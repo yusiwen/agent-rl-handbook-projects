@@ -35,6 +35,10 @@ run() {
 run "common tests" python3 -m unittest discover -s common/tests -t .
 run "p1 tests" python3 -m unittest discover -s p1-verifiers/tests -t p1-verifiers/tests
 run "p1 check (fixtures)" python3 p1-verifiers/checks/check_p1.py
+
+# The checks are checked first: a scan that has stopped being able to fail would report
+# success for the rest of the gate too.
+run "repository checks (selftest)" python3 scripts/check_repo.py --selftest
 run "repository checks" python3 scripts/check_repo.py
 
 if [ "$status" -eq 0 ]; then

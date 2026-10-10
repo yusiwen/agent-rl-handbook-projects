@@ -12,20 +12,41 @@ measure.
 ## What runs today
 
 ```bash
-bash scripts/verify.sh
+nix develop --command bash scripts/verify.sh   # or: direnv allow .  then the same command
+nix build                                      # the same gate in a sandbox, no network
 ```
 
 ```
-== common tests ==        Ran 97 tests ... OK
-== p1 tests ==            Ran 36 tests ... OK
-== p1 check (fixtures) == coverage 10/11 tasks; 20 rollouts; 14/20 passed, 6/10 groups mixed
-== repository checks ==   [PASS] characters   [PASS] payloads   [PASS] secrets
+== common tests ==                Ran 97 tests ... OK
+== p1 tests ==                    Ran 36 tests ... OK
+== p1 check (fixtures) ==         coverage 10/11 tasks; 20 rollouts; 14/20 passed
+== repository checks (selftest) == [PASS] the checks still reject what they must reject
+== repository checks ==           [PASS] characters  [PASS] payloads  [PASS] secrets
 all checks passed
 ```
 
 133 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
-writes a run record to `runs/` (gitignored). If the gate fails, the problem is in this
-repository rather than in your environment - which is the whole reason it exists.
+writes a run record to `runs/` (gitignored); `nix build` sends it to the sandbox's writable
+directory instead, which is what `ARL_RUNS_DIR` is for. If the gate fails, the problem is in
+this repository rather than in your environment - which is the whole reason it exists.
+
+## The environment is pinned
+
+`flake.nix` + `flake.lock` pin the toolchain and `.envrc` wires it to direnv:
+
+- **The same nixpkgs revision as the handbook** (`7a0f122f5090`), so both repositories
+  resolve to identical store paths on the reference machine instead of downloading a second
+  copy of Python.
+- The shell is deliberately small - `python3`, `git`, `coreutils`, `ripgrep`, `fd`, `jq`. The
+  contract layer's only dependency is the standard library, and a shell that cannot import
+  torch cannot quietly start depending on it.
+- `nix build` runs the same gate as a derivation: it fails when a check fails, it cannot
+  reach the network, and its source tree is read-only. Those are a CI job's constraints, met
+  before there is a CI job.
+- Pulling a dataset still needs the `hf` CLI, which is not in the shell: `pip install -U
+  'huggingface_hub[cli]'`. See `datasets/README.md`.
+- `nix develop` and `nix build` only see files git knows about, so `git add` a new file
+  before building it.
 
 ## What this repo is for
 
@@ -52,6 +73,7 @@ bash scripts/verify.sh                                 # the whole gate
 python3 -m unittest discover -s common/tests -t .      # the shared layer
 python3 -m unittest discover -s p1-verifiers/tests -t p1-verifiers/tests
 python3 p1-verifiers/checks/check_p1.py                # P1 end to end on fixtures
+python3 scripts/check_repo.py --selftest               # prove the checks can still fail
 python3 scripts/check_repo.py                          # characters, payloads, secrets
 bash datasets/gsm8k.pull.sh                            # pull a dataset (writes an ignored payload)
 ```
@@ -70,19 +92,23 @@ The gate reads the git index, so run `git add` first if you want a brand-new fil
   the config hash and the code SHA.
 - **Reward is never one number.** Rollouts carry *terms*; the fused total is derived. If you
   cannot say how much each term contributed, you cannot debug the run.
+- **English prose, by an allowlist of characters** - the same list as the handbook's gate, so the
+  two repositories cannot judge the same sentence two different ways. See `scripts/check_repo.py`.
+- **The checks are themselves checked.** `check_repo.py --selftest` proves the scanner still
+  rejects what it must; a scan that has quietly stopped failing reports success for everything
+  else too.
 - **Counts are claims.** Row counts, dataset sizes and timings here are labelled
   measured / reported / arithmetic. See `datasets/README.md`.
-- **Prose is English, and the gate enforces it** - see `scripts/check_repo.py` and
-  `AGENTS.md` for why the rule is about characters rather than about a language.
 
 ## Layout
 
 ```
+flake.nix        the pinned toolchain; nix build = the same gate as a derivation
 common/          schema, mask, verifier protocol, fusion, run records, checks (+ 97 tests)
 p1-verifiers/    src/ fixtures/ checks/ configs/ tests/   (harness complete, three verifiers yours)
 p2..p6/          one README each, written with their chapter
 datasets/        pull scripts + manifest + digests (verified row counts and licences)
-scripts/         verify.sh (the gate), check_repo.py (characters, payloads, secrets)
+scripts/         verify.sh (the gate), check_repo.py (characters, payloads, secrets, selftest)
 ```
 
 ## Licence

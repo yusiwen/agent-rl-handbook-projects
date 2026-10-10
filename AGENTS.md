@@ -93,5 +93,10 @@ These are the graders. A project that fails one of them fails it loudly, naming 
 - A pull script that hashes everything under its output directory will hash the CLI's own
   `.cache/` bookkeeping too, and a digest that changes when a client updates is not a pin. Skip
   any path whose components start with a dot.
-- macOS has no `timeout`; it is `gtimeout` from coreutils. Do not put `timeout` in a script that
-  has to run on the reference machine.
+- `timeout` is not in macOS's own shell (coreutils spells it `gtimeout` there), but the dev
+  shell provides an unprefixed one from the pinned coreutils, and the reference machine has
+  it as standard. A script that has to run outside the dev shell on macOS must not depend
+  on it - `datasets/gsm8k.pull.sh` does not.
+- `nix develop` and `nix build` only see files git knows about, so `git add` a new file
+  before building it. This has bitten the handbook repository too; the gate reads the index
+  for the same reason, which makes the two behaviours agree instead of both being surprising.

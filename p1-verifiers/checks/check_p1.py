@@ -23,6 +23,7 @@ Exit status is 0 only when every part passes.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -160,6 +161,9 @@ def main() -> int:
     print(f"stub contract: {', '.join(UNIMPLEMENTED)} all decline and raise as expected")
 
     run_id = f"p1-fixtures-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+    # Where the run record lands. Overridable because a sandboxed run (nix build, CI) has a
+    # read-only source tree: the record is an artefact, and artefacts go where the caller says.
+    runs_root = Path(os.environ.get("ARL_RUNS_DIR") or REPO / "runs")
     writer = RunWriter(
         RunHeader(
             run_id=run_id,
@@ -171,11 +175,12 @@ def main() -> int:
             dataset_digest=digest_of(TASKS),
             notes=f"responses fixture digest {digest_of(RESPONSES)}",
         ),
-        root=REPO / "runs",
+        root=runs_root,
     )
     writer.append_round(round_record(0, rows))
     writer.append_rollouts(0, rows)
-    print(f"run record: runs/{run_id}/ (header.json, rounds.jsonl, round-000.jsonl)")
+    shown = runs_root.relative_to(REPO) if runs_root.is_relative_to(REPO) else runs_root
+    print(f"run record: {shown}/ (header.json, rounds.jsonl, round-000.jsonl)")
 
     missing = [name for name in UNIMPLEMENTED]
     print(f"-- your turn: implement {', '.join(missing)} in p1-verifiers/src/p1_verifiers/verifiers.py --")
