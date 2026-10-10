@@ -1,5 +1,5 @@
 {
-  description = "agent-rl-projects — companion code for the Agent RL handbook";
+  description = "agent-rl-handbook-projects — companion code for the Agent RL handbook";
 
   inputs = {
     # The same channel and the same locked revision as the handbook repository
@@ -43,7 +43,7 @@
           ];
 
           shellHook = ''
-            echo "agent-rl-projects dev shell — python $(python3 -V | sed 's/^Python //') with huggingface-hub ($(uname -m) $(uname -s))"
+            echo "agent-rl-handbook-projects dev shell — python $(python3 -V | sed 's/^Python //') with huggingface-hub ($(uname -m) $(uname -s))"
             echo "  bash scripts/verify.sh           # the gate: tests, fixtures, characters/payloads/secrets"
             echo "  nix build --no-link              # the same gate in a sandbox; no ./result link left behind"
             echo "  python3 datasets/pull.py --list  # datasets, and what a pull would record"
@@ -60,7 +60,7 @@
       # manifest's own contract tests can run.
       packages = forAllSystems (pkgs: {
         default = pkgs.stdenvNoCC.mkDerivation {
-          pname = "agent-rl-projects-gate";
+          pname = "agent-rl-handbook-projects-gate";
           version = "unstable";
           src = ./.;
           nativeBuildInputs = [

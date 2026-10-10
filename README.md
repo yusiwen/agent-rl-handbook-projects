@@ -1,4 +1,4 @@
-# agent-rl-projects
+# agent-rl-handbook-projects
 
 Companion code for the handbook *Agent RL Explained: A Beginner's Handbook*
 (<https://yusiwen.cn/agent-rl-handbook/>). Six projects, one shared contract.
