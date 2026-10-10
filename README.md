@@ -13,7 +13,7 @@ measure.
 
 ```bash
 nix develop --command bash scripts/verify.sh   # or: direnv allow .  then the same command
-nix build                                      # the same gate in a sandbox, no network
+nix build --no-link                            # the same gate in a sandbox, no network
 ```
 
 ```
@@ -43,7 +43,9 @@ this repository rather than in your environment - which is the whole reason it e
   torch cannot quietly start depending on it.
 - `nix build` runs the same gate as a derivation: it fails when a check fails, it cannot
   reach the network, and its source tree is read-only. Those are a CI job's constraints, met
-  before there is a CI job.
+  before there is a CI job. It is a check rather than an artefact - the only output is a
+  timestamp - so `nix build --no-link` is the habit this repo documents: same semantics,
+  without the `./result` symlink appearing in the working tree.
 - `huggingface_hub` and PyYAML come from that same pin, so `python3 datasets/pull.py gsm8k`
   works in the shell with nothing installed by hand. The tool imports them inside its
   functions, which is why the gate can run offline with neither of them present. See

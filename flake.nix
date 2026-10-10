@@ -45,7 +45,7 @@
           shellHook = ''
             echo "agent-rl-projects dev shell — python $(python3 -V | sed 's/^Python //') with huggingface-hub ($(uname -m) $(uname -s))"
             echo "  bash scripts/verify.sh           # the gate: tests, fixtures, characters/payloads/secrets"
-            echo "  nix build                        # the same gate in a sandbox, writing nothing into git"
+            echo "  nix build --no-link              # the same gate in a sandbox; no ./result link left behind"
             echo "  python3 datasets/pull.py --list  # datasets, and what a pull would record"
           '';
         };
