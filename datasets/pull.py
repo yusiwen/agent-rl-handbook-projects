@@ -40,10 +40,14 @@ PAYLOADS = DATASETS / "payloads"
 DIGESTS = DATASETS / "digests"
 
 #: Shown whenever a dependency is missing. The point is that the reader does not have to
-#: guess where the library was supposed to come from.
+#: guess where the library was supposed to come from - and it names both routes, because the
+#: reference machine (a DGX Spark) has no nix on it.
 PULL_HINT = (
-    "This tool runs inside the dev shell, where the library version is pinned:\n"
-    "    nix develop --command python3 datasets/pull.py <name>"
+    "This tool needs huggingface_hub and PyYAML. With nix, the dev shell pins both:\n"
+    "    nix develop --command python3 datasets/pull.py <name>\n"
+    "Without nix, a virtual environment works:\n"
+    "    python3 -m venv .venv && .venv/bin/pip install huggingface_hub pyyaml\n"
+    "    .venv/bin/python datasets/pull.py <name>"
 )
 
 

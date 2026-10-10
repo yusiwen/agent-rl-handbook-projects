@@ -18,7 +18,7 @@ nix build --no-link                            # the same gate in a sandbox, no 
 
 ```
 == common tests ==                Ran 97 tests ... OK
-== p1 tests ==                    Ran 36 tests ... OK
+== p1 tests ==                    Ran 71 tests ... OK
 == p1 check (fixtures) ==         coverage 10/11 tasks; 20 rollouts; 14/20 passed
 == datasets tests ==              Ran 28 tests ... OK
 == repository checks (selftest) == [PASS] the checks still reject what they must reject
@@ -26,7 +26,7 @@ nix build --no-link                            # the same gate in a sandbox, no 
 all checks passed
 ```
 
-161 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
+196 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
 writes a run record to `runs/` (gitignored); `nix build` sends it to the sandbox's writable
 directory instead, which is what `ARL_RUNS_DIR` is for. If the gate fails, the problem is in
 this repository rather than in your environment - which is the whole reason it exists.
@@ -83,6 +83,8 @@ python3 scripts/check_repo.py --selftest               # prove the checks can st
 python3 scripts/check_repo.py                          # characters, payloads, secrets, imports
 python3 datasets/pull.py --list                        # datasets, and what a pull would record
 python3 datasets/pull.py gsm8k                         # pull one (payload ignored, digest committed)
+python3 p1-verifiers/checks/run_p1_live.py --base-url http://host:8000 --model the-id
+                                                       # the same pipeline against a real model
 ```
 
 The gate reads the git index, so run `git add` first if you want a brand-new file checked.

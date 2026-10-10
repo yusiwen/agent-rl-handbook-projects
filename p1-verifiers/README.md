@@ -1,6 +1,7 @@
 # P1 - a verifier suite and its coverage report
 
-**Status: harness complete, one verifier implemented, three are yours.**
+**Status: the offline harness and the live path are both complete; one verifier implemented,
+three are yours.**
 Book chapter: Chapter 5 (reward engineering) and Chapter 7 (task sets).
 Compute tier: ✅ - runs on the reference machine as written.
 
@@ -23,11 +24,23 @@ Two things the book asks for and this project grades:
 ```bash
 python3 p1-verifiers/checks/check_p1.py          # the grader: fixtures, no network, no GPU
 python3 -m unittest discover -s p1-verifiers/tests -t p1-verifiers/tests
+
+# Against a served model (any OpenAI-compatible endpoint, e.g. vLLM on the reference machine):
+python3 p1-verifiers/checks/run_p1_live.py \
+    --base-url http://192.168.2.40:8000 --model qwen3-8b --samples 2
 ```
 
 The fixture run is deliberately offline. If it fails, the problem is here rather than in
 your environment; if it passes and a real run fails, the problem is in the environment or
 in the model. That ordering is the whole reason the fixtures exist.
+
+The live runner does five things worth knowing about before you point it at a GPU: it
+**preflights the model name** against `/v1/models` (so a typo costs a second, not a round),
+it **prints coverage before spending tokens**, it counts tokens with the **server's own
+tokeniser** over `/tokenize` and puts that tokeniser's name in every row, it **runs the five
+checks on the rows it just produced**, and it writes a run record naming the endpoint, the
+model, the task-file digest and the commit. Exit status is non-zero if any check fails - the
+record is still written, because a record of a rejected run is evidence.
 
 ## What the run does
 
@@ -71,5 +84,12 @@ here`. The difference between the two is the compute tier from the book's append
 - The real task set: `fixtures/` is 11 tasks, enough to prove the pipeline. Pull the real
   datasets with `../datasets/` (see its README) once you have measured your own
   throughput - the budget in `configs/` has a field waiting for that number.
-- A model. The fixture responder stands in for one so the checks stay offline; a real run
-  points the harness at a served model instead.
+- **A served model to point at.** The code is ready (`remote.py`: a chat responder and a
+  `/tokenize` counter over HTTP, standard library only) and the live runner is wired to it,
+  but nothing starts a server for you. What a real run needs is one command on the reference
+  machine - and the model name exactly as that server spells it, which is why the runner asks
+  the server first.
+- The three verifiers you owe. Until they exist, a real run's coverage is `exact_match`'s 10
+  of 11 tasks, and the runner will say so before it spends a token.
+- A second sampling round. One round gives you rows and an advantage spread; the round-stability
+  check needs two rounds with the same sample ids, which is what `common/runs.py` records.

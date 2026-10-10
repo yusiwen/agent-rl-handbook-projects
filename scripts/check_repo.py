@@ -22,10 +22,10 @@ Four things this repository promises and can therefore be caught breaking:
    deliberately narrow - they match credential-shaped strings, not the word "token", which
    this project uses constantly for something else.
 4. **No third-party imports in the shared layers.**  ``common/``, ``p1-verifiers/src/``,
-   ``datasets/`` and ``scripts/`` may import the standard library and each other, and
-   nothing else.  The projects under ``p2..p6`` are deliberately out of scope: they are
-   meant to import frameworks.  That difference is the rule, so it is checked rather than
-   asserted in a document.
+   ``p1-verifiers/checks/``, ``datasets/`` and ``scripts/`` may import the standard library and
+   each other, and nothing else.  The projects under ``p2..p6`` are deliberately out of scope:
+   they are meant to import frameworks.  That difference is the rule, so it is checked rather
+   than asserted in a document.
 
 ``--selftest`` runs the checks against inputs whose verdict is known, because a check that
 has only ever seen clean input has been hoped at rather than tested.
@@ -94,8 +94,10 @@ PAYLOAD_EXEMPT = ("datasets/digests",)
 #: Files larger than this are almost certainly a payload that got committed by accident.
 MAX_BYTES = 256 * 1024
 
-#: Layers that must stay importable with nothing but an interpreter.
-IMPORT_FREE_ROOTS = ("common", "p1-verifiers/src", "datasets", "scripts")
+#: Layers that must stay importable with nothing but an interpreter. The checks live here too:
+#: they are tools rather than libraries, and a tool that needs a framework to print a report is
+#: a tool that cannot run on the machine where the problem is.
+IMPORT_FREE_ROOTS = ("common", "p1-verifiers/checks", "p1-verifiers/src", "datasets", "scripts")
 
 #: First-party names those layers may import.  `pull` is the dataset tool, which is not a
 #: package because the project's directories have hyphens; its tests import it by name.

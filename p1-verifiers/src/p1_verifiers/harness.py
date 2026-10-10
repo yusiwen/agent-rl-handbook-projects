@@ -5,9 +5,10 @@ somewhere else:
 
     task -> responder -> verifier -> reward terms -> rollout row -> run record
 
-Three parts are pluggable: the **responder** (the model; a fixture responder in the
-tests so nothing needs a GPU or a network), the **registry** (the verifier suite), and
-the **task set** (a JSONL file).
+Four parts are pluggable: the **responder** (the model; a fixture responder in the tests so
+nothing needs a GPU or a network), the **registry** (the verifier suite), the **task set** (a
+JSONL file), and the **tokeniser** (the server's own in a real run, a word counter in the
+tests).  ``remote.py`` holds the two HTTP-backed ones.
 
 What this module refuses to do:
 
@@ -16,9 +17,10 @@ What this module refuses to do:
 * It will not write a row whose loss mask is wrong.  The mask is built from the
   segments and then *checked* against them before the row leaves the function; a
   pipeline that records its own bug is worth more than one that hides it.
-* It will not pretend to have a tokeniser.  ``_pseudo_tokens`` counts words and says so
-  in ``env_version``; a real run tokenises with the model's own tokeniser and records
-  its version, because a token count is only meaningful next to the thing that counted.
+* It will not pretend to have a tokeniser.  ``PseudoTokeniser`` counts words and says so in
+  ``env_version``; a real run tokenises with the model's own tokeniser and records its
+  version, because a token count is only meaningful next to the thing that counted.  Supply
+  a real tokeniser and leave the marker alone and the run stops rather than mislabelling.
 """
 
 from __future__ import annotations
@@ -131,6 +133,19 @@ class FixtureResponder:
         return answers[sample_index % len(answers)]
 
 
+class Tokeniser(Protocol):
+    """Whatever counts tokens.
+
+    ``name`` is not decoration: it is what goes into a row's ``env_version``, so a count can
+    always be traced to the thing that produced it.
+    """
+
+    name: str
+
+    def count(self, text: str) -> int:  # pragma: no cover - protocol
+        ...
+
+
 def _pseudo_tokens(text: str) -> int:
     """A stand-in token count: words, floored at one.
 
@@ -140,16 +155,34 @@ def _pseudo_tokens(text: str) -> int:
     return max(1, len(text.split()))
 
 
-def segments_for(task: Task, response: str) -> list[Segment]:
+class PseudoTokeniser:
+    """The stand-in, in the shape the pipeline now expects.
+
+    Kept as the default so that every offline check keeps working unchanged, and so that
+    "no tokeniser here" is a state the code can name rather than a state it forgets.
+    """
+
+    name = PSEUDO_TOKENISER
+
+    def count(self, text: str) -> int:
+        return _pseudo_tokens(text)
+
+
+#: The default tokeniser.  Compared by identity in ``run_episode`` to catch a real tokeniser
+#: whose rows would still carry the stand-in's marker.
+PSEUDO = PseudoTokeniser()
+
+
+def segments_for(task: Task, response: str, tokeniser: Tokeniser = PSEUDO) -> list[Segment]:
     """A single-turn trace: the instruction, the question, the attempt.
 
     Single-turn because P1's tasks are single-turn.  Multi-turn traces (tool calls,
     environment replies) are P2's and P5's shape; the record is the same either way.
     """
     return [
-        Segment(role="system", text=SYSTEM_PROMPT, tokens=_pseudo_tokens(SYSTEM_PROMPT)),
-        Segment(role="user", text=task.prompt, tokens=_pseudo_tokens(task.prompt)),
-        Segment(role="model", text=response, tokens=_pseudo_tokens(response)),
+        Segment(role="system", text=SYSTEM_PROMPT, tokens=tokeniser.count(SYSTEM_PROMPT)),
+        Segment(role="user", text=task.prompt, tokens=tokeniser.count(task.prompt)),
+        Segment(role="model", text=response, tokens=tokeniser.count(response)),
     ]
 
 
@@ -168,12 +201,22 @@ def run_episode(
     registry: VerifierRegistry,
     sample_index: int,
     provenance: Provenance,
+    tokeniser: Tokeniser | None = None,
 ) -> Rollout:
     """Score one attempt and build its row.
 
     Raises ``MissingVerifier`` when the task's verifier is not registered: a task that
     cannot be scored is a gap in the suite, not a zero.
     """
+    tokeniser = tokeniser or PSEUDO
+    if tokeniser is not PSEUDO and provenance.env_version == PSEUDO_TOKENISER:
+        raise ValueError(
+            "a tokeniser was supplied but the row's env_version still says "
+            f"{PSEUDO_TOKENISER!r}. Pass Provenance(env_version=tokeniser.name, ...) so the "
+            "row names what counted its tokens; a count whose author is unknown is not a "
+            "measurement, it is a number."
+        )
+
     verifier = registry.for_task(task.as_mapping())
     if not verifier.can_verify(task.as_mapping()):
         raise MissingVerifier(
@@ -182,7 +225,7 @@ def run_episode(
         )
     outcome = verifier.verify(task.as_mapping(), response)
 
-    segments = segments_for(task, response)
+    segments = segments_for(task, response, tokeniser)
     mask = build_mask(segments)
     faults = mask_faults(segments, mask)
     if faults:  # a bug here means the trace and the mask disagree about who wrote what
@@ -215,6 +258,7 @@ def run_taskset(
     registry: VerifierRegistry,
     samples_per_task: int = 1,
     provenance: Provenance | None = None,
+    tokeniser: Tokeniser | None = None,
 ) -> list[Rollout]:
     """Run every task ``samples_per_task`` times and return the rows.
 
@@ -229,7 +273,7 @@ def run_taskset(
         for sample_index in range(samples_per_task):
             rows.append(
                 run_episode(task, responder.respond(task, sample_index), registry,
-                            sample_index, provenance)
+                            sample_index, provenance, tokeniser)
             )
     return rows
 
