@@ -58,12 +58,22 @@ services:
     # max-model-len is a per-request limit rather than a reservation, and 8192 is far more than
     # this task set needs. Raise it only when something else will use this server too.
     #
+    # The default model is the 1.7B chat model from the Qwen3 family: same architecture as
+    # everything else this machine serves, small enough to start in seconds, and *instruction
+    # tuned* - which the cached nvidia/Qwen3-8B-NVFP4 is not, and P1's task shape needs it to
+    # be. The first start downloads it if it is missing; env/README.md has the one-liner to
+    # fetch the weights without starting a server.
+    #
+    # --trust-remote-code stays in the command because the NVFP4 checkpoints need it and a
+    # compose command cannot branch on which model was chosen. For the default 1.7B it is
+    # simply ignored - a flag that does nothing beats a start that fails on a technicality.
+    #
     # --gpu-memory-utilization 0.80 rather than the vendor's 0.85: the failure mode when the
     # unified pool runs out is earlyoom killing the scheduler, which costs a restart rather
     # than a flag. Raise it when the machine is dedicated to this.
     command: >
-      ${ARL_MODEL:-nvidia/Qwen3-8B-NVFP4}
-      --served-model-name ${ARL_SERVED_NAME:-qwen3-8b-nvfp4}
+      ${ARL_MODEL:-Qwen/Qwen3-1.7B}
+      --served-model-name ${ARL_SERVED_NAME:-qwen3-1.7b}
       --max-model-len ${ARL_MAX_MODEL_LEN:-8192}
       --max-num-seqs ${ARL_MAX_NUM_SEQS:-8}
       --gpu-memory-utilization ${ARL_GPU_MEMORY_UTILIZATION:-0.80}

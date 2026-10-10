@@ -92,6 +92,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--timeout", type=float, default=120.0, help="seconds per attempt")
     parser.add_argument("--api-key-env", default=None,
                         help="name of an environment variable holding the key, if the server wants one")
+    parser.add_argument("--no-thinking", action="store_true",
+                        help="ask the chat template to skip its reasoning block (Qwen3 chat models "
+                             "reason by default; P1's verifier only reads the last line)")
     parser.add_argument("--runs-dir", default=None, help="where run records go")
     return parser.parse_args(argv)
 
@@ -129,6 +132,7 @@ def main(argv: list[str] | None = None) -> int:
     responder = OpenAIChatResponder(
         args.base_url, args.model, api_key_env=args.api_key_env, temperature=args.temperature,
         top_p=args.top_p, max_tokens=args.max_tokens, timeout=args.timeout,
+        chat_template_kwargs={"enable_thinking": False} if args.no_thinking else None,
     )
     tokeniser = ServerTokeniser(args.base_url, args.model, timeout=args.timeout)
 

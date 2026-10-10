@@ -29,6 +29,7 @@ import os
 import time
 import urllib.error
 import urllib.request
+from typing import Any
 from urllib.parse import urlparse
 
 from .harness import SYSTEM_PROMPT, Task
@@ -141,6 +142,7 @@ class OpenAIChatResponder:
         timeout: float = 120.0,
         retries: int = 2,
         seed: int | None = None,
+        chat_template_kwargs: dict[str, Any] | None = None,
         sleep=time.sleep,
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -153,6 +155,11 @@ class OpenAIChatResponder:
         self.timeout = timeout
         self.retries = retries
         self.seed = seed
+        #: Passed through to the model's chat template. The one that matters here is
+        #: ``enable_thinking``: Qwen3's chat models reason before answering by default, which
+        #: on a single-turn task spends tokens on a scratchpad nobody reads - and P1's verifier
+        #: only ever looks at the last line.
+        self.chat_template_kwargs = dict(chat_template_kwargs or {})
         self._sleep = sleep
         #: Whatever the last call reported. Provenance for a run record, not a decision input.
         self.last_usage: dict | None = None
@@ -174,8 +181,13 @@ class OpenAIChatResponder:
             key = f"key from ${self.api_key_env}"
         else:
             key = f"no key (${self.api_key_env} is unset)"
+        template = ""
+        if self.chat_template_kwargs:
+            # Recorded because it changes both the token count and the answer: a run with
+            # thinking off is not comparable to one with it on.
+            template = ", template=" + json.dumps(self.chat_template_kwargs, sort_keys=True)
         return (f"{self.model} at {self.url}, temperature={self.temperature}, "
-                f"max_tokens={self.max_tokens}, {key}")
+                f"max_tokens={self.max_tokens}{template}, {key}")
 
     def _headers(self) -> dict[str, str]:
         if self.api_key_env:
@@ -201,6 +213,8 @@ class OpenAIChatResponder:
         }
         if self.seed is not None:
             payload["seed"] = self.seed + sample_index
+        if self.chat_template_kwargs:
+            payload["chat_template_kwargs"] = dict(self.chat_template_kwargs)
 
         attempt = 0
         while True:

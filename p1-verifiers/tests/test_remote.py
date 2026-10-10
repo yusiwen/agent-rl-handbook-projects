@@ -398,6 +398,34 @@ class LiveWiringTests(ServerTestCase):
         self.assertIn("env_version", str(ctx.exception))
 
 
+class ChatTemplateTests(ServerTestCase):
+    """The Qwen3 reasoning block is opt-out, and the switch has to be visible in the record."""
+
+    def request_body(self, **kwargs):
+        self.responder(**kwargs).respond(Task(id="t", prompt="p", verifier="exact_match"), 0)
+        return self.server.requests[-1]["payload"]
+
+    def test_nothing_extra_is_sent_by_default(self) -> None:
+        self.assertNotIn("chat_template_kwargs", self.request_body())
+
+    def test_the_switch_reaches_the_request(self) -> None:
+        body = self.request_body(chat_template_kwargs={"enable_thinking": False})
+        self.assertEqual(body["chat_template_kwargs"], {"enable_thinking": False})
+
+    def test_describe_says_which_mode_was_used(self) -> None:
+        off = self.responder(chat_template_kwargs={"enable_thinking": False}).describe()
+        self.assertIn("enable_thinking", off)
+        self.assertNotIn("enable_thinking", self.responder().describe())
+
+    def test_the_kwargs_are_copied_not_shared(self) -> None:
+        # A mutable default shared between responders would turn one run's setting into
+        # another's, which is the kind of thing that makes two records incomparable.
+        given = {"enable_thinking": False}
+        responder = self.responder(chat_template_kwargs=given)
+        given["enable_thinking"] = True
+        self.assertEqual(responder.chat_template_kwargs, {"enable_thinking": False})
+
+
 class ModelListingTests(ServerTestCase):
     def test_it_lists_what_the_server_serves(self) -> None:
         self.assertEqual(remote.list_models(self.server.base_url), ["test-model"])
@@ -530,6 +558,18 @@ class LiveRunnerTests(ServerTestCase):
         code, output = self.run_main("--limit", "2", "--samples", "2")
         self.assertEqual(code, 0, output)
         self.assertIn("2 covered, x2 samples = 4 attempts", output)
+
+    def test_no_thinking_reaches_the_server_and_lands_in_the_record(self) -> None:
+        self.server.replies = [REPLY, self.WRONG]
+        code, output = self.run_main("--samples", "2", "--no-thinking")
+        self.assertEqual(code, 0, output)
+        # Only the chat calls: /tokenize is a different route and has no chat template.
+        sent = [r["payload"] for r in self.server.requests
+                if r["payload"] and r["path"].endswith("/v1/chat/completions")]
+        self.assertTrue(sent and all(p.get("chat_template_kwargs") == {"enable_thinking": False}
+                                     for p in sent), "the switch did not reach every request")
+        header = json.loads(next(self.runs.glob("p1-live-*/header.json")).read_text(encoding="utf-8"))
+        self.assertIn("enable_thinking", header["notes"], "the record does not say which mode ran")
 
     def test_nothing_scoreable_is_refused_before_the_model_is_touched(self) -> None:
         only_stub = self.root / "stubs.jsonl"

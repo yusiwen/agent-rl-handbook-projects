@@ -10,13 +10,14 @@ tier: spark
 book_chapter: 5
 
 model:
-  id: qwen3-8b-nvfp4           # the name the server answers to, not the Hugging Face id: it is
+  id: qwen3-1.7b               # the name the server answers to, not the Hugging Face id: it is
                                # what `--served-model-name` sets in env/docker-compose.yaml, and
                                # what a client must send. P1 preflights it against /v1/models.
-  weights: nvidia/Qwen3-8B-NVFP4   # what the container loads
-  dtype: auto                  # NVFP4 is detected from the checkpoint; do not pin bfloat16
+  weights: Qwen/Qwen3-1.7B     # what the container loads: the Qwen3 chat model, instruction
+                               # tuned. Not nvidia/Qwen3-8B-NVFP4, which is a base checkpoint
+  dtype: auto                  # let the checkpoint decide; only quantised weights need pinning
   attention: sdpa              # flash_attention_2 has no sm_121 wheel; do not reach for it
-  trust_remote_code: true      # the NVFP4 checkpoint ships custom code
+  trust_remote_code: false     # nothing in this checkpoint needs custom code
 
 serving:
   compose: env/docker-compose.yaml   # the server this config describes; start it from there
