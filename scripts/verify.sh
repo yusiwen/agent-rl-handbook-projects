@@ -3,12 +3,17 @@
 #
 #   bash scripts/verify.sh
 #
-# Four steps, each of which must pass on this repository (not on a hypothetical one):
+# Five steps, each of which must pass on this repository (not on a hypothetical one):
 #
 #   1. the shared layer's tests
 #   2. P1's tests
 #   3. P1's end-to-end check on fixtures (no network, no GPU)
-#   4. repository checks: characters, payloads, secrets
+#   4. the dataset tool's tests (offline: the download is injected)
+#   5. repository checks: characters, payloads, secrets, imports
+#
+# Nothing here touches the network. `datasets/pull.py` does, and it is not part of the gate
+# for exactly that reason - the gate must be able to tell you that your environment is fine
+# without asking anything of the world.
 #
 # Exit status is non-zero if anything fails, so this is usable as a CI step unchanged.
 
@@ -30,11 +35,13 @@ run() {
   fi
 }
 
-# The two test suites have different discovery roots: the shared layer is a package
-# under `common/`, while `p1-verifiers` has a hyphen in its name and cannot be one.
+# Three test suites, three discovery roots. The shared layer is a package under `common/`;
+# `p1-verifiers` has a hyphen in its name and cannot be one; `datasets/` holds a tool rather
+# than a package, so its tests are a root of their own.
 run "common tests" python3 -m unittest discover -s common/tests -t .
 run "p1 tests" python3 -m unittest discover -s p1-verifiers/tests -t p1-verifiers/tests
 run "p1 check (fixtures)" python3 p1-verifiers/checks/check_p1.py
+run "datasets tests" python3 -m unittest discover -s datasets/tests -t datasets/tests
 
 # The checks are checked first: a scan that has stopped being able to fail would report
 # success for the rest of the gate too.

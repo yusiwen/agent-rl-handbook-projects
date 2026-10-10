@@ -1,32 +1,30 @@
 {
+  "allow_patterns": [
+    "README.md",
+    "eval.yaml",
+    "main/*"
+  ],
   "dataset": "openai/gsm8k",
   "files": {
     "README.md": {
       "bytes": 7935,
-      "sha256": "a17e882503578c9e"
+      "sha256": "a17e882503578c9e324560630e31017617714ee025c87cf4fea6fd916895f3c1"
     },
     "eval.yaml": {
       "bytes": 920,
-      "sha256": "a115b103292f0d24"
+      "sha256": "a115b103292f0d24a1483de6b5eac826292bd6c66f7f9f8fc31ffbc560260984"
     },
     "main/test-00000-of-00001.parquet": {
       "bytes": 419088,
-      "sha256": "ee7b8da9e381df27"
+      "sha256": "ee7b8da9e381df27b9e3f7758a159ab2bdaa4dbaa910546cbbc47e0cb44e4f59"
     },
     "main/train-00000-of-00001.parquet": {
       "bytes": 2306545,
-      "sha256": "ea82612ea9582142"
-    },
-    "socratic/test-00000-of-00001.parquet": {
-      "bytes": 486995,
-      "sha256": "477dba7028204b46"
-    },
-    "socratic/train-00000-of-00001.parquet": {
-      "bytes": 2677259,
-      "sha256": "54eb5fd2105a9126"
+      "sha256": "ea82612ea9582142387730c793eb67d3b12849002bc0b7fa6f8efafa7351419d"
     }
   },
-  "licence": "MIT (per the dataset card, checked 2026-10-09)",
+  "licence": "MIT",
+  "pulled_at": "2026-10-10T08:34:53Z",
   "revision": "740312add88f781978c0658806c59bc2815b9866",
-  "total_bytes": 5898742
+  "total_bytes": 2734488
 }

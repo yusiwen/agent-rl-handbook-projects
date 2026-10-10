@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Repository checks that do not need a build: characters, payloads, secrets.
+"""Repository checks that do not need a build: characters, payloads, secrets, imports.
 
-    python3 scripts/check_repo.py             # all three
+    python3 scripts/check_repo.py             # all four
     python3 scripts/check_repo.py --chars     # one at a time
     python3 scripts/check_repo.py --selftest  # prove the checks can still fail
 
-Three things this repository promises and can therefore be caught breaking:
+Four things this repository promises and can therefore be caught breaking:
 
 1. **English prose, with a stated allowlist.**  Allowed: ASCII, the Latin-1 letters minus
    no-break space and soft hyphen, the punctuation this project's prose uses (dashes,
@@ -21,6 +21,11 @@ Three things this repository promises and can therefore be caught breaking:
 3. **No secrets in a file.**  Keys are read from the environment.  The patterns are
    deliberately narrow - they match credential-shaped strings, not the word "token", which
    this project uses constantly for something else.
+4. **No third-party imports in the shared layers.**  ``common/``, ``p1-verifiers/src/``,
+   ``datasets/`` and ``scripts/`` may import the standard library and each other, and
+   nothing else.  The projects under ``p2..p6`` are deliberately out of scope: they are
+   meant to import frameworks.  That difference is the rule, so it is checked rather than
+   asserted in a document.
 
 ``--selftest`` runs the checks against inputs whose verdict is known, because a check that
 has only ever seen clean input has been hoped at rather than tested.
@@ -29,6 +34,7 @@ has only ever seen clean input has been hoped at rather than tested.
 from __future__ import annotations
 
 import argparse
+import ast
 import re
 import subprocess
 import sys
@@ -87,6 +93,13 @@ PAYLOAD_EXEMPT = ("datasets/digests",)
 
 #: Files larger than this are almost certainly a payload that got committed by accident.
 MAX_BYTES = 256 * 1024
+
+#: Layers that must stay importable with nothing but an interpreter.
+IMPORT_FREE_ROOTS = ("common", "p1-verifiers/src", "datasets", "scripts")
+
+#: First-party names those layers may import.  `pull` is the dataset tool, which is not a
+#: package because the project's directories have hyphens; its tests import it by name.
+ALLOWED_FIRST_PARTY = {"common", "p1_verifiers", "pull"}
 
 SECRET_PATTERNS = (
     re.compile(r"sk-[A-Za-z0-9]{16,}"),
@@ -198,13 +211,75 @@ def check_secrets() -> list[str]:
     return problems
 
 
+def imported_names(source: str, relative: Path) -> tuple[list[tuple[int, str]], str | None]:
+    """Every module this source imports, with the line it is imported on.
+
+    Parsed rather than searched: ``import`` inside a docstring or a comment is not an
+    import, and the dataset tool deliberately imports its two libraries inside a function -
+    so a grep would report the opposite of the truth in both directions.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError as exc:
+        return [], f"{relative}: unparseable ({exc})"
+
+    found: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            found.extend((node.lineno, alias.name) for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:  # a relative import is first-party by definition
+                continue
+            if node.module:
+                found.append((node.lineno, node.module))
+    return found, None
+
+
+def check_imports() -> list[str]:
+    """No third-party imports in the layers that must stay dependency-free.
+
+    ``sys.stdlib_module_names`` is the definition of "standard library" here, so a module
+    can leave it in one release and be caught by the next gate run rather than by a reader
+    noticing.
+    """
+    if not hasattr(sys, "stdlib_module_names"):
+        return [f"this interpreter ({sys.version.split()[0]}) exposes no stdlib_module_names, "
+                f"so the import rule cannot be checked here"]
+    stdlib = set(sys.stdlib_module_names)
+
+    problems: list[str] = []
+    for path in iter_files():
+        relative = path.relative_to(REPO)
+        if path.suffix != ".py" or not str(relative).startswith(IMPORT_FREE_ROOTS):
+            continue
+        source = read_text(path)
+        if source is None:
+            continue
+        found, error = imported_names(source, relative)
+        if error:
+            problems.append(error)
+            continue
+        for lineno, module in found:
+            top = module.split(".")[0]
+            if top in stdlib or top in ALLOWED_FIRST_PARTY:
+                continue
+            problems.append(
+                f"{relative}:{lineno}: imports {top!r}, which is neither the standard library "
+                f"nor first-party; the shared layers must stay runnable with nothing but an "
+                f"interpreter (see AGENTS.md)"
+            )
+    return problems
+
+
 def selftest() -> list[str]:
     """Fail the gate if the checks have stopped being able to fail.
 
     Every case below is a verdict something else depends on: a full-width mark and an
     ideograph must be rejected (those are the mistakes that have actually happened here),
-    the tier marks and dashes must be accepted (the README and every doc use them), and the
-    secret patterns must fire on a credential while ignoring the word "token".
+    the tier marks and dashes must be accepted (the README and every doc use them), the
+    secret patterns must fire on a credential while ignoring the word "token", and the
+    import rule must reject a framework while allowing a lazy import of a third-party
+    library.
 
     The rejected characters are written as escapes on purpose: this file is scanned by its
     own character rule, so a checker that spelled them literally would fail the gate it
@@ -240,6 +315,27 @@ def selftest() -> list[str]:
                 f"{sample[:24]!r}"
             )
 
+    stdlib_guard = "torch" not in getattr(sys, "stdlib_module_names", ())
+    for source, expected_count, why in (
+        ("import os\nimport json\n", 0, "the standard library"),
+        ("import torch\n", 1 if stdlib_guard else 0, "a framework at module level"),
+        ("def f():\n    import torch\n", 1 if stdlib_guard else 0, "a framework inside a function"),
+        ('"""import torch"""\nimport os\n', 0, "the word import in a docstring"),
+        ("from . import sibling\n", 0, "a relative import"),
+    ):
+        found, error = imported_names(source, Path("selftest.py"))
+        if error:
+            failures.append(f"selftest: parsing failed for {why} ({error})")
+            continue
+        offending = [name for _, name in found
+                     if name.split(".")[0] not in set(sys.stdlib_module_names)
+                     and name.split(".")[0] not in ALLOWED_FIRST_PARTY]
+        if len(offending) != expected_count:
+            failures.append(
+                f"selftest: the import rule found {len(offending)} problem(s) in {why}, "
+                f"expected {expected_count}"
+            )
+
     return failures
 
 
@@ -248,6 +344,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--chars", action="store_true", help="only the character check")
     parser.add_argument("--payloads", action="store_true", help="only the payload check")
     parser.add_argument("--secrets", action="store_true", help="only the secret check")
+    parser.add_argument("--imports", action="store_true", help="only the import check")
     parser.add_argument("--selftest", action="store_true",
                         help="check that the checks can still fail")
     args = parser.parse_args(argv)
@@ -262,7 +359,7 @@ def main(argv: list[str] | None = None) -> int:
         print("[PASS] selftest: the checks still reject what they must reject")
         return 0
 
-    selected = args.chars or args.payloads or args.secrets
+    selected = args.chars or args.payloads or args.secrets or args.imports
     checks: list[tuple[str, list[str]]] = []
     if not selected or args.chars:
         checks.append(("characters", check_chars()))
@@ -270,6 +367,8 @@ def main(argv: list[str] | None = None) -> int:
         checks.append(("payloads", check_payloads()))
     if not selected or args.secrets:
         checks.append(("secrets", check_secrets()))
+    if not selected or args.imports:
+        checks.append(("imports", check_imports()))
 
     failed = False
     for name, problems in checks:

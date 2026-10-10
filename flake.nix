@@ -18,6 +18,12 @@
         "x86_64-linux"
       ];
       forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f (import nixpkgs { inherit system; }));
+
+      # The two libraries datasets/pull.py needs, pinned here rather than installed by pip:
+      # what a pull records should not depend on when somebody last ran an installer. They
+      # are imported inside the functions that use them, so nothing else can come to depend
+      # on them by accident - and the gate below runs without huggingface_hub at all.
+      pullerPython = pkgs: pkgs.python3.withPackages (ps: [ ps.huggingface-hub ps.pyyaml ]);
     in
     {
       formatter = forAllSystems (pkgs: pkgs.nixfmt-rfc-style);
@@ -25,10 +31,10 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           # Deliberately small. The contract layer's only dependency is the standard
-          # library, so the shell that runs its tests needs nothing but an interpreter -
-          # and a shell that cannot import torch cannot accidentally start depending on it.
+          # library, so the shell that runs its tests needs an interpreter and nothing that
+          # carries a GPU with it - and `scripts/check_repo.py --imports` keeps it that way.
           packages = [
-            pkgs.python3
+            (pullerPython pkgs)
             pkgs.git # the gate reads the git index; see AGENTS.md
             pkgs.coreutils # timeout, which macOS's own shell does not ship
             pkgs.ripgrep
@@ -37,10 +43,10 @@
           ];
 
           shellHook = ''
-            echo "agent-rl-projects dev shell — python $(python3 -V | sed 's/^Python //') ($(uname -m) $(uname -s))"
-            echo "  bash scripts/verify.sh          # the gate: tests, fixtures, characters/payloads/secrets"
-            echo "  nix build                       # the same gate in a sandbox, writing nothing into git"
-            echo "  bash datasets/gsm8k.pull.sh     # needs the hf CLI; see datasets/README.md"
+            echo "agent-rl-projects dev shell — python $(python3 -V | sed 's/^Python //') with huggingface-hub ($(uname -m) $(uname -s))"
+            echo "  bash scripts/verify.sh           # the gate: tests, fixtures, characters/payloads/secrets"
+            echo "  nix build                        # the same gate in a sandbox, writing nothing into git"
+            echo "  python3 datasets/pull.py --list  # datasets, and what a pull would record"
           '';
         };
       });
@@ -48,13 +54,17 @@
       # The gate as a build: `nix build` fails when any check fails, and it cannot see the
       # network. The run record goes to $TMPDIR because the store is read-only - the same
       # constraint a CI job has, which is why the check script takes ARL_RUNS_DIR.
+      #
+      # Note what is *not* here: huggingface_hub. The gate is offline by construction, so the
+      # pull tool's network library has no business in it - pyyaml is present only so the
+      # manifest's own contract tests can run.
       packages = forAllSystems (pkgs: {
         default = pkgs.stdenvNoCC.mkDerivation {
           pname = "agent-rl-projects-gate";
           version = "unstable";
           src = ./.;
           nativeBuildInputs = [
-            pkgs.python3
+            (pkgs.python3.withPackages (ps: [ ps.pyyaml ]))
             pkgs.git
             pkgs.coreutils
           ];

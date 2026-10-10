@@ -13,7 +13,11 @@ own book teaches the wrong thing.
 2. **The contract layer stays dependency-free.** `common/` may import only the standard library.
    It must never import torch, transformers, trl, verl, vllm or anything with a GPU in it. The
    whole point is that six projects share one definition of a rollout; a shared definition that
-   drags a framework in cannot be shared.
+   drags a framework in cannot be shared. Enforced by `scripts/check_repo.py --imports`, which
+   parses rather than greps, over `common/`, `p1-verifiers/src/`, `datasets/` and `scripts/` -
+   the projects under `p2..p6` are out of scope precisely because they are *meant* to import
+   frameworks. When a tool needs a third-party library, `datasets/pull.py` shows the shape to
+   copy: import it inside the function that uses it, and document how to get it.
 3. **No dataset payloads in git.** No parquet, csv, jsonl, arrow and no downloaded weights.
    `datasets/` holds pull scripts, the manifest, licence notes, row counts - and
    `datasets/digests/`, which *is* committed: a digest is provenance, and it is what a run
@@ -72,9 +76,13 @@ These are the graders. A project that fails one of them fails it loudly, naming 
 
 ## Workflow
 
-- `bash scripts/verify.sh` before every commit: the two test suites, the P1 fixture run, then
-  `scripts/check_repo.py` (characters, payloads, secrets). Exit status is non-zero on any failure,
-  so it is a CI step unchanged.
+- `bash scripts/verify.sh` before every commit: three test suites (common, P1, datasets), the
+  P1 fixture run, then `scripts/check_repo.py` (characters, payloads, secrets, imports). Exit
+  status is non-zero on any failure, so it is a CI step unchanged.
+- Dataset pulls go through `datasets/pull.py` inside the dev shell, never through a
+  per-dataset script: the manifest already knows the licence and the patterns, and a second
+  copy of that knowledge in shell is a second place to be wrong. The gate needs neither the
+  network nor that library.
 - One concern per commit, English imperative subject.
 - New project directory = README first (the nine-item template from the book's appendix), then
   fixtures, then code. Fixtures before code is not a style preference: it is how the reader can
@@ -93,6 +101,11 @@ These are the graders. A project that fails one of them fails it loudly, naming 
 - A pull script that hashes everything under its output directory will hash the CLI's own
   `.cache/` bookkeeping too, and a digest that changes when a client updates is not a pin. Skip
   any path whose components start with a dot.
+- `snapshot_download` adds to a directory rather than replacing it, so a second pull with
+  narrower `allow_patterns` leaves the first pull's files in place - and a digest that hashes
+  what is on disk would then claim a filtered pull while describing an unfiltered one.
+  `digest_tree` attests the patterns against the tree and refuses; `--clean` is opt-in and says
+  what it removed. This one was found by running it, not by reading it.
 - `timeout` is not in macOS's own shell (coreutils spells it `gtimeout` there), but the dev
   shell provides an unprefixed one from the pinned coreutils, and the reference machine has
   it as standard. A script that has to run outside the dev shell on macOS must not depend

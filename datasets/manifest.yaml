@@ -4,17 +4,29 @@
 # 2026-10-09 and are `reported`, not `measured`: nothing here has been trained on yet.
 # Re-check before publishing anything derived from a dataset whose licence says
 # "unstated" - no licence is not the same as a permissive licence.
+#
+# This file is executable documentation. `name` and `allow_patterns` are read by
+# datasets/pull.py; the rest is for a reader. Pull one with:
+#
+#   python3 datasets/pull.py --list
+#   python3 datasets/pull.py gsm8k
+#
+# Without a `name`, the last path segment is used; without `allow_patterns`, everything is
+# fetched - and the digest records which of the two happened, so a filtered pull can never
+# be mistaken for a complete one.
 checked: "2026-10-09"
 
 datasets:
   - id: openai/gsm8k
+    name: gsm8k
     licence: MIT
     rows: {train: 7473, test: 1319}
     used_by: [p1-verifiers, p3-verl]
     why: grade-school arithmetic with one agreed answer - the cheapest fully verifiable signal
-    payload: datasets/gsm8k.pull.sh
+    allow_patterns: ["README.md", "eval.yaml", "main/*"]  # skip the socratic split for now
 
   - id: HuggingFaceH4/MATH-500
+    name: math500
     licence: unstated
     rows: {test: 500}
     used_by: [p1-verifiers, p3-verl]
@@ -22,6 +34,7 @@ datasets:
     caution: the card declares no licence; record your decision before publishing a derivative
 
   - id: WildEval/ZebraLogic
+    name: zebralogic
     licence: unstated
     rows: {configs: ["1000", "3259"]}
     used_by: [p1-verifiers]
@@ -30,12 +43,15 @@ datasets:
       pass rate sits in the useful band (not all zero, not all one)
 
   - id: google-research-datasets/mbpp
+    name: mbpp
     licence: CC-BY-4.0
     rows: {train: 374, test: 500, validation: 90, prompt: 10}
     used_by: [p1-verifiers]
     why: small code problems that need a sandbox rather than a string comparison
+    caution: the `prompt` config is not a task set - it is 10 examples of how to ask
 
   - id: xlangai/DS-1000
+    name: ds1000
     licence: CC-BY-SA-4.0
     rows: {test: 1000}
     used_by: [p4-deepanalyze]
@@ -43,17 +59,20 @@ datasets:
     caution: share-alike; never copy rows into a fixture or a committed file
 
   - id: stanfordnlp/wikitablequestions
+    name: wikitablequestions
     licence: CC-BY-4.0
     rows: {note: "the size API needs a config parameter; not fetched"}
     used_by: [p4-deepanalyze]
 
   - id: wenhu/tab_fact
+    name: tab_fact
     licence: CC-BY-4.0
     rows: {note: "the size API needs a config parameter; not fetched"}
     used_by: [p4-deepanalyze]
     why: table entailment - verifiable without a judge
 
   - id: hotpotqa/hotpot_qa
+    name: hotpotqa
     licence: CC-BY-SA-4.0
     rows: {train: 90447, validation: 7405}
     used_by: [p2-reagent]
@@ -62,19 +81,23 @@ datasets:
       use a few hundred rows
 
   - id: DigitalLearningGmbH/MATH-lighteval
+    name: math-lighteval
     licence: MIT
     rows: {configs: ["7500/5000", "1744/1187"]}
     used_by: [p1-verifiers, p3-verl]
     note: the canonical replacement for hendrycks/competition_math, which now returns 401
 
   - id: open-r1/OpenR1-Math-220k
+    name: openr1-math
     licence: Apache-2.0
     rows: {configs: ["93733", "225129", "131396"]}
     used_by: [p1-verifiers, p3-verl]
     note: the fallback pool when 500 problems are not enough; sample it, do not take it
 
 environments:
-  # Not datasets: Python packages plus a task list, installed and driven by code.
+  # Not datasets: Python packages plus a task list, installed and driven by code. No pull
+  # applies to these - their "row count" is a moving target and their tasks are generated
+  # at run time.
   - name: ALFWorld
     source: pip + GitHub (no canonical Hugging Face repository)
     used_by: [p2-reagent, p5-openclaw-rl, p6-memento-skills]
