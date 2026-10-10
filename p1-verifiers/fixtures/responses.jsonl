@@ -1,0 +1,20 @@
+{"prompt_id": "t01", "response": "17 * 23 = 391\n\n391"}
+{"prompt_id": "t01", "response": "17 * 23 = 400\n\n400"}
+{"prompt_id": "t02", "response": "144 / 12 = 12\n\n12"}
+{"prompt_id": "t02", "response": "Dividing 144 by 12 gives 12.\n\n12"}
+{"prompt_id": "t03", "response": "2.5 hours is 2 hours and 30 minutes, so 150 minutes.\n\n150"}
+{"prompt_id": "t03", "response": "2.5 hours is 150 minutes.\n\n150 minutes"}
+{"prompt_id": "t04", "response": "2, 3, 5, 7, 11, 13, 17 - so the 7th is 17.\n\n17"}
+{"prompt_id": "t04", "response": "The primes are 2, 3, 5, 7, 11, 13, 17.\n\n17"}
+{"prompt_id": "t05", "response": "60 km/h for 3 hours is 180 km.\n\n180"}
+{"prompt_id": "t05", "response": "60 times 3 is 180 km.\n\n180 km"}
+{"prompt_id": "t06", "response": "2^10 = 1024.\n\n1024"}
+{"prompt_id": "t06", "response": "2 to the tenth power is 1024.\n\n1024.0"}
+{"prompt_id": "t07", "response": "The sum is 20 * 21 / 2 = 210.\n\n210"}
+{"prompt_id": "t07", "response": "Adding 1 through 20 gives 210.\n\n210"}
+{"prompt_id": "t08", "response": "Subtract 7 from both sides: x = 12.\n\n12"}
+{"prompt_id": "t08", "response": "x + 7 = 19, so x = 12.\n\nx = 12"}
+{"prompt_id": "t09", "response": "15% of 240 is 0.15 * 240 = 36.\n\n36"}
+{"prompt_id": "t09", "response": "15% of 240 is 36.\n\n36 percent"}
+{"prompt_id": "t10", "response": "A pentagon splits into three triangles, so 3 * 180 = 540.\n\n540"}
+{"prompt_id": "t10", "response": "Interior angles of a pentagon sum to 540 degrees.\n\n540"}

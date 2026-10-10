@@ -1,0 +1,43 @@
+# P1 on the reference machine. This config must run as written; anything that cannot
+# belongs in a `rented-*.yaml` file instead.
+#
+# Reference machine: a DGX Spark (GB10, aarch64 + sm_121, 128 GB unified memory,
+# ~273 GB/s). The two fields left empty at the bottom are the point of the exercise:
+# measure them once, then plan with your numbers instead of anybody's estimates.
+
+project: p1-verifiers
+tier: spark
+book_chapter: 5
+
+model:
+  id: Qwen/Qwen3-0.6B
+  dtype: bfloat16
+  attention: sdpa              # flash_attention_2 has no sm_121 wheel; do not reach for it
+  trust_remote_code: false
+
+serving:
+  backend: vllm                # GB10 community image; fall back to sglang, then to HF generate
+  port: 8000
+  max_model_len: 8192
+  gpu_memory_utilization: 0.45 # leave the unified pool to the OS and to any training process
+  max_num_seqs: 8
+  smoke_test: /v1/models       # import success is not a check; a real short generation is
+
+sampling:
+  task_set: p1-verifiers/fixtures/tasks.jsonl
+  prompts: 10
+  samples_per_prompt: 2
+  temperature: 0.7
+  top_p: 0.95
+  max_tokens: 512
+
+budget:
+  decode_tokens_per_round: 10240     # 10 prompts x 2 samples x <=512 tokens: arithmetic
+  measured_tokens_per_second: null   # YOUR NUMBER (arithmetic above is not a measurement)
+  estimated_seconds_per_round: null  # derive from the measurement, not from a guess
+
+verifiers:
+  exact_match: implemented
+  numeric: your turn
+  unit_test: your turn
+  logic_puzzle: your turn

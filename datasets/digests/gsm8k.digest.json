@@ -1,0 +1,32 @@
+{
+  "dataset": "openai/gsm8k",
+  "files": {
+    "README.md": {
+      "bytes": 7935,
+      "sha256": "a17e882503578c9e"
+    },
+    "eval.yaml": {
+      "bytes": 920,
+      "sha256": "a115b103292f0d24"
+    },
+    "main/test-00000-of-00001.parquet": {
+      "bytes": 419088,
+      "sha256": "ee7b8da9e381df27"
+    },
+    "main/train-00000-of-00001.parquet": {
+      "bytes": 2306545,
+      "sha256": "ea82612ea9582142"
+    },
+    "socratic/test-00000-of-00001.parquet": {
+      "bytes": 486995,
+      "sha256": "477dba7028204b46"
+    },
+    "socratic/train-00000-of-00001.parquet": {
+      "bytes": 2677259,
+      "sha256": "54eb5fd2105a9126"
+    }
+  },
+  "licence": "MIT (per the dataset card, checked 2026-10-09)",
+  "revision": "740312add88f781978c0658806c59bc2815b9866",
+  "total_bytes": 5898742
+}

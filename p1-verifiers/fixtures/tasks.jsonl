@@ -1,0 +1,11 @@
+{"id": "t01", "prompt": "What is 17 * 23?", "verifier": "exact_match", "answer": "391"}
+{"id": "t02", "prompt": "What is 144 / 12?", "verifier": "exact_match", "answer": "12"}
+{"id": "t03", "prompt": "How many minutes are there in 2.5 hours?", "verifier": "exact_match", "answer": "150"}
+{"id": "t04", "prompt": "What is the 7th prime number?", "verifier": "exact_match", "answer": "17"}
+{"id": "t05", "prompt": "A train travels at 60 km/h for 3 hours. How far does it go?", "verifier": "exact_match", "answer": "180"}
+{"id": "t06", "prompt": "What is 2^10?", "verifier": "exact_match", "answer": "1024"}
+{"id": "t07", "prompt": "What is the sum of the integers from 1 to 20?", "verifier": "exact_match", "answer": "210"}
+{"id": "t08", "prompt": "If x + 7 = 19, what is x?", "verifier": "exact_match", "answer": "12"}
+{"id": "t09", "prompt": "What is 15% of 240?", "verifier": "exact_match", "answer": "36"}
+{"id": "t10", "prompt": "What is the sum of the interior angles of a pentagon, in degrees?", "verifier": "exact_match", "answer": "540"}
+{"id": "t11", "prompt": "What is pi to two decimal places?", "verifier": "numeric", "answer": "3.14", "tolerance": 0.01}

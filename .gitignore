@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local runs and data (the row format is tracked, the rows are not)
+runs/
+local/
+*.log
+
+# Dataset payloads: never committed. See datasets/README.md.
+datasets/payloads/
+datasets/**/*.parquet
+datasets/**/*.arrow
+datasets/**/*.csv
+datasets/**/*.jsonl
+datasets/**/*.json
+datasets/**/*.gz
+datasets/**/*.zip
+models/
+
+# Tooling
+.direnv/
+result
+.DS_Store
+
+# Provenance digests are committed; the payloads they describe are not.
+!datasets/digests/
+!datasets/digests/**

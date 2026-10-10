@@ -1,0 +1,50 @@
+# READ, DO NOT RUN HERE.
+#
+# This is the same project at a scale the reference machine cannot hold. Its purpose is
+# to make the difference visible: what changes when the model grows, and what does not.
+# Rent an 80 GB GPU for a few hours if you want to see this one run; the book's compute
+# appendix says which projects that is worth doing for and which it is not.
+#
+# The differences from spark-0.6b.yaml, in one list:
+#   model            0.6B -> 8B            (about 15x the weights, not 15x the tokens)
+#   serving          one instance, more sequences in flight
+#   budget           measured in hours, not minutes; plan it before you start it
+# What does NOT change: attention is still sdpa, the policy is still unquantised, and the
+# loss mask is still the same contract. A bigger machine is not a different experiment.
+
+project: p1-verifiers
+tier: rented
+book_chapter: 5
+
+model:
+  id: Qwen/Qwen3-8B
+  dtype: bfloat16
+  attention: sdpa
+  trust_remote_code: false
+
+serving:
+  backend: vllm
+  port: 8000
+  max_model_len: 16384
+  gpu_memory_utilization: 0.85
+  max_num_seqs: 32
+  smoke_test: /v1/models
+
+sampling:
+  task_set: p1-verifiers/fixtures/tasks.jsonl
+  prompts: 200               # more prompts, because more samples per prompt is what a big
+  samples_per_prompt: 8      # model is for; these two numbers multiply the whole budget
+  temperature: 0.7
+  top_p: 0.95
+  max_tokens: 1024
+
+budget:
+  decode_tokens_per_round: 1638400   # 200 x 8 x <=1024: arithmetic, and it is why you measure first
+  measured_tokens_per_second: null
+  estimated_seconds_per_round: null
+
+verifiers:
+  exact_match: implemented
+  numeric: your turn
+  unit_test: your turn
+  logic_puzzle: your turn

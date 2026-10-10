@@ -1,0 +1,105 @@
+# Datasets for the companion projects.
+#
+# Counts and licences were read from the Hugging Face API and datasets-server on
+# 2026-10-09 and are `reported`, not `measured`: nothing here has been trained on yet.
+# Re-check before publishing anything derived from a dataset whose licence says
+# "unstated" - no licence is not the same as a permissive licence.
+checked: "2026-10-09"
+
+datasets:
+  - id: openai/gsm8k
+    licence: MIT
+    rows: {train: 7473, test: 1319}
+    used_by: [p1-verifiers, p3-verl]
+    why: grade-school arithmetic with one agreed answer - the cheapest fully verifiable signal
+    payload: datasets/gsm8k.pull.sh
+
+  - id: HuggingFaceH4/MATH-500
+    licence: unstated
+    rows: {test: 500}
+    used_by: [p1-verifiers, p3-verl]
+    why: 500 competition problems, hard enough that pass@k is interesting
+    caution: the card declares no licence; record your decision before publishing a derivative
+
+  - id: WildEval/ZebraLogic
+    licence: unstated
+    rows: {configs: ["1000", "3259"]}
+    used_by: [p1-verifiers]
+    why: a constraint puzzle with a programmatically checkable solution and a natural difficulty ladder
+    caution: the card declares no licence; also the most likely source of a task set whose
+      pass rate sits in the useful band (not all zero, not all one)
+
+  - id: google-research-datasets/mbpp
+    licence: CC-BY-4.0
+    rows: {train: 374, test: 500, validation: 90, prompt: 10}
+    used_by: [p1-verifiers]
+    why: small code problems that need a sandbox rather than a string comparison
+
+  - id: xlangai/DS-1000
+    licence: CC-BY-SA-4.0
+    rows: {test: 1000}
+    used_by: [p4-deepanalyze]
+    why: data-science code completions - the task shape P4 is built around
+    caution: share-alike; never copy rows into a fixture or a committed file
+
+  - id: stanfordnlp/wikitablequestions
+    licence: CC-BY-4.0
+    rows: {note: "the size API needs a config parameter; not fetched"}
+    used_by: [p4-deepanalyze]
+
+  - id: wenhu/tab_fact
+    licence: CC-BY-4.0
+    rows: {note: "the size API needs a config parameter; not fetched"}
+    used_by: [p4-deepanalyze]
+    why: table entailment - verifiable without a judge
+
+  - id: hotpotqa/hotpot_qa
+    licence: CC-BY-SA-4.0
+    rows: {train: 90447, validation: 7405}
+    used_by: [p2-reagent]
+    why: multi-hop questions whose intermediate steps are the point
+    caution: share-alike, and the full set is far too large for the reference machine -
+      use a few hundred rows
+
+  - id: DigitalLearningGmbH/MATH-lighteval
+    licence: MIT
+    rows: {configs: ["7500/5000", "1744/1187"]}
+    used_by: [p1-verifiers, p3-verl]
+    note: the canonical replacement for hendrycks/competition_math, which now returns 401
+
+  - id: open-r1/OpenR1-Math-220k
+    licence: Apache-2.0
+    rows: {configs: ["93733", "225129", "131396"]}
+    used_by: [p1-verifiers, p3-verl]
+    note: the fallback pool when 500 problems are not enough; sample it, do not take it
+
+environments:
+  # Not datasets: Python packages plus a task list, installed and driven by code.
+  - name: ALFWorld
+    source: pip + GitHub (no canonical Hugging Face repository)
+    used_by: [p2-reagent, p5-openclaw-rl, p6-memento-skills]
+    why: a text world that resets quickly, runs on CPU, and repeats its layouts -
+      which is what makes a skill library worth building in P6
+
+  - name: TextWorld
+    source: pip + GitHub
+    used_by: [p5-openclaw-rl]
+    why: generated tasks with known difficulty; useful when ALFWorld's task list runs out
+
+  - name: tau-bench
+    source: GitHub
+    used_by: [p2-reagent]
+    why: task-level pass/fail with a complete tool trace, so a failed turn is visible
+
+  - name: Berkeley function-calling leaderboard
+    source: GitHub
+    used_by: [p2-reagent]
+    why: multi-turn function calling with per-call checks
+
+derived:
+  # Task sets this project builds rather than downloads. These are the ones that belong
+  # in fixtures, because nothing upstream owns them.
+  - id: p6-recurring-families
+    description: "10 task families x 20 instances, generated; the recurrence is the point"
+    used_by: [p6-memento-skills]
+    licence: MIT (generated here)
