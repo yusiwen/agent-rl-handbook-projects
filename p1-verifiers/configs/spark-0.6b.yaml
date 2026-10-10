@@ -10,18 +10,22 @@ tier: spark
 book_chapter: 5
 
 model:
-  id: Qwen/Qwen3-0.6B
-  dtype: bfloat16
+  id: qwen3-8b-nvfp4           # the name the server answers to, not the Hugging Face id: it is
+                               # what `--served-model-name` sets in env/docker-compose.yaml, and
+                               # what a client must send. P1 preflights it against /v1/models.
+  weights: nvidia/Qwen3-8B-NVFP4   # what the container loads
+  dtype: auto                  # NVFP4 is detected from the checkpoint; do not pin bfloat16
   attention: sdpa              # flash_attention_2 has no sm_121 wheel; do not reach for it
-  trust_remote_code: false
+  trust_remote_code: true      # the NVFP4 checkpoint ships custom code
 
 serving:
-  backend: vllm                # GB10 community image; fall back to sglang, then to HF generate
+  compose: env/docker-compose.yaml   # the server this config describes; start it from there
+  backend: vllm                # the pinned image in that compose; sglang is the MoE alternative
   port: 8000
   max_model_len: 8192
-  gpu_memory_utilization: 0.45 # leave the unified pool to the OS and to any training process
+  gpu_memory_utilization: 0.80 # must match the compose: the pool is unified with the OS
   max_num_seqs: 8
-  smoke_test: /v1/models       # import success is not a check; a real short generation is
+  smoke_test: /v1/models and /tokenize   # the two endpoints P1 cannot work without
 
 sampling:
   task_set: p1-verifiers/fixtures/tasks.jsonl

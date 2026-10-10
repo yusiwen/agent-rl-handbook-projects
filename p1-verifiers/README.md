@@ -73,22 +73,26 @@ than quietly changing what the run demonstrates.
 
 `src/p1_verifiers/verifiers.py` explains each in the docstring of its stub.
 
-## Configs
+## Configs and the environment
 
-`configs/spark-0.6b.yaml` is the config that must run on the reference machine (a DGX
-Spark). `configs/rented-8b.yaml` is for a rented GPU and is marked `read, do not run
-here`. The difference between the two is the compute tier from the book's appendix.
+`configs/spark-0.6b.yaml` is the config that must run on the reference machine (a DGX Spark).
+`configs/rented-8b.yaml` is for a rented GPU and is marked `read, do not run here`. The
+difference between the two is the compute tier from the book's appendix.
+
+`env/` is the server those configs describe: a pinned `docker-compose.yaml` that starts one
+vLLM model, plus the four traps that cost a restart on this machine. Read `env/README.md`
+before the first start - in particular, `nvidia/Qwen3-8B-NVFP4` is a base checkpoint, and the
+compose's defaults are the ones this project was measured against.
 
 ## What is not here yet
 
 - The real task set: `fixtures/` is 11 tasks, enough to prove the pipeline. Pull the real
   datasets with `../datasets/` (see its README) once you have measured your own
   throughput - the budget in `configs/` has a field waiting for that number.
-- **A served model to point at.** The code is ready (`remote.py`: a chat responder and a
-  `/tokenize` counter over HTTP, standard library only) and the live runner is wired to it,
-  but nothing starts a server for you. What a real run needs is one command on the reference
-  machine - and the model name exactly as that server spells it, which is why the runner asks
-  the server first.
+- **Someone to start the server.** `env/docker-compose.yaml` is ready and pinned, and the code is
+  wired to it, but starting it is your call - and the machine has to be on. Two commands:
+  `docker compose up -d` in `env/`, then the runner, which preflights the model name against
+  `/v1/models` and the tokeniser against `/tokenize` before it spends anything.
 - The three verifiers you owe. Until they exist, a real run's coverage is `exact_match`'s 10
   of 11 tasks, and the runner will say so before it spends a token.
 - A second sampling round. One round gives you rows and an advantage spread; the round-stability

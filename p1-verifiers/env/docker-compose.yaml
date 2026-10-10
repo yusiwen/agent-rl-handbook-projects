@@ -1,0 +1,74 @@
+# P1's environment: one served model, on the reference machine (a DGX Spark).
+#
+#   cd p1-verifiers/env
+#   docker compose up -d
+#   # then poll until it answers - see README.md, "Is it up?"
+#
+# Every value can be overridden from the environment or from an ignored .env file, so
+# switching model or image is one variable instead of an edit. The names are listed in
+# .env.example.
+#
+# Four things below are the way they are because the other way cost a restart on this machine:
+#
+# 1. `command` does not begin with `vllm serve`. The image's ENTRYPOINT is already
+#    ["vllm","serve"] - `docker image inspect vllm/vllm-openai:v0.27.1` shows it - so repeating
+#    it fails with "unrecognized arguments: serve <model>".
+# 2. The Hugging Face cache is mounted by absolute path. A `~` in a compose file expands to
+#    /root when the command is run under sudo, which hands the container an empty cache and
+#    starts a download of weights that are already on the disk.
+# 3. `--served-model-name` is a fixed string, and clients must use exactly that string. A name
+#    differing by one hyphen is a 404 here and a context error on another server; both look
+#    like a model problem and neither is one.
+# 4. There is no healthcheck, deliberately. The image's interpreter name is not guaranteed, and
+#    a healthcheck that reports unhealthy while the service is fine is worse than no
+#    healthcheck - that one has already cost an afternoon. Poll /health from outside instead.
+
+services:
+  p1-model:
+    # The pinned stable image, already present on the reference machine. If a checkpoint needs
+    # newer NVFP4 kernels, fall back to the model-family image rather than to a nightly.
+    image: ${ARL_VLLM_IMAGE:-vllm/vllm-openai:v0.27.1}
+    container_name: p1-model
+
+    # The GB10's memory is unified: weights, KV cache, the OS and the page cache all come out of
+    # one 128 GB pool. One model at a time, and the reservation form below is the one that
+    # works here (it resolves through CDI; there is no nvidia runtime on this host).
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, compute, utility]
+
+    # vLLM uses shared memory for its worker queues; the default 64 MB is not it.
+    ipc: host
+
+    ports:
+      - "${ARL_PORT:-8000}:8000"
+
+    volumes:
+      - /home/yusiwen/.cache/huggingface:/root/.cache/huggingface
+      # Kernel compile cache. The first start pays for the compilation, every later start does
+      # not - which is the difference between a two-minute and an eight-minute startup.
+      - /home/yusiwen/.cache/vllm:/root/.cache/vllm
+
+    # NOTE: no `vllm serve` here - the entrypoint already is that (see comment 1 above).
+    # P1 sends one request at a time and its prompts are short, so the KV budget stays small:
+    # max-model-len is a per-request limit rather than a reservation, and 8192 is far more than
+    # this task set needs. Raise it only when something else will use this server too.
+    #
+    # --gpu-memory-utilization 0.80 rather than the vendor's 0.85: the failure mode when the
+    # unified pool runs out is earlyoom killing the scheduler, which costs a restart rather
+    # than a flag. Raise it when the machine is dedicated to this.
+    command: >
+      ${ARL_MODEL:-nvidia/Qwen3-8B-NVFP4}
+      --served-model-name ${ARL_SERVED_NAME:-qwen3-8b-nvfp4}
+      --max-model-len ${ARL_MAX_MODEL_LEN:-8192}
+      --max-num-seqs ${ARL_MAX_NUM_SEQS:-8}
+      --gpu-memory-utilization ${ARL_GPU_MEMORY_UTILIZATION:-0.80}
+      --trust-remote-code
+
+    # "no" on purpose: this machine is powered off daily, and a model that resurrects itself on
+    # boot is a surprise, not a convenience. Start it when you are about to use it.
+    restart: "no"

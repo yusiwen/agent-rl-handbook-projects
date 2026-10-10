@@ -4,10 +4,10 @@ Companion code for the handbook *Agent RL Explained: A Beginner's Handbook*
 (<https://yusiwen.cn/agent-rl-handbook/>). Six projects, one shared contract.
 
 **Status: field 1 is built.** The shared layer (`common/`) is implemented and tested; P1
-(verifier suite) runs end to end on fixtures, offline, and is graded by a check script that
-was negative-tested. P2-P6 are directories with a README each, written when their chapter is
-written. Nothing here has been trained yet, and nothing here claims a number it did not
-measure.
+(verifier suite) runs end to end on fixtures, offline, and against a served model over HTTP, and
+it is graded by a check script that was negative-tested. P2-P6 are directories with a README
+each, written when their chapter is written. Nothing here has been trained yet, and nothing here
+claims a number it did not measure.
 
 ## What runs today
 
@@ -114,7 +114,7 @@ The gate reads the git index, so run `git add` first if you want a brand-new fil
 ```
 flake.nix        the pinned toolchain; nix build = the same gate as a derivation
 common/          schema, mask, verifier protocol, fusion, run records, checks (+ 97 tests)
-p1-verifiers/    src/ fixtures/ checks/ configs/ tests/   (harness complete, three verifiers yours)
+p1-verifiers/    src/ fixtures/ checks/ configs/ env/ tests/   (harness + live path; three verifiers yours)
 p2..p6/          one README each, written with their chapter
 datasets/        pull scripts + manifest + digests (verified row counts and licences)
 scripts/         verify.sh (the gate), check_repo.py (characters, payloads, secrets, selftest)

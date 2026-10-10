@@ -26,6 +26,10 @@ models/
 result
 .DS_Store
 
+# Local environment overrides: may hold a token, so never committed. `.env.example` is the
+# committed template and is not matched by this pattern.
+.env
+
 # Provenance digests are committed; the payloads they describe are not.
 !datasets/digests/
 !datasets/digests/**
