@@ -18,3 +18,5 @@
 {"prompt_id": "t09", "response": "15% of 240 is 36.\n\n36 percent"}
 {"prompt_id": "t10", "response": "A pentagon splits into three triangles, so 3 * 180 = 540.\n\n540"}
 {"prompt_id": "t10", "response": "Interior angles of a pentagon sum to 540 degrees.\n\n540"}
+{"prompt_id": "t11", "response": "Pi is 3.14159..., so to two decimal places it is 3.14.\n\n3.14"}
+{"prompt_id": "t11", "response": "Pi rounds to 3.1 when you keep two digits.\n\n3.1"}

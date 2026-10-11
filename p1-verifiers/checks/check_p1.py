@@ -63,10 +63,10 @@ RESPONSES = FIXTURES / "responses.jsonl"
 #: What the fixture is built to produce.  Editing the fixture without editing these
 #: numbers fails the check on purpose: a fixture whose contract is not stated drifts.
 EXPECTED_TASKS = 11
-EXPECTED_COVERED = 10
+EXPECTED_COVERED = 11
 EXPECTED_SAMPLES_PER_TASK = 2
-EXPECTED_PASSED = 14
-EXPECTED_MIXED_GROUPS = 6
+EXPECTED_PASSED = 15
+EXPECTED_MIXED_GROUPS = 7
 
 
 def code_sha() -> str:

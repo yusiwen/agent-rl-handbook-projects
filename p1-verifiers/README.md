@@ -1,7 +1,7 @@
 # P1 - a verifier suite and its coverage report
 
-**Status: the offline harness and the live path are both complete; one verifier implemented,
-three are yours.**
+**Status: the offline harness and the live path are both complete; two verifiers implemented,
+two are yours.**
 Book chapter: Chapter 5 (reward engineering) and Chapter 7 (task sets).
 Compute tier: ✅ - runs on the reference machine as written.
 
@@ -10,7 +10,7 @@ Compute tier: ✅ - runs on the reference machine as written.
 Two things the book asks for and this project grades:
 
 1. **A verifier suite** that can score your task set: `src/p1_verifiers/verifiers.py`.
-   `ExactMatchVerifier` is done, as the worked example. `NumericVerifier`,
+   `ExactMatchVerifier` and `NumericVerifier` are done, as the worked examples.
    `UnitTestVerifier` and `LogicPuzzleVerifier` raise `NotImplementedError` with what to
    do; each also declines every task it is asked about, so the coverage report stays
    honest while they are unfinished.
@@ -27,7 +27,7 @@ python3 -m unittest discover -s p1-verifiers/tests -t p1-verifiers/tests
 
 # Against a served model (any OpenAI-compatible endpoint, e.g. vLLM on the reference machine):
 python3 p1-verifiers/checks/run_p1_live.py \
-    --base-url http://192.168.2.40:8000 --model qwen3-8b --samples 2
+    --base-url http://192.168.2.40:8000 --model qwen3-1.7b --no-thinking --samples 2
 ```
 
 The fixture run is deliberately offline. If it fails, the problem is here rather than in
@@ -45,8 +45,8 @@ record is still written, because a record of a rejected run is evidence.
 ## What the run does
 
 ```
-fixtures/tasks.jsonl      11 tasks: 10 exact-match, 1 numeric (not yet scoreable)
-fixtures/responses.jsonl  2 attempts per exact-match task, from a fixture responder
+fixtures/tasks.jsonl      11 tasks: 10 exact-match, 1 numeric
+fixtures/responses.jsonl  2 attempts per task, from a fixture responder
       |
       v
   responder -> verifier -> reward terms -> rollout row -> run record
@@ -55,23 +55,25 @@ fixtures/responses.jsonl  2 attempts per exact-match task, from a fixture respon
 runs/<run-id>/{header.json, rounds.jsonl, round-000.jsonl}
 ```
 
-The fixture is built, not found: 6 of its 10 groups contain two attempts that disagree
-(60% mixed). A task set where every attempt scores the same produces a zero advantage in
+The fixture is built, not found: 7 of its 11 groups contain two attempts that disagree
+(64% mixed). A task set where every attempt scores the same produces a zero advantage in
 every group, and a training run on it will look alive while learning nothing. The check
 script asserts these numbers, so an accidental edit to the fixtures fails loudly rather
 than quietly changing what the run demonstrates.
 
 `runs/` is gitignored: the row *format* is versioned, the rows are not.
 
-## The three verifiers you owe
+## The verifiers
 
-| Verifier | Use it when | The trap |
-|---|---|---|
-| `numeric` | the answer is a number and a tolerance is acceptable (`1024` vs `1024.0`) | parsing "the last number in the text" silently accepts `150 minutes` for `150` |
-| `unit_test` | the task ships tests that return 0 on success | a hung sandbox must count as a failure, not as an error; run it in a container with a timeout |
-| `logic_puzzle` | the answer is a structured assignment (a grid, a schedule) | a near miss and a wrong answer must not both collapse to zero, or you cannot tell them apart later |
+| Verifier | Status | Use it when | The trap |
+|---|---|---|---|
+| `exact_match` | implemented | the answer has one agreed surface form (a number, a short name, a date) | the same value in a different surface form fails: `1024.0` is not `1024` |
+| `numeric` | implemented | the answer is a number and a tolerance is acceptable (`1024` vs `1024.0`) | units are ignored, so `150 kilometres` scores the same as `150 minutes`; a task where the unit carries meaning wants `exact_match` |
+| `unit_test` | your turn | the task ships tests that return 0 on success | a hung sandbox must count as a failure, not as an error; run it in a container with a timeout |
+| `logic_puzzle` | your turn | the answer is a structured assignment (a grid, a schedule) | a near miss and a wrong answer must not both collapse to zero, or you cannot tell them apart later |
 
-`src/p1_verifiers/verifiers.py` explains each in the docstring of its stub.
+`src/p1_verifiers/verifiers.py` explains each in its docstring - including what it will not
+do, which is the part that decides whether you can trust the numbers it produces.
 
 ## Configs and the environment
 
@@ -92,8 +94,15 @@ compose's defaults are the ones this project was measured against.
 - **Someone to start the server.** `env/docker-compose.yaml` is ready and pinned, and the code is
   wired to it, but starting it is your call - and the machine has to be on. Two commands:
   `docker compose up -d` in `env/`, then the runner, which preflights the model name against
-  `/v1/models` and the tokeniser against `/tokenize` before it spends anything.
-- The three verifiers you owe. Until they exist, a real run's coverage is `exact_match`'s 10
-  of 11 tasks, and the runner will say so before it spends a token.
+  `/v1/models` and the tokeniser against `/tokenize` before it spends anything. The wiring has
+  been proven end to end (2026-10-10); what a live model then scores is the model's number, not
+  this fixture's.
+- The two verifiers you still owe (`unit_test`, `logic_puzzle`). Coverage on this fixture is
+  now 11/11, but a real task set will contain tasks that want those two, and the runner
+  reports that ceiling before it spends a token.
 - A second sampling round. One round gives you rows and an advantage spread; the round-stability
   check needs two rounds with the same sample ids, which is what `common/runs.py` records.
+- A model that produces a spread at this size. One live round on the reference machine
+  (1.7B, two samples per task) left every group flat - same reward both times - which is a
+  fact about the task set and the sampler, not about the verifier: `--samples 4` and a
+  harder set are the levers, and `check_advantage_spread` is the check that says so.

@@ -43,6 +43,6 @@ budget:
 
 verifiers:
   exact_match: implemented
-  numeric: your turn
+  numeric: implemented
   unit_test: your turn
   logic_puzzle: your turn

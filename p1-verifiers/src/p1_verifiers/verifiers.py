@@ -1,8 +1,8 @@
-"""P1's verifier suite: one implemented, three that are yours.
+"""P1's verifier suite: two implemented, two that are yours.
 
 The book's Chapter 5 deliverable is a verifier suite plus a coverage report.  This
-module gives you the shape and one worked example (``ExactMatchVerifier``); the other
-three are the exercise.  Each stub is honest about its state:
+module gives you the shape and two worked examples (``ExactMatchVerifier`` and
+``NumericVerifier``); the other two are the exercise.  Each stub is honest about its state:
 
 * ``can_verify`` returns ``False`` while the verifier is unimplemented, so the coverage
   report tells the truth instead of promising a check that does not exist.
@@ -26,6 +26,12 @@ from common.verifier import Outcome, VerifierRegistry
 #: in a different verifier, where its assumptions are visible.
 _WHITESPACE = re.compile(r"\s+")
 
+#: A number as it appears in prose: an optional sign, either a thousands-separated group
+#: (``1,000``) or a plain run of digits, an optional decimal part, and an optional exponent
+#: (``1e3``).  Spelled out rather than cutting a slice of text and hoping ``float`` takes it,
+#: because the job is "find the number" and the units around it are the task's business.
+_NUMBER = re.compile(r"[-+]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][-+]?\d+)?")
+
 
 def final_answer(response: str) -> str:
     """Extract the candidate answer from a response: the last non-empty line.
@@ -35,10 +41,10 @@ def final_answer(response: str) -> str:
     because a clever extractor is a new failure mode you cannot see in the reward curve.
     Two cases here show both directions of that:
 
-    * ``"... reasoning ...\\n\\n150 minutes"`` is extracted as ``150 minutes`` and fails an
+    * ``"... reasoning ...\\\\n\\\\n150 minutes"`` is extracted as ``150 minutes`` and fails an
       exact-match check against ``150``: correct arithmetic, wrong claim about what the
       answer *is*.
-    * ``"x + 7 = 19, so x = 12.\\n\\nx = 12"`` is extracted as ``x = 12`` and also fails:
+    * ``"x + 7 = 19, so x = 12.\\\\n\\\\nx = 12"`` is extracted as ``x = 12`` and also fails:
       this extractor does not understand equations, and pretending otherwise would need a
       symbolic parser this project has not written.
 
@@ -56,6 +62,45 @@ def normalise(text: str) -> str:
     """Case-insensitive, whitespace-insensitive, trailing-punctuation-insensitive."""
     folded = _WHITESPACE.sub(" ", text.strip().lower())
     return folded.rstrip(".").strip()
+
+
+def last_number(response: str) -> float | None:
+    """The last number in a response, or ``None`` when it contains none.
+
+    The *last* one, because the system prompt asks for the final answer on the last line
+    and a response that shows its work ends with the number that matters::
+
+        "Pi is 3.14159..., so to two decimal places it is 3.14."   ->   3.14
+
+    Units are deliberately ignored.  That is what lets ``150 minutes`` count as the answer
+    ``150`` - and it is also this helper's blind spot: ``150 kilometres`` scores the same
+    as ``150 minutes``.  A task where the unit carries meaning wants ``ExactMatchVerifier``,
+    which compares text and refuses both.
+
+    A date or a version string reads as its last numeric fragment (``2026-10-10`` -> ``-10``),
+    which is another reason those tasks belong to a different verifier.
+
+    Returns ``None`` rather than raising: a response with no number in it is a failed
+    attempt, not a defect in the harness, and the two must not look alike in a report.
+    """
+    matches = _NUMBER.findall(response)
+    if not matches:
+        return None
+    return float(matches[-1].replace(",", ""))
+
+
+def _as_number(value: Any, *, what: str) -> float:
+    """A float from a task field, or an error that names the field.
+
+    Loud rather than zero: a task whose ``answer`` field is not a number is a defect in the
+    task set, and a verifier that scores it ``0.0`` turns that defect into a training
+    signal.  ``common.verifier``'s rule for a missing verifier applies here too - an
+    unscored task and a failed task must not look identical.
+    """
+    try:
+        return float(str(value).replace(",", "").strip())
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{what} is not a number: {value!r}") from exc
 
 
 class ExactMatchVerifier:
@@ -90,24 +135,62 @@ class ExactMatchVerifier:
 
 
 class NumericVerifier:
-    """YOUR TURN.  Score numbers within a tolerance instead of by text.
+    """Scores a number within a tolerance.  Tasks carry ``answer`` plus ``tolerance``.
 
-    Tasks that want this verifier carry ``answer`` plus ``tolerance``.
+    The tolerance is what makes some tasks scoreable at all.  ``1024`` and ``1024.0`` are
+    the same answer to a mathematician and different strings to ``ExactMatchVerifier``; a
+    model that writes ``3.14159`` for "pi to two decimal places" is right, and a text
+    comparison would call it wrong.  So the question here is "is the last number in the
+    response close enough", and the answer is a pass or a fail rather than a graded score:
+    partial credit for wrong arithmetic is a reward you cannot explain later.
+
+    The comparison is ``abs(actual - expected) <= tolerance``.  One caveat belongs in the
+    open: both numbers are binary floats, so a value that *looks* exactly one tolerance away
+    can land on either side of it.  Measured, not assumed: ``abs(3.15 - 3.14)`` is
+    ``0.009999999999999787``, which is inside a tolerance of ``0.01``.  A tolerance written
+    to one significant figure is a statement about the answer, not about the last binary
+    digit - do not put a task's boundary on a knife edge and expect the tie to resolve your
+    way.
+
+    What it will not do: understand units, algebra or equations, or guess which of several
+    numbers in a response was meant.  It takes the last one.  When that is not good enough
+    for a task, the task needs a different verifier, not a cleverer regex.
     """
 
     name = "numeric"
 
     def can_verify(self, task: Mapping[str, Any]) -> bool:
-        # Honest while unimplemented: see the module docstring.  Flip this to
-        # ``return "tolerance" in task`` when verify() below works.
-        return False
+        """True when the task carries the fields this verifier needs.
+
+        Presence only.  A task whose ``answer`` is not a number is a task-set defect, and
+        ``verify`` reports it loudly rather than this predicate quietly shrinking coverage.
+        """
+        return "answer" in task and "tolerance" in task
 
     def verify(self, task: Mapping[str, Any], response: str) -> Outcome:
-        raise NotImplementedError(
-            "numeric verification is not implemented yet.  Parse the last number that "
-            "appears in the response, compare it with task['answer'] within "
-            "task['tolerance'], and return a score of 1.0 or 0.0.  When it works, make "
-            "can_verify() return True for tasks that carry a tolerance."
+        task_id = task.get("id", "<no id>")
+        expected = _as_number(task["answer"], what=f"task {task_id!r} answer")
+        tolerance = _as_number(task["tolerance"], what=f"task {task_id!r} tolerance")
+        if tolerance < 0:
+            raise ValueError(
+                f"task {task_id!r} has a negative tolerance ({tolerance!r}); a tolerance is a "
+                "distance, so write the value you mean"
+            )
+        actual = last_number(response)
+        if actual is None:
+            return Outcome(
+                passed=False,
+                score=0.0,
+                detail=(
+                    f"expected {expected:g} +/- {tolerance:g}, but the response contains no number"
+                ),
+            )
+        delta = abs(actual - expected)
+        matched = delta <= tolerance
+        return Outcome(
+            passed=matched,
+            score=1.0 if matched else 0.0,
+            detail=f"expected {expected:g} +/- {tolerance:g}, got {actual:g} (off by {delta:g})",
         )
 
 
@@ -167,4 +250,4 @@ def default_registry() -> VerifierRegistry:
 
 #: Names whose ``verify`` is expected to raise ``NotImplementedError``.  The check
 #: script asserts this, so a stub cannot silently become a zero-scoring verifier.
-UNIMPLEMENTED = ("numeric", "unit_test", "logic_puzzle")
+UNIMPLEMENTED = ("unit_test", "logic_puzzle")
