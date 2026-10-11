@@ -46,6 +46,7 @@ from common.verifier import MissingVerifier  # noqa: E402
 from p1_verifiers import (  # noqa: E402
     UNIMPLEMENTED,
     FixtureResponder,
+    LocalSandbox,
     Provenance,
     default_registry,
     load_tasks,
@@ -62,11 +63,11 @@ RESPONSES = FIXTURES / "responses.jsonl"
 
 #: What the fixture is built to produce.  Editing the fixture without editing these
 #: numbers fails the check on purpose: a fixture whose contract is not stated drifts.
-EXPECTED_TASKS = 11
-EXPECTED_COVERED = 11
+EXPECTED_TASKS = 12
+EXPECTED_COVERED = 12
 EXPECTED_SAMPLES_PER_TASK = 2
-EXPECTED_PASSED = 15
-EXPECTED_MIXED_GROUPS = 7
+EXPECTED_PASSED = 16
+EXPECTED_MIXED_GROUPS = 8
 
 
 def code_sha() -> str:
@@ -84,7 +85,14 @@ def main() -> int:
 
     tasks = load_tasks(TASKS)
     responder = FixtureResponder.from_jsonl(RESPONSES)
-    registry = default_registry()
+    # The unit-test verifier executes code, so its sandbox is a choice rather than a default.
+    # The registry hands out the container, because what it runs in a real run came from a
+    # model; this script passes a local one because the fixture's attempts are written in this
+    # repository and the offline gate must not need a container runtime.  Every row it produces
+    # says which sandbox produced it, and why.
+    registry = default_registry(
+        sandbox=LocalSandbox(why="the fixture's attempts are written in this repository")
+    )
 
     print(f"tasks: {len(tasks)} loaded from {TASKS.name}")
     if len(tasks) != EXPECTED_TASKS:

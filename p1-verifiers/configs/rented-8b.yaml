@@ -46,5 +46,5 @@ budget:
 verifiers:
   exact_match: implemented
   numeric: implemented
-  unit_test: your turn
+  unit_test: implemented
   logic_puzzle: your turn

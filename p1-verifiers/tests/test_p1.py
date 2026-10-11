@@ -10,6 +10,7 @@ the discovery root and this file puts the repository and ``p1-verifiers/src`` on
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -24,12 +25,20 @@ for path in (str(REPO), str(SRC)):
 from common.verifier import MissingVerifier  # noqa: E402
 
 from p1_verifiers import (  # noqa: E402
+    DEFAULT_ATTEMPT_FILE,
+    DEFAULT_TEST_TIMEOUT_S,
+    DockerSandbox,
     ExactMatchVerifier,
     FixtureResponder,
+    LocalSandbox,
     NumericVerifier,
     Provenance,
+    SandboxResult,
+    SandboxUnavailable,
     Task,
     TaskSetError,
+    UnitTestVerifier,
+    attempt_source,
     default_registry,
     load_tasks,
     normalise,
@@ -45,13 +54,17 @@ FIXTURES = REPO / "p1-verifiers" / "fixtures"
 
 
 def fixture_rows():
-    """The fixture run in one place: two attempts for every task the suite can score."""
+    """The fixture run in one place: two attempts for every task the suite can score.
+
+    The sandbox is local and says why: the fixture's attempts are written in this repository,
+    so the offline gate must not need a container runtime to score them.
+    """
     tasks = load_tasks(FIXTURES / "tasks.jsonl")
     covered, _ = partition_by_coverage(tasks, default_registry())
     return run_taskset(
         covered,
         FixtureResponder.from_jsonl(FIXTURES / "responses.jsonl"),
-        default_registry(),
+        default_registry(sandbox=LocalSandbox(why="the fixture's attempts are in this repository")),
         samples_per_task=2,
     )
 
@@ -206,6 +219,223 @@ class NumericVerifierTests(unittest.TestCase):
         self.assertEqual(self.verifier.verify(self.task(), "3.14").as_terms("rule"), {"rule": 1.0})
 
 
+class AttemptSourceTests(unittest.TestCase):
+    def test_a_plain_response_is_its_own_source(self) -> None:
+        self.assertEqual(attempt_source("def add(a, b):\n    return a + b"),
+                         "def add(a, b):\n    return a + b")
+
+    def test_a_fenced_response_loses_the_fence(self) -> None:
+        # The fence is presentation; writing it into the file would score the wrapper.
+        self.assertEqual(attempt_source("```python\ndef add(a, b):\n    return a + b\n```"),
+                         "def add(a, b):\n    return a + b")
+
+    def test_prose_around_the_fence_is_left_behind(self) -> None:
+        response = "Here it is:\n\n```python\ndef add(a, b):\n    return a + b\n```\nThat adds them."
+        self.assertEqual(attempt_source(response), "def add(a, b):\n    return a + b")
+
+    def test_the_last_block_wins(self) -> None:
+        response = "```\nfirst = 1\n```\nand then:\n```\nsecond = 2\n```"
+        self.assertEqual(attempt_source(response), "second = 2")
+
+    def test_an_empty_response_has_no_source(self) -> None:
+        self.assertEqual(attempt_source("   \n\n"), "")
+
+
+class FakeSandbox:
+    """A sandbox that answers from a script, so the verifier's branches are testable here."""
+
+    name = "fake sandbox"
+
+    def __init__(self, exit_code: int | None = 0, timed_out: bool = False,
+                 output: str = "", error: Exception | None = None) -> None:
+        self.exit_code = exit_code
+        self.timed_out = timed_out
+        self.output = output
+        self.error = error
+        self.seen: dict[str, object] = {}
+
+    def run(self, command: str, workdir: Path, timeout: float) -> SandboxResult:
+        attempt = workdir / "main.py"
+        self.seen = {
+            "command": command,
+            "workdir": workdir,
+            "timeout": timeout,
+            "attempt": attempt.read_text(encoding="utf-8") if attempt.exists() else None,
+            "entries": sorted(entry.name for entry in workdir.iterdir()),
+        }
+        if self.error is not None:
+            raise self.error
+        return SandboxResult(self.exit_code, self.timed_out, self.output, self.name)
+
+
+class UnitTestVerifierTests(unittest.TestCase):
+    TASK = {"id": "u", "tests": "python3 -m pytest -q"}
+
+    def verify(self, sandbox: FakeSandbox, response: str = "def add(a, b):\n    return a + b",
+               **fields: object):
+        task = {**self.TASK, **fields}
+        return UnitTestVerifier(sandbox).verify(task, response)
+
+    def test_a_passing_run_scores_one_and_names_the_sandbox(self) -> None:
+        outcome = self.verify(FakeSandbox(exit_code=0))
+        self.assertTrue(outcome.passed)
+        self.assertEqual(outcome.score, 1.0)
+        self.assertIn("fake sandbox", outcome.detail)
+        self.assertIn("tests passed", outcome.detail)
+
+    def test_the_attempt_is_written_where_the_tests_expect_it(self) -> None:
+        sandbox = FakeSandbox()
+        self.verify(sandbox, attempt_file="solution.py", response="x = 1")
+        self.assertEqual(sandbox.seen["entries"], ["solution.py"])
+
+    def test_the_default_attempt_file_is_used_when_the_task_names_none(self) -> None:
+        sandbox = FakeSandbox()
+        self.verify(sandbox, response="x = 1\n")
+        self.assertEqual(sandbox.seen["entries"], [DEFAULT_ATTEMPT_FILE])
+        self.assertEqual(sandbox.seen["attempt"], "x = 1\n")
+
+    def test_the_task_s_tests_command_is_what_runs(self) -> None:
+        sandbox = FakeSandbox()
+        self.verify(sandbox)
+        self.assertEqual(sandbox.seen["command"], self.TASK["tests"])
+
+    def test_the_timeout_is_the_task_s_or_the_default(self) -> None:
+        sandbox = FakeSandbox()
+        self.verify(sandbox)
+        self.assertEqual(sandbox.seen["timeout"], DEFAULT_TEST_TIMEOUT_S)
+        self.verify(sandbox, test_timeout=3)
+        self.assertEqual(sandbox.seen["timeout"], 3.0)
+
+    def test_a_failing_run_scores_zero_and_quotes_the_output(self) -> None:
+        sandbox = FakeSandbox(exit_code=1, output="line one\nAssertionError: 5 != -1\n")
+        outcome = self.verify(sandbox)
+        self.assertFalse(outcome.passed)
+        self.assertEqual(outcome.score, 0.0)
+        self.assertIn("exit status 1", outcome.detail)
+        self.assertIn("AssertionError: 5 != -1", outcome.detail)
+
+    def test_a_timeout_is_a_failure_that_says_timed_out(self) -> None:
+        # The book's rule: an environment that hangs must not look like a slow model.
+        outcome = self.verify(FakeSandbox(exit_code=None, timed_out=True))
+        self.assertFalse(outcome.passed)
+        self.assertEqual(outcome.score, 0.0)
+        self.assertIn("timed out", outcome.detail)
+        self.assertIn("failed attempt, not an error", outcome.detail)
+
+    def test_an_unavailable_sandbox_raises_rather_than_scoring_zero(self) -> None:
+        # 'This machine cannot run the tests' is not the model's fault, and a 0.0 would be.
+        sandbox = FakeSandbox(error=SandboxUnavailable("no container runtime here"))
+        with self.assertRaises(SandboxUnavailable):
+            self.verify(sandbox)
+
+    def test_an_empty_response_fails_without_starting_a_sandbox(self) -> None:
+        sandbox = FakeSandbox()
+        outcome = self.verify(sandbox, response="   \n")
+        self.assertFalse(outcome.passed)
+        self.assertEqual(outcome.score, 0.0)
+        self.assertIn("nothing to run the tests against", outcome.detail)
+        self.assertEqual(sandbox.seen, {})
+
+    def test_a_fenced_attempt_is_unwrapped_before_it_is_written(self) -> None:
+        sandbox = FakeSandbox()
+        self.verify(sandbox, response="```python\nx = 1\n```")
+        self.assertEqual(sandbox.seen["attempt"], "x = 1\n")
+
+    def test_the_working_directory_is_gone_afterwards(self) -> None:
+        sandbox = FakeSandbox()
+        self.verify(sandbox)
+        self.assertFalse(Path(str(sandbox.seen["workdir"])).exists())
+
+    def test_can_verify_needs_a_non_empty_tests_command(self) -> None:
+        verifier = UnitTestVerifier(FakeSandbox())
+        self.assertTrue(verifier.can_verify({"tests": "true"}))
+        self.assertFalse(verifier.can_verify({"tests": "   "}))
+        self.assertFalse(verifier.can_verify({"tests": 5}))
+        self.assertFalse(verifier.can_verify({}))
+
+    def test_an_attempt_file_that_is_a_path_is_an_error(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            self.verify(FakeSandbox(), attempt_file="../../etc/passwd")
+        self.assertIn("not a plain file name", str(ctx.exception))
+
+    def test_a_non_positive_timeout_is_an_error(self) -> None:
+        # A zero is not "absent": the first version resolved the timeout with `or`, which
+        # quietly replaced 0 with the 20-second default. The test caught it; resolution is
+        # explicit about None now.
+        for bad in (0, -5):
+            with self.subTest(test_timeout=bad):
+                with self.assertRaises(ValueError) as ctx:
+                    self.verify(FakeSandbox(), test_timeout=bad)
+                self.assertIn("non-positive", str(ctx.exception))
+
+    def test_the_reward_term_is_named(self) -> None:
+        self.assertEqual(self.verify(FakeSandbox()).as_terms("rule"), {"rule": 1.0})
+
+
+class LocalSandboxTests(unittest.TestCase):
+    sandbox = LocalSandbox(why="this test wrote the command")
+
+    def test_a_successful_command_reports_status_zero(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = self.sandbox.run("printf 'ok'", Path(tmp), timeout=10)
+        self.assertEqual(result.exit_code, 0)
+        self.assertFalse(result.timed_out)
+        self.assertIn("ok", result.output)
+        self.assertEqual(result.sandbox, self.sandbox.name)
+
+    def test_it_runs_in_the_working_directory_it_was_given(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "attempt.py").write_text("print('hello')\n", encoding="utf-8")
+            result = self.sandbox.run("python3 attempt.py", Path(tmp), timeout=30)
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn("hello", result.output)
+
+    def test_a_failing_command_reports_its_status_and_output(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = self.sandbox.run("echo nope; exit 3", Path(tmp), timeout=10)
+        self.assertEqual(result.exit_code, 3)
+        self.assertIn("nope", result.output)
+        self.assertEqual(result.tail(), "nope")
+
+    def test_a_hanging_command_is_reported_as_a_timeout_not_an_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = self.sandbox.run("sleep 30", Path(tmp), timeout=0.5)
+        self.assertTrue(result.timed_out)
+        self.assertIsNone(result.exit_code)
+
+    def test_it_refuses_to_run_without_a_reason(self) -> None:
+        with self.assertRaises(ValueError):
+            LocalSandbox(why="  ").run("true", Path(tempfile.gettempdir()), timeout=5)
+
+
+class DockerSandboxTests(unittest.TestCase):
+    def test_the_command_line_has_no_network_and_a_name(self) -> None:
+        argv = DockerSandbox().argv("pytest -q", Path("/tmp/work"), "p1-unit-abc")
+        self.assertEqual(argv[:2], ["docker", "run"])
+        self.assertIn("--network=none", argv)
+        self.assertIn("--name", argv)
+        self.assertIn("p1-unit-abc", argv)
+        self.assertIn("--memory=512m", argv)
+        self.assertIn("/tmp/work:/work", argv)
+        self.assertEqual(argv[-3:], ["sh", "-lc", "pytest -q"])
+
+    def test_the_image_is_configurable(self) -> None:
+        self.assertIn("python:3.13-alpine", DockerSandbox().argv("true", Path("/tmp"), "c"))
+        self.assertIn("pytorch/pytorch:latest",
+                      DockerSandbox(image="pytorch/pytorch:latest").argv("true", Path("/tmp"), "c"))
+
+    def test_a_missing_docker_is_unavailable_not_a_zero(self) -> None:
+        # Patched rather than skipped, so the assertion holds on machines that do have docker.
+        original = shutil.which
+        shutil.which = lambda name: None  # type: ignore[assignment]
+        try:
+            with self.assertRaises(SandboxUnavailable) as ctx:
+                DockerSandbox().run("true", Path(tempfile.gettempdir()), timeout=5)
+        finally:
+            shutil.which = original  # type: ignore[assignment]
+        self.assertIn("docker is not on PATH", str(ctx.exception))
+
+
 class TaskLoadingTests(unittest.TestCase):
     def write(self, lines: list[str]) -> Path:
         tmp = Path(tempfile.mkdtemp()) / "tasks.jsonl"
@@ -243,9 +473,10 @@ class TaskLoadingTests(unittest.TestCase):
 
     def test_the_real_fixture_loads_with_the_documented_shape(self) -> None:
         tasks = load_tasks(FIXTURES / "tasks.jsonl")
-        self.assertEqual(len(tasks), 11)
+        self.assertEqual(len(tasks), 12)
         self.assertEqual(sum(1 for task in tasks if task.verifier == "exact_match"), 10)
         self.assertEqual(sum(1 for task in tasks if task.verifier == "numeric"), 1)
+        self.assertEqual(sum(1 for task in tasks if task.verifier == "unit_test"), 1)
 
 
 class ResponderTests(unittest.TestCase):
@@ -273,16 +504,23 @@ class CoveragePartitionTests(unittest.TestCase):
     def test_every_task_in_the_fixture_is_now_covered(self) -> None:
         tasks = load_tasks(FIXTURES / "tasks.jsonl")
         covered, uncovered = partition_by_coverage(tasks, default_registry())
-        self.assertEqual(len(covered), 11)
+        self.assertEqual(len(covered), 12)
         self.assertEqual(uncovered, [])
         self.assertEqual([task.id for task in covered if task.verifier == "numeric"], ["t11"])
+        self.assertEqual([task.id for task in covered if task.verifier == "unit_test"], ["t12"])
 
     def test_a_task_whose_verifier_is_still_a_stub_is_declined_with_a_reason(self) -> None:
-        task = Task(id="t", prompt="p", verifier="unit_test", fields={"tests": "true"})
+        task = Task(id="t", prompt="p", verifier="logic_puzzle", fields={"solution": {}})
         covered, uncovered = partition_by_coverage([task], default_registry())
         self.assertEqual(covered, [])
         self.assertEqual(len(uncovered), 1)
         self.assertIn("cannot verify this task as written", uncovered[0][1])
+        self.assertIn("logic_puzzle", uncovered[0][1])
+
+    def test_a_unit_test_task_without_tests_is_declined(self) -> None:
+        task = Task(id="t", prompt="p", verifier="unit_test")
+        covered, uncovered = partition_by_coverage([task], default_registry())
+        self.assertEqual(covered, [])
         self.assertIn("unit_test", uncovered[0][1])
 
     def test_a_task_naming_an_unknown_verifier_is_uncovered(self) -> None:
@@ -317,8 +555,10 @@ class EpisodeTests(unittest.TestCase):
         for task in (
             # a numeric task with no tolerance: missing the field this verifier needs
             Task(id="t", prompt="pi?", verifier="numeric", fields={"answer": "3.14"}),
+            # a unit-test task with no tests: nothing to run
+            Task(id="t", prompt="p", verifier="unit_test"),
             # a verifier that is still a stub
-            Task(id="t", prompt="p", verifier="unit_test", fields={"tests": "true"}),
+            Task(id="t", prompt="p", verifier="logic_puzzle", fields={"solution": {}}),
         ):
             with self.subTest(verifier=task.verifier, fields=task.fields):
                 with self.assertRaises(MissingVerifier):
@@ -340,11 +580,11 @@ class TaskSetRunTests(unittest.TestCase):
 
     def test_two_samples_per_task_form_groups(self) -> None:
         rows = self.rows()
-        self.assertEqual(len(rows), 22)
+        self.assertEqual(len(rows), 24)
         grouped: dict[str, set[int]] = {}
         for row in rows:
             grouped.setdefault(row.group_id, set()).add(row.sample_index)
-        self.assertEqual(len(grouped), 11)
+        self.assertEqual(len(grouped), 12)
         self.assertTrue(all(indices == {0, 1} for indices in grouped.values()))
 
     def test_every_row_has_a_usable_mask_and_a_recorded_turn_count(self) -> None:
@@ -353,7 +593,7 @@ class TaskSetRunTests(unittest.TestCase):
             self.assertEqual(row.turn_count, 1)
 
     def test_the_fixture_pass_rate_is_what_the_check_script_asserts(self) -> None:
-        self.assertEqual(pass_rate(self.rows()), (15, 22))
+        self.assertEqual(pass_rate(self.rows()), (16, 24))
 
     def test_samples_per_task_must_be_positive(self) -> None:
         with self.assertRaises(ValueError):
@@ -361,7 +601,7 @@ class TaskSetRunTests(unittest.TestCase):
 
     def test_the_report_names_the_misses(self) -> None:
         text = report(self.rows())
-        self.assertIn("15/22 (68%)", text)
+        self.assertIn("16/24 (67%)", text)
         self.assertIn("missed:", text)
         self.assertIn("tokens:", text)
 
@@ -397,6 +637,18 @@ class FixtureContractTests(unittest.TestCase):
         rows = [row for row in fixture_rows() if row.prompt_id == "t11"]
         self.assertEqual([row.extras["passed"] for row in rows], [True, False])
         self.assertEqual({row.reward() for row in rows}, {0.0, 1.0})
+
+    def test_the_unit_test_task_is_one_pass_and_one_fail(self) -> None:
+        # t12's pair is the sandbox's two outcomes: the tests exit 0, then they do not.
+        rows = [row for row in fixture_rows() if row.prompt_id == "t12"]
+        self.assertEqual([row.extras["passed"] for row in rows], [True, False])
+        self.assertEqual({row.reward() for row in rows}, {0.0, 1.0})
+
+    def test_every_fixture_row_says_which_sandbox_scored_it(self) -> None:
+        # A row scored without a container must be distinguishable from one scored inside one.
+        for row in fixture_rows():
+            if row.prompt_id == "t12":
+                self.assertIn("local subprocess (no isolation)", row.extras["detail"])
 
 
 if __name__ == "__main__":

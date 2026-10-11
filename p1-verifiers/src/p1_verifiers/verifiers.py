@@ -1,8 +1,9 @@
-"""P1's verifier suite: two implemented, two that are yours.
+"""P1's verifier suite: three implemented, one that is yours.
 
 The book's Chapter 5 deliverable is a verifier suite plus a coverage report.  This
-module gives you the shape and two worked examples (``ExactMatchVerifier`` and
-``NumericVerifier``); the other two are the exercise.  Each stub is honest about its state:
+module gives you the shape and three worked examples (``ExactMatchVerifier``,
+``NumericVerifier`` and ``UnitTestVerifier``); the last one is the exercise.  Each stub is
+honest about its state:
 
 * ``can_verify`` returns ``False`` while the verifier is unimplemented, so the coverage
   report tells the truth instead of promising a check that does not exist.
@@ -17,7 +18,13 @@ Implement one, flip its ``can_verify`` to a real test, and re-run
 from __future__ import annotations
 
 import re
-from typing import Any, Mapping
+import shutil
+import subprocess
+import tempfile
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Mapping, Protocol
 
 from common.verifier import Outcome, VerifierRegistry
 
@@ -31,6 +38,9 @@ _WHITESPACE = re.compile(r"\s+")
 #: (``1e3``).  Spelled out rather than cutting a slice of text and hoping ``float`` takes it,
 #: because the job is "find the number" and the units around it are the task's business.
 _NUMBER = re.compile(r"[-+]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][-+]?\d+)?")
+
+#: A fenced code block: the whole response can be one, or one can sit among prose.
+_FENCE = re.compile(r"```[^\n]*\n(.*?)(?:```|\Z)", re.DOTALL)
 
 
 def final_answer(response: str) -> str:
@@ -194,29 +204,253 @@ class NumericVerifier:
         )
 
 
+#: The file an attempt is written to when its task does not name one.  Tests are expected to
+#: reach it as a module, which is why the default is a name a test can import.
+DEFAULT_ATTEMPT_FILE = "main.py"
+
+#: Wall-clock seconds a task's tests get before the attempt is called a failure.  Generous for
+#: a unit test, short enough that a hung sandbox costs a round rather than a night.
+DEFAULT_TEST_TIMEOUT_S = 20.0
+
+#: Docker's own exit status for "the client could not run the container at all", as opposed to
+#: a container that ran and whose command failed.  Only this one is an environment problem.
+DOCKER_CLIENT_ERROR = 125
+
+
+def attempt_source(response: str) -> str:
+    """The code to run in the sandbox: the last fenced block, or the response itself.
+
+    The one piece of presentation this verifier removes, and it removes exactly one: a model
+    that answers with a fenced block has followed the instruction and wrapped it in markdown,
+    and a verifier that wrote the fence lines into the file would be scoring the wrapper
+    rather than the code.  The *last* block, for the same reason ``final_answer`` takes the
+    last line - the prompt asks for one answer, and the last one is the answer.
+
+    Everything else is left alone: prose around the code, a missing function, a syntax error.
+    Those belong to the attempt, and the attempt's score should say so.
+    """
+    blocks = _FENCE.findall(response)
+    return (blocks[-1] if blocks else response).strip()
+
+
+@dataclass(frozen=True)
+class SandboxResult:
+    """What a sandbox reports back: status, whether it timed out, output, and who ran it."""
+
+    exit_code: int | None
+    timed_out: bool
+    output: str
+    sandbox: str
+
+    def tail(self, limit: int = 200) -> str:
+        """The last non-empty line of output, truncated: what a detail line can carry.
+
+        Not the whole output: a row's detail is a pointer for a human, not a log, and a
+        traceback pasted into every row is how a run record stops being readable.
+        """
+        for line in reversed(self.output.strip().splitlines()):
+            if line.strip():
+                return line.strip()[:limit]
+        return ""
+
+
+class SandboxUnavailable(RuntimeError):
+    """Raised when the configured sandbox cannot run at all.
+
+    Deliberately an error and not a zero score, for the same reason as ``MissingVerifier``:
+    "this machine cannot run the tests" and "the attempt failed the tests" are different
+    facts, and only one of them is the model's fault.  A verifier that scored an unavailable
+    sandbox as 0.0 would be training on an environment bug.
+    """
+
+
+class Sandbox(Protocol):
+    """Where a task's tests run.  ``name`` travels into every detail, so a row can say where."""
+
+    name: str
+
+    def run(self, command: str, workdir: Path, timeout: float) -> SandboxResult:  # pragma: no cover
+        ...
+
+
+@dataclass(frozen=True)
+class LocalSandbox:
+    """Runs the tests with ``subprocess`` on this machine.  No isolation whatsoever.
+
+    It exists for one narrow case: attempts that *this repository* wrote, so that the offline
+    gate needs no container runtime.  For anything a model produced it is the wrong tool - it
+    would run generated code directly on the host - so it refuses to be anonymous.  It demands
+    a ``why`` sentence, and every detail it produces carries that sentence: a row scored
+    without a container says so, and says why.
+    """
+
+    why: str
+    name = "local subprocess (no isolation)"
+
+    def run(self, command: str, workdir: Path, timeout: float) -> SandboxResult:
+        if not self.why.strip():
+            raise ValueError("LocalSandbox needs a 'why': say whose code this is")
+        try:
+            completed = subprocess.run(
+                ["sh", "-lc", command],
+                cwd=str(workdir),
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired as exc:
+            output = _as_text(exc.stdout) + _as_text(exc.stderr)
+            return SandboxResult(None, True, output, self.name)
+        return SandboxResult(
+            completed.returncode, False, completed.stdout + completed.stderr, self.name
+        )
+
+
+@dataclass(frozen=True)
+class DockerSandbox:
+    """Runs the tests in a container: no network, a memory cap, and the timeout from outside.
+
+    The book's two non-negotiables - a container and a wall-clock timeout - are both here.  The
+    third thing that matters is what happens when it is *missing*: no ``docker`` on PATH raises
+    ``SandboxUnavailable`` rather than quietly running a model's code on the host.
+    """
+
+    image: str = "python:3.13-alpine"
+    memory: str = "512m"
+    name = "docker"
+
+    def argv(self, command: str, workdir: Path, container: str) -> list[str]:
+        """The docker command line, kept separate from running it so the flags are testable.
+
+        ``--network=none`` because a unit test has no business on the network, and the
+        alternative is generated code with a route out.  ``--memory`` so a runaway allocation
+        does not take the host with it.  ``--rm`` plus a name, so a container cannot outlive
+        the run that started it.
+        """
+        return [
+            "docker", "run", "--rm",
+            "--name", container,
+            "--network=none",
+            f"--memory={self.memory}",
+            "-v", f"{workdir}:/work",
+            "-w", "/work",
+            self.image,
+            "sh", "-lc", command,
+        ]
+
+    def run(self, command: str, workdir: Path, timeout: float) -> SandboxResult:
+        if shutil.which("docker") is None:
+            raise SandboxUnavailable(
+                "docker is not on PATH, so the unit-test sandbox cannot run. Install a "
+                "container runtime, or pass a LocalSandbox with a 'why' when the attempts "
+                "are your own code rather than a model's."
+            )
+        container = f"p1-unit-{uuid.uuid4().hex[:12]}"
+        try:
+            completed = subprocess.run(
+                self.argv(command, workdir, container),
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired as exc:
+            # Killing the client does not stop the container, so kill it by name.  A leftover
+            # container is a hang that costs the *next* run - the failure mode this verifier
+            # exists to avoid, and one it would otherwise cause itself.
+            subprocess.run(
+                ["docker", "kill", container], capture_output=True, text=True, check=False
+            )
+            output = _as_text(exc.stdout) + _as_text(exc.stderr)
+            return SandboxResult(None, True, output, self.name)
+        if completed.returncode == DOCKER_CLIENT_ERROR:
+            raise SandboxUnavailable(
+                "docker could not run the container at all (its own exit status "
+                f"{DOCKER_CLIENT_ERROR}): {completed.stderr.strip()[:200]}"
+            )
+        return SandboxResult(
+            completed.returncode, False, completed.stdout + completed.stderr, self.name
+        )
+
+
+def _as_text(value: object) -> str:
+    """Whatever a timeout left behind, as text: bytes, a string, or nothing at all."""
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
 class UnitTestVerifier:
-    """YOUR TURN.  Run a task's tests in a sandbox and score by the exit status.
+    """Runs a task's tests in a sandbox and scores the exit status.  Tasks carry ``tests``.
 
-    Tasks that want this verifier carry a ``tests`` entry: a command (or a file path)
-    that returns 0 when the attempt is correct.
+    The two rules from the book are structure here rather than advice.  The tests run in a
+    sandbox, and ``DockerSandbox`` is what the registry hands this verifier by default, because
+    the code being executed came from a model.  The run is bounded by a wall-clock timeout, and
+    the timeout expiring is a *failure* whose detail says "timed out" - an environment that
+    hangs must not look like a model that is slow.  A sandbox that cannot start at all is
+    neither: that raises ``SandboxUnavailable``.
 
-    Two rules from the book apply and are not optional here: run it in a container with
-    a timeout, and treat a timeout as a failure rather than as an error - an environment
-    that hangs must not look like a model that is slow.
+    Optional task fields: ``attempt_file`` (default ``main.py``) is where the attempt is
+    written in the sandbox's working directory, and ``test_timeout`` overrides the default of
+    20 seconds.  Every detail names the sandbox that produced it, so a row scored without a
+    container is distinguishable from one scored inside one.
     """
 
     name = "unit_test"
 
+    def __init__(self, sandbox: Sandbox) -> None:
+        self.sandbox = sandbox
+
     def can_verify(self, task: Mapping[str, Any]) -> bool:
-        return False  # until implemented
+        """True when the task states the tests to run.  Presence only, like ``numeric``."""
+        tests = task.get("tests")
+        return isinstance(tests, str) and bool(tests.strip())
 
     def verify(self, task: Mapping[str, Any], response: str) -> Outcome:
-        raise NotImplementedError(
-            "unit-test verification is not implemented yet.  Write the candidate code to "
-            "a temporary directory, run task['tests'] in a container with a wall-clock "
-            "timeout, and score 1.0 on exit status 0, 0.0 otherwise.  Record the timeout "
-            "case in the detail so a hung environment is not read as a wrong answer."
-        )
+        task_id = task.get("id", "<no id>")
+        tests = str(task["tests"])
+        raw_attempt = task.get("attempt_file")
+        attempt_file = DEFAULT_ATTEMPT_FILE if raw_attempt is None else str(raw_attempt)
+        if attempt_file in {"", ".", ".."} or "/" in attempt_file or "\\" in attempt_file:
+            raise ValueError(
+                f"task {task_id!r} names an attempt_file that is not a plain file name: "
+                f"{attempt_file!r}"
+            )
+        # Explicitly about None: `task.get("test_timeout") or DEFAULT` treats a zero as
+        # "absent", and a task that says 0 means 0 - which is a defect, not a default.
+        raw_timeout = task.get("test_timeout")
+        timeout = DEFAULT_TEST_TIMEOUT_S if raw_timeout is None else float(raw_timeout)
+        if timeout <= 0:
+            raise ValueError(f"task {task_id!r} has a non-positive test_timeout: {timeout!r}")
+        source = attempt_source(response)
+        if not source:
+            return Outcome(
+                passed=False,
+                score=0.0,
+                detail="the response is empty, so there is nothing to run the tests against",
+            )
+        with tempfile.TemporaryDirectory(prefix="p1-unit-") as tmp:
+            workdir = Path(tmp)
+            (workdir / attempt_file).write_text(source + "\n", encoding="utf-8")
+            result = self.sandbox.run(tests, workdir, timeout)
+
+        where = f"{result.sandbox}; attempt written to {attempt_file}"
+        if result.timed_out:
+            return Outcome(
+                passed=False,
+                score=0.0,
+                detail=(
+                    f"timed out after {timeout:g}s ({where}) - a hung sandbox is a failed "
+                    "attempt, not an error"
+                ),
+            )
+        if result.exit_code == 0:
+            return Outcome(passed=True, score=1.0, detail=f"tests passed ({where})")
+        detail = f"tests failed with exit status {result.exit_code} ({where})"
+        if result.tail():
+            detail += f": {result.tail()}"
+        return Outcome(passed=False, score=0.0, detail=detail)
 
 
 class LogicPuzzleVerifier:
@@ -242,12 +476,24 @@ class LogicPuzzleVerifier:
 
 #: Every verifier this project declares.  ``common.checks``-style honesty applies: a
 #: name in here that declines a task shows up in the coverage report, not in a log.
-def default_registry() -> VerifierRegistry:
+def default_registry(sandbox: Sandbox | None = None) -> VerifierRegistry:
+    """The suite, with a choice to make about the unit-test verifier's sandbox.
+
+    The default is ``DockerSandbox``: this verifier executes code that a model produced, and
+    running it directly on the host is not a trade-off worth making for speed.  Pass a
+    ``LocalSandbox`` only when the attempts are this repository's own - which is what
+    ``check_p1.py`` does, so that the offline gate needs no container runtime.
+    """
     return VerifierRegistry(
-        [ExactMatchVerifier(), NumericVerifier(), UnitTestVerifier(), LogicPuzzleVerifier()]
+        [
+            ExactMatchVerifier(),
+            NumericVerifier(),
+            UnitTestVerifier(sandbox or DockerSandbox()),
+            LogicPuzzleVerifier(),
+        ]
     )
 
 
 #: Names whose ``verify`` is expected to raise ``NotImplementedError``.  The check
 #: script asserts this, so a stub cannot silently become a zero-scoring verifier.
-UNIMPLEMENTED = ("unit_test", "logic_puzzle")
+UNIMPLEMENTED = ("logic_puzzle",)

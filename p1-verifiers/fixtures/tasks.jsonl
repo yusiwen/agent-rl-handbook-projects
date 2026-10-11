@@ -9,3 +9,4 @@
 {"id": "t09", "prompt": "What is 15% of 240?", "verifier": "exact_match", "answer": "36"}
 {"id": "t10", "prompt": "What is the sum of the interior angles of a pentagon, in degrees?", "verifier": "exact_match", "answer": "540"}
 {"id": "t11", "prompt": "What is pi to two decimal places?", "verifier": "numeric", "answer": "3.14", "tolerance": 0.01}
+{"id": "t12", "prompt": "Write Python code that defines add(a, b) and returns their sum. Answer with the code only.", "verifier": "unit_test", "tests": "python3 -c \"import main; assert main.add(2, 3) == 5 and main.add(-1, 1) == 0 and main.add(0, 0) == 0; print('add works')\"", "attempt_file": "main.py"}
