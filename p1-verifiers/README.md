@@ -1,7 +1,6 @@
 # P1 - a verifier suite and its coverage report
 
-**Status: the offline harness and the live path are both complete; three verifiers implemented,
-one is yours.**
+**Status: complete. The offline harness, the live path, and all four verifiers are in place.**
 Book chapter: Chapter 5 (reward engineering) and Chapter 7 (task sets).
 Compute tier: ✅ - runs on the reference machine as written.
 
@@ -9,11 +8,10 @@ Compute tier: ✅ - runs on the reference machine as written.
 
 Two things the book asks for and this project grades:
 
-1. **A verifier suite** that can score your task set: `src/p1_verifiers/verifiers.py`.
-   `ExactMatchVerifier`, `NumericVerifier` and `UnitTestVerifier` are done, as the worked
-   examples. `LogicPuzzleVerifier` raises `NotImplementedError` with what to do; it also
-   declines every task it is asked about, so the coverage report stays honest while it is
-   unfinished.
+1. **A verifier suite** that can score your task set: `src/p1_verifiers/verifiers.py`. All four
+   are implemented - `ExactMatchVerifier`, `NumericVerifier`, `UnitTestVerifier` and
+   `LogicPuzzleVerifier` - and each docstring says what its verifier will *not* do, which is
+   the part that decides whether you can trust the numbers it produces.
 2. **A coverage report** over your task set: how many tasks anything can score, and the
    reasons for the rest. `python3 checks/check_p1.py` prints it, and the number it prints
    is an upper bound on what training can add - a task nothing can score is a task no
@@ -45,7 +43,7 @@ record is still written, because a record of a rejected run is evidence.
 ## What the run does
 
 ```
-fixtures/tasks.jsonl      12 tasks: 10 exact-match, 1 numeric, 1 unit-test
+fixtures/tasks.jsonl      13 tasks: 10 exact-match, 1 numeric, 1 unit-test, 1 logic-puzzle
 fixtures/responses.jsonl  2 attempts per task, from a fixture responder
       |
       v
@@ -55,8 +53,8 @@ fixtures/responses.jsonl  2 attempts per task, from a fixture responder
 runs/<run-id>/{header.json, rounds.jsonl, round-000.jsonl}
 ```
 
-The fixture is built, not found: 8 of its 12 groups contain two attempts that disagree
-(67% mixed). A task set where every attempt scores the same produces a zero advantage in
+The fixture is built, not found: 9 of its 13 groups contain two attempts that disagree
+(69% mixed). A task set where every attempt scores the same produces a zero advantage in
 every group, and a training run on it will look alive while learning nothing. The check
 script asserts these numbers, so an accidental edit to the fixtures fails loudly rather
 than quietly changing what the run demonstrates.
@@ -65,26 +63,40 @@ than quietly changing what the run demonstrates.
 
 ## The verifiers
 
-| Verifier | Status | Use it when | The trap |
-|---|---|---|---|
-| `exact_match` | implemented | the answer has one agreed surface form (a number, a short name, a date) | the same value in a different surface form fails: `1024.0` is not `1024` |
-| `numeric` | implemented | the answer is a number and a tolerance is acceptable (`1024` vs `1024.0`) | units are ignored, so `150 kilometres` scores the same as `150 minutes`; a task where the unit carries meaning wants `exact_match` |
-| `unit_test` | implemented | the task ships tests that return 0 when the attempt is correct | the tests run in a sandbox, so the machine running the *runner* needs a container runtime; without one the run stops with an error instead of scoring a zero, because "this machine cannot run the tests" is not the model's fault |
-| `logic_puzzle` | your turn | the answer is a structured assignment (a grid, a schedule) | a near miss and a wrong answer must not both collapse to zero, or you cannot tell them apart later |
+| Verifier | Use it when | The trap |
+|---|---|---|
+| `exact_match` | the answer has one agreed surface form (a number, a short name, a date) | the same value in a different surface form fails: `1024.0` is not `1024` |
+| `numeric` | the answer is a number and a tolerance is acceptable (`1024` vs `1024.0`) | units are ignored, so `150 kilometres` scores the same as `150 minutes`; a task where the unit carries meaning wants `exact_match` |
+| `unit_test` | the task ships tests that return 0 when the attempt is correct | the tests run in a sandbox, so the machine running the *runner* needs a container runtime; without one the run stops with an error instead of scoring a zero, because "this machine cannot run the tests" is not the model's fault |
+| `logic_puzzle` | the answer is a structured assignment and the task can state constraints over it | the constraints *are* the answer: a near miss scores a hard zero, so the detail is where the gradient is - it names the constraint that failed and why - and a solution with no variables, no constraints or an unknown kind is an error rather than a task that scores zero |
 
-`src/p1_verifiers/verifiers.py` explains each in its docstring - including what it will not
-do, which is the part that decides whether you can trust the numbers it produces.
+`src/p1_verifiers/verifiers.py` explains each in its docstring.
 
-The unit-test verifier is worth reading in full before you point it at a model's output. The
-attempt is written into a fresh temporary directory and the task's tests run there in a
-container with `--network=none` and a memory cap, under a wall-clock timeout from outside; a
-timeout is recorded as a *failure* whose detail says so, because an environment that hangs
-must not look like a model that is slow. Every detail also names the sandbox that produced
-it, so a row scored without a container is distinguishable from one scored inside one. The
-registry hands out the container; the offline check passes a `LocalSandbox` instead, because
-the fixture's attempts are written in this repository - and that sandbox refuses to be
-anonymous: it demands a sentence saying whose code this is, and puts it in every detail it
-produces.
+Two of them are worth reading in full before you point them at a model's output.
+
+The **unit-test** verifier writes the attempt into a fresh temporary directory and runs the
+task's tests there in a container with `--network=none` and a memory cap, under a wall-clock
+timeout from outside; a timeout is recorded as a *failure* whose detail says so, because an
+environment that hangs must not look like a model that is slow. Every detail also names the
+sandbox that produced it, so a row scored without a container is distinguishable from one
+scored inside one. The registry hands out the container; the offline check passes a
+`LocalSandbox` instead, because the fixture's attempts are written in this repository - and
+that sandbox refuses to be anonymous: it demands a sentence saying whose code this is, and
+puts it in every detail it produces.
+
+The **logic-puzzle** verifier parses an assignment out of the response - the last JSON
+object, or `name = value` lines, keeping only the variables the task declares - and checks it
+against the task's constraints one kind at a time: `distinct`, `equals`, `not_equals`. A
+variable the answer never mentions fails whatever constraint names it, because an incomplete
+assignment is not vacuously right about the parts it left out. It scores a hard zero for
+anything short of all constraints holding, for the same reason `numeric` refuses partial
+credit for wrong arithmetic: a reward you cannot explain later is worse than one you can
+defend. The fraction that held is not lost, though - it is in the detail, so a near miss
+reads like this in a run record:
+
+```
+satisfied 2 of 3 constraints; failed: c1 (distinct: alice and bob are both 'blue')
+```
 
 ## Configs and the environment
 
@@ -99,7 +111,7 @@ compose's defaults are the ones this project was measured against.
 
 ## What is not here yet
 
-- The real task set: `fixtures/` is 12 tasks, enough to prove the pipeline. Pull the real
+- The real task set: `fixtures/` is 13 tasks, enough to prove the pipeline. Pull the real
   datasets with `../datasets/` (see its README) once you have measured your own
   throughput - the budget in `configs/` has a field waiting for that number.
 - **Someone to start the server.** `env/docker-compose.yaml` is ready and pinned, and the code is
@@ -108,8 +120,6 @@ compose's defaults are the ones this project was measured against.
   `/v1/models` and the tokeniser against `/tokenize` before it spends anything. The wiring has
   been proven end to end (2026-10-10); what a live model then scores is the model's number, not
   this fixture's.
-- The last verifier (`logic_puzzle`), which is the one that needs a parser rather than a
-  comparison, and which is the only name left in `UNIMPLEMENTED`.
 - **A container runtime where the runner runs, for `unit_test`.** This machine deliberately runs
   no docker, so a live run started here would raise `SandboxUnavailable` the moment it reached a
   unit-test task, rather than running generated code directly on the host. That behaviour is the

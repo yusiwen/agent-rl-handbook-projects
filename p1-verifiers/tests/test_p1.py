@@ -27,10 +27,12 @@ from common.verifier import MissingVerifier  # noqa: E402
 from p1_verifiers import (  # noqa: E402
     DEFAULT_ATTEMPT_FILE,
     DEFAULT_TEST_TIMEOUT_S,
+    UNIMPLEMENTED,
     DockerSandbox,
     ExactMatchVerifier,
     FixtureResponder,
     LocalSandbox,
+    LogicPuzzleVerifier,
     NumericVerifier,
     Provenance,
     SandboxResult,
@@ -48,7 +50,12 @@ from p1_verifiers import (  # noqa: E402
     run_episode,
     run_taskset,
 )
-from p1_verifiers.verifiers import final_answer, last_number  # noqa: E402
+from p1_verifiers.verifiers import (  # noqa: E402
+    constraint_failure,
+    final_answer,
+    last_number,
+    parse_assignment,
+)
 
 FIXTURES = REPO / "p1-verifiers" / "fixtures"
 
@@ -239,6 +246,132 @@ class AttemptSourceTests(unittest.TestCase):
 
     def test_an_empty_response_has_no_source(self) -> None:
         self.assertEqual(attempt_source("   \n\n"), "")
+
+
+VARIABLES = ["alice", "bob", "carol"]
+
+
+class ParseAssignmentTests(unittest.TestCase):
+    def test_a_json_object_is_read(self) -> None:
+        self.assertEqual(parse_assignment('{"alice": "green", "bob": "blue"}', VARIABLES),
+                         {"alice": "green", "bob": "blue"})
+
+    def test_the_last_json_object_wins(self) -> None:
+        response = '{"alice": "red", "bob": "blue"}\nStill not sure:\n{"alice": "green", "bob": "blue"}'
+        self.assertEqual(parse_assignment(response, VARIABLES),
+                         {"alice": "green", "bob": "blue"})
+
+    def test_name_equals_value_lines_are_read(self) -> None:
+        response = "Reasoning first.\n\nalice = green\nbob = blue"
+        self.assertEqual(parse_assignment(response, VARIABLES), {"alice": "green", "bob": "blue"})
+
+    def test_a_colon_line_reads_the_same_way(self) -> None:
+        self.assertEqual(parse_assignment("alice: green", VARIABLES), {"alice": "green"})
+
+    def test_a_later_line_overrides_an_earlier_one(self) -> None:
+        response = "alice = red\nbob = blue\n\nalice = green"
+        self.assertEqual(parse_assignment(response, VARIABLES)["alice"], "green")
+
+    def test_only_declared_variables_survive(self) -> None:
+        # Prose and undeclared names are left out: the task says what the answer is about.
+        response = "note: this took a while\nanswer = 3\nalice = green"
+        self.assertEqual(parse_assignment(response, VARIABLES), {"alice": "green"})
+
+    def test_case_and_spacing_fold_on_both_sides(self) -> None:
+        self.assertEqual(parse_assignment('{"Alice": " Green "}', VARIABLES), {"alice": "green"})
+
+    def test_braces_that_are_not_json_are_skipped(self) -> None:
+        response = "{not json}\n\nalice = green"
+        self.assertEqual(parse_assignment(response, VARIABLES), {"alice": "green"})
+
+    def test_no_assignment_anywhere_gives_an_empty_mapping(self) -> None:
+        self.assertEqual(parse_assignment("I would rather not say.", VARIABLES), {})
+        self.assertEqual(parse_assignment("", VARIABLES), {})
+        self.assertEqual(parse_assignment('{"dave": "green"}', VARIABLES), {})
+
+
+class LogicPuzzleVerifierTests(unittest.TestCase):
+    verifier = LogicPuzzleVerifier()
+    SOLUTION = {
+        "variables": VARIABLES,
+        "constraints": [
+            {"id": "c1", "kind": "distinct"},
+            {"id": "c2", "kind": "equals", "var": "bob", "value": "blue"},
+            {"id": "c3", "kind": "not_equals", "var": "alice", "value": "red"},
+        ],
+    }
+
+    def verify(self, response: str, solution: dict[str, object] | None = None):
+        return self.verifier.verify({"id": "p", "solution": solution or self.SOLUTION}, response)
+
+    def test_a_complete_consistent_assignment_scores_one(self) -> None:
+        outcome = self.verify("alice = green\nbob = blue\ncarol = red")
+        self.assertTrue(outcome.passed)
+        self.assertEqual(outcome.score, 1.0)
+        self.assertIn("all 3 constraints hold", outcome.detail)
+
+    def test_a_near_miss_scores_zero_and_says_which_constraint_failed(self) -> None:
+        # Two of three constraints hold, so the report has to read as a near miss: the failed
+        # constraint is named, with the reason, even though the score is a hard zero.
+        outcome = self.verify('{"alice": "blue", "bob": "blue", "carol": "red"}')
+        self.assertFalse(outcome.passed)
+        self.assertEqual(outcome.score, 0.0)
+        self.assertIn("satisfied 2 of 3 constraints", outcome.detail)
+        self.assertIn("c1", outcome.detail)
+        self.assertIn("both 'blue'", outcome.detail)
+
+    def test_a_missing_variable_fails_rather_than_passing_vacuously(self) -> None:
+        outcome = self.verify("alice = green\nbob = blue")
+        self.assertFalse(outcome.passed)
+        self.assertIn("carol missing from the answer", outcome.detail)
+
+    def test_a_wrong_value_is_reported_with_what_was_actually_said(self) -> None:
+        outcome = self.verify("alice = green\nbob = green\ncarol = red")
+        self.assertIn("bob must be 'blue', got 'green'", outcome.detail)
+
+    def test_a_violated_negative_constraint_says_so(self) -> None:
+        outcome = self.verify("alice = red\nbob = green\ncarol = blue")
+        self.assertIn("alice must not be 'red', and is", outcome.detail)
+
+    def test_a_response_with_no_assignment_is_reported_as_such(self) -> None:
+        outcome = self.verify("I cannot decide between two colourings.")
+        self.assertFalse(outcome.passed)
+        self.assertIn("contains no assignment", outcome.detail)
+
+    def test_values_are_compared_case_insensitively(self) -> None:
+        self.assertTrue(self.verify("Alice = Green\nBob = Blue\nCarol = Red").passed)
+
+    def test_can_verify_needs_a_solution_object(self) -> None:
+        self.assertTrue(self.verifier.can_verify({"solution": self.SOLUTION}))
+        self.assertTrue(self.verifier.can_verify({"solution": {}}))
+        self.assertFalse(self.verifier.can_verify({}))
+        self.assertFalse(self.verifier.can_verify({"solution": "distinct"}))
+
+    def test_a_solution_without_variables_is_an_error(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            self.verify("alice = green", solution={"constraints": [{"kind": "distinct"}]})
+        self.assertIn("without 'variables'", str(ctx.exception))
+
+    def test_a_solution_without_constraints_is_an_error(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            self.verify("alice = green", solution={"variables": VARIABLES})
+        self.assertIn("without 'constraints'", str(ctx.exception))
+
+    def test_an_unknown_constraint_kind_is_an_error_not_an_ignored_constraint(self) -> None:
+        solution = {"variables": VARIABLES, "constraints": [{"kind": "riddle"}]}
+        with self.assertRaises(ValueError) as ctx:
+            self.verify("alice = green", solution=solution)
+        self.assertIn("not one of", str(ctx.exception))
+
+    def test_a_constraint_missing_its_operands_is_an_error(self) -> None:
+        for constraint in ({"kind": "equals", "value": "blue"}, {"kind": "equals", "var": "bob"}):
+            with self.subTest(constraint=constraint):
+                with self.assertRaises(ValueError):
+                    constraint_failure(constraint, {"bob": "blue"}, VARIABLES)
+
+    def test_the_reward_term_is_named(self) -> None:
+        outcome = self.verify("alice = green\nbob = blue\ncarol = red")
+        self.assertEqual(outcome.as_terms("rule"), {"rule": 1.0})
 
 
 class FakeSandbox:
@@ -473,10 +606,11 @@ class TaskLoadingTests(unittest.TestCase):
 
     def test_the_real_fixture_loads_with_the_documented_shape(self) -> None:
         tasks = load_tasks(FIXTURES / "tasks.jsonl")
-        self.assertEqual(len(tasks), 12)
+        self.assertEqual(len(tasks), 13)
         self.assertEqual(sum(1 for task in tasks if task.verifier == "exact_match"), 10)
         self.assertEqual(sum(1 for task in tasks if task.verifier == "numeric"), 1)
         self.assertEqual(sum(1 for task in tasks if task.verifier == "unit_test"), 1)
+        self.assertEqual(sum(1 for task in tasks if task.verifier == "logic_puzzle"), 1)
 
 
 class ResponderTests(unittest.TestCase):
@@ -500,17 +634,43 @@ class ResponderTests(unittest.TestCase):
         self.assertEqual(len(responder._answers["t01"]), 2)  # noqa: SLF001 - test of the loader
 
 
+class StubContractTests(unittest.TestCase):
+    """The rule a stub has to keep, asserted for whatever ``UNIMPLEMENTED`` currently holds."""
+
+    PROBE = {"id": "probe", "prompt": "irrelevant", "answer": "1", "tolerance": 0.1,
+             "tests": "true", "solution": {"variables": ["a"], "constraints": [{"kind": "distinct"}]}}
+
+    def test_every_unimplemented_name_declines_and_raises(self) -> None:
+        registry = default_registry()
+        for name in UNIMPLEMENTED:
+            with self.subTest(name=name):
+                verifier = registry.get(name)
+                self.assertFalse(verifier.can_verify(self.PROBE))
+                with self.assertRaises(NotImplementedError):
+                    verifier.verify(self.PROBE, "anything")
+
+    def test_the_suite_is_complete(self) -> None:
+        # The current state, asserted rather than assumed: four declared verifiers, none of
+        # them a stub. A new stub has to arrive with the checks that describe it.
+        self.assertEqual(UNIMPLEMENTED, ())
+        self.assertEqual(default_registry().names,
+                         ["exact_match", "logic_puzzle", "numeric", "unit_test"])
+
+
 class CoveragePartitionTests(unittest.TestCase):
     def test_every_task_in_the_fixture_is_now_covered(self) -> None:
         tasks = load_tasks(FIXTURES / "tasks.jsonl")
         covered, uncovered = partition_by_coverage(tasks, default_registry())
-        self.assertEqual(len(covered), 12)
+        self.assertEqual(len(covered), 13)
         self.assertEqual(uncovered, [])
         self.assertEqual([task.id for task in covered if task.verifier == "numeric"], ["t11"])
         self.assertEqual([task.id for task in covered if task.verifier == "unit_test"], ["t12"])
+        self.assertEqual([task.id for task in covered if task.verifier == "logic_puzzle"], ["t13"])
 
-    def test_a_task_whose_verifier_is_still_a_stub_is_declined_with_a_reason(self) -> None:
-        task = Task(id="t", prompt="p", verifier="logic_puzzle", fields={"solution": {}})
+    def test_a_task_that_declares_a_verifier_which_declines_it_is_reported_with_a_reason(self) -> None:
+        # A logic_puzzle task with no solution: the verifier is registered, but this task is
+        # not something it can judge, and coverage has to say so rather than count it.
+        task = Task(id="t", prompt="p", verifier="logic_puzzle")
         covered, uncovered = partition_by_coverage([task], default_registry())
         self.assertEqual(covered, [])
         self.assertEqual(len(uncovered), 1)
@@ -551,14 +711,21 @@ class EpisodeTests(unittest.TestCase):
         self.assertEqual(row.extras["verifier"], "numeric")
         self.assertTrue(row.extras["passed"])
 
+    def test_a_logic_puzzle_is_scored_by_its_constraints(self) -> None:
+        task = Task(id="t", prompt="who chose what?", verifier="logic_puzzle",
+                    fields={"solution": LogicPuzzleVerifierTests.SOLUTION})
+        row = self.episode(task, "alice = green\nbob = blue\ncarol = red")
+        self.assertEqual(row.extras["verifier"], "logic_puzzle")
+        self.assertTrue(row.extras["passed"])
+
     def test_a_declined_task_raises_rather_than_scoring_zero(self) -> None:
         for task in (
             # a numeric task with no tolerance: missing the field this verifier needs
             Task(id="t", prompt="pi?", verifier="numeric", fields={"answer": "3.14"}),
             # a unit-test task with no tests: nothing to run
             Task(id="t", prompt="p", verifier="unit_test"),
-            # a verifier that is still a stub
-            Task(id="t", prompt="p", verifier="logic_puzzle", fields={"solution": {}}),
+            # a logic-puzzle task with no solution: nothing to check against
+            Task(id="t", prompt="p", verifier="logic_puzzle"),
         ):
             with self.subTest(verifier=task.verifier, fields=task.fields):
                 with self.assertRaises(MissingVerifier):
@@ -580,11 +747,11 @@ class TaskSetRunTests(unittest.TestCase):
 
     def test_two_samples_per_task_form_groups(self) -> None:
         rows = self.rows()
-        self.assertEqual(len(rows), 24)
+        self.assertEqual(len(rows), 26)
         grouped: dict[str, set[int]] = {}
         for row in rows:
             grouped.setdefault(row.group_id, set()).add(row.sample_index)
-        self.assertEqual(len(grouped), 12)
+        self.assertEqual(len(grouped), 13)
         self.assertTrue(all(indices == {0, 1} for indices in grouped.values()))
 
     def test_every_row_has_a_usable_mask_and_a_recorded_turn_count(self) -> None:
@@ -593,7 +760,7 @@ class TaskSetRunTests(unittest.TestCase):
             self.assertEqual(row.turn_count, 1)
 
     def test_the_fixture_pass_rate_is_what_the_check_script_asserts(self) -> None:
-        self.assertEqual(pass_rate(self.rows()), (16, 24))
+        self.assertEqual(pass_rate(self.rows()), (17, 26))
 
     def test_samples_per_task_must_be_positive(self) -> None:
         with self.assertRaises(ValueError):
@@ -601,7 +768,7 @@ class TaskSetRunTests(unittest.TestCase):
 
     def test_the_report_names_the_misses(self) -> None:
         text = report(self.rows())
-        self.assertIn("16/24 (67%)", text)
+        self.assertIn("17/26 (65%)", text)
         self.assertIn("missed:", text)
         self.assertIn("tokens:", text)
 
@@ -643,6 +810,14 @@ class FixtureContractTests(unittest.TestCase):
         rows = [row for row in fixture_rows() if row.prompt_id == "t12"]
         self.assertEqual([row.extras["passed"] for row in rows], [True, False])
         self.assertEqual({row.reward() for row in rows}, {0.0, 1.0})
+
+    def test_the_logic_puzzle_task_is_one_pass_and_one_near_miss(self) -> None:
+        # t13's pair: a consistent assignment, then one that breaks a single constraint - and
+        # the near miss has to read as one in the record, not as a bare zero.
+        rows = [row for row in fixture_rows() if row.prompt_id == "t13"]
+        self.assertEqual([row.extras["passed"] for row in rows], [True, False])
+        self.assertIn("all 3 constraints hold", rows[0].extras["detail"])
+        self.assertIn("satisfied 2 of 3 constraints", rows[1].extras["detail"])
 
     def test_every_fixture_row_says_which_sandbox_scored_it(self) -> None:
         # A row scored without a container must be distinguishable from one scored inside one.

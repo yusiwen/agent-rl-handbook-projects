@@ -63,11 +63,11 @@ RESPONSES = FIXTURES / "responses.jsonl"
 
 #: What the fixture is built to produce.  Editing the fixture without editing these
 #: numbers fails the check on purpose: a fixture whose contract is not stated drifts.
-EXPECTED_TASKS = 12
-EXPECTED_COVERED = 12
+EXPECTED_TASKS = 13
+EXPECTED_COVERED = 13
 EXPECTED_SAMPLES_PER_TASK = 2
-EXPECTED_PASSED = 16
-EXPECTED_MIXED_GROUPS = 8
+EXPECTED_PASSED = 17
+EXPECTED_MIXED_GROUPS = 9
 
 
 def code_sha() -> str:
@@ -152,21 +152,28 @@ def main() -> int:
     if mixed != EXPECTED_MIXED_GROUPS:
         failures.append(f"expected {EXPECTED_MIXED_GROUPS} mixed groups, counted {mixed}")
 
-    # The stubs must be honestly unimplemented: never a silent zero.
-    for name in UNIMPLEMENTED:
-        verifier = registry.get(name)
-        probe = {"id": "probe", "prompt": "irrelevant", "verifier": name, "answer": "1",
-                 "tolerance": 0.1, "tests": "true", "solution": {}}
-        if verifier.can_verify(probe):
-            failures.append(f"{name}: can_verify() claims coverage but verify() is a stub")
-        try:
-            verifier.verify(probe, "anything")
-        except NotImplementedError as exc:
-            if "not implemented yet" not in str(exc):
-                failures.append(f"{name}: NotImplementedError does not say what to do")
-        else:
-            failures.append(f"{name}: verify() returned instead of raising - it may score zero silently")
-    print(f"stub contract: {', '.join(UNIMPLEMENTED)} all decline and raise as expected")
+    # The stubs must be honestly unimplemented: never a silent zero.  An empty UNIMPLEMENTED
+    # means the suite is complete, and this says so rather than iterating nothing and printing
+    # an empty list of names.
+    if UNIMPLEMENTED:
+        for name in UNIMPLEMENTED:
+            verifier = registry.get(name)
+            probe = {"id": "probe", "prompt": "irrelevant", "verifier": name, "answer": "1",
+                     "tolerance": 0.1, "tests": "true", "solution": {}}
+            if verifier.can_verify(probe):
+                failures.append(f"{name}: can_verify() claims coverage but verify() is a stub")
+            try:
+                verifier.verify(probe, "anything")
+            except NotImplementedError as exc:
+                if "not implemented yet" not in str(exc):
+                    failures.append(f"{name}: NotImplementedError does not say what to do")
+            else:
+                failures.append(
+                    f"{name}: verify() returned instead of raising - it may score zero silently"
+                )
+        print(f"stub contract: {', '.join(UNIMPLEMENTED)} all decline and raise as expected")
+    else:
+        print("stub contract: no stubs left - every declared verifier is implemented")
 
     run_id = f"p1-fixtures-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
     # Where the run record lands. Overridable because a sandboxed run (nix build, CI) has a
@@ -190,8 +197,13 @@ def main() -> int:
     shown = runs_root.relative_to(REPO) if runs_root.is_relative_to(REPO) else runs_root
     print(f"run record: {shown}/ (header.json, rounds.jsonl, round-000.jsonl)")
 
-    missing = [name for name in UNIMPLEMENTED]
-    print(f"-- your turn: implement {', '.join(missing)} in p1-verifiers/src/p1_verifiers/verifiers.py --")
+    if UNIMPLEMENTED:
+        print(
+            f"-- your turn: implement {', '.join(UNIMPLEMENTED)} in "
+            "p1-verifiers/src/p1_verifiers/verifiers.py --"
+        )
+    else:
+        print("-- all four verifiers are implemented: what is left is the task set --")
 
     if failures:
         print("\nFAILED:")

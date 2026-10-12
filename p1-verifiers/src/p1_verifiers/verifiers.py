@@ -1,22 +1,19 @@
-"""P1's verifier suite: three implemented, one that is yours.
+"""P1's verifier suite: all four verifiers implemented.
 
-The book's Chapter 5 deliverable is a verifier suite plus a coverage report.  This
-module gives you the shape and three worked examples (``ExactMatchVerifier``,
-``NumericVerifier`` and ``UnitTestVerifier``); the last one is the exercise.  Each stub is
-honest about its state:
+The book's Chapter 5 deliverable is a verifier suite plus a coverage report, and this module is
+the suite: four verifiers, each with a docstring that says what it will *not* do - which is the
+part that decides whether you can trust the numbers it produces.
 
-* ``can_verify`` returns ``False`` while the verifier is unimplemented, so the coverage
-  report tells the truth instead of promising a check that does not exist.
-* ``verify`` raises ``NotImplementedError`` with what to do, so a stub can never
-  quietly return a zero - an unscored task and a failed task would then look identical
-  in a reward curve, and only one of them is the model's fault.
-
-Implement one, flip its ``can_verify`` to a real test, and re-run
-``p1-verifiers/checks/check_p1.py``.
+The pattern to keep if you add another one: a verifier that cannot judge a task declines it
+(``can_verify`` returns ``False``) instead of scoring it, and a verifier that is not written yet
+raises ``NotImplementedError`` instead of returning a zero.  An unscored task and a failed task
+look identical in a reward curve, and only one of them is the model's fault; the check script
+asserts both halves of that rule for every name in ``UNIMPLEMENTED``.
 """
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import subprocess
@@ -453,24 +450,186 @@ class UnitTestVerifier:
         return Outcome(passed=False, score=0.0, detail=detail)
 
 
-class LogicPuzzleVerifier:
-    """YOUR TURN.  Check a structured solution (a grid, an assignment) rather than a string.
+#: The constraint kinds a ``solution`` may use.  A short list on purpose: each kind is a
+#: statement a reader can check by eye, and an unknown kind is an error rather than a
+#: constraint that is quietly ignored.
+SOLUTION_KINDS = ("distinct", "equals", "not_equals")
 
-    Tasks that want this verifier carry a ``solution`` entry: the constraint set the
-    attempt must satisfy.
+#: A ``name = value`` or ``name: value`` line.  Only lines naming a variable the task declares
+#: are read, which is what keeps a sentence like "note: this took a while" out of the answer.
+_ASSIGNMENT_LINE = re.compile(r"^\s*([A-Za-z][\w.-]*)\s*(?:=|:)\s*(\S.*?)\s*$")
+
+#: A brace-delimited object, as a *candidate* for JSON rather than as a JSON parser: tried from
+#: the end of the response backwards and rejected when it does not parse.  Nested objects are
+#: out of scope - an assignment is flat, and a flat object is what the prompt asks for.
+_JSON_OBJECT = re.compile(r"\{[^{}]*\}")
+
+
+def parse_assignment(response: str, variables: Mapping[str, Any] | list[str]) -> dict[str, str]:
+    """The assignment a response states, as ``{variable: value}``, both sides normalised.
+
+    Two shapes, in this order, because they are the two a model actually produces:
+
+    1. the last brace-delimited object in the response that parses as a flat object;
+    2. ``name = value`` / ``name: value`` lines, a later line overriding an earlier one.
+
+    Only declared variables survive: an assignment is judged against the task's variables, and
+    a model that mentions something else along the way has not changed its answer.  That filter
+    is also what keeps prose out - a line must name a declared variable to be read at all.
+
+    Returns an empty mapping when neither shape is present, so the caller reports "no
+    assignment" instead of scoring an empty answer against the constraints and calling the
+    missing entries failures.
+    """
+    declared = {normalise(str(variable)) for variable in variables}
+    for candidate in reversed(_JSON_OBJECT.findall(response)):
+        try:
+            data = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, dict):
+            found = {
+                normalise(str(key)): normalise(str(value))
+                for key, value in data.items()
+                if normalise(str(key)) in declared
+            }
+            if found:
+                return found
+    assignment: dict[str, str] = {}
+    for line in response.splitlines():
+        match = _ASSIGNMENT_LINE.match(line)
+        if match and normalise(match.group(1)) in declared:
+            assignment[normalise(match.group(1))] = normalise(match.group(2))
+    return assignment
+
+
+def _solution_parts(solution: Mapping[str, Any], task_id: Any) -> tuple[list[str], list[Any]]:
+    """``(variables, constraints)`` from a solution, or an error naming what is missing.
+
+    A puzzle nothing can check is not a scoreable task, and scoring it 0.0 would report a
+    defect in the task set as a failure of the model's.
+    """
+    variables = solution.get("variables")
+    if not isinstance(variables, (list, tuple)) or not variables:
+        raise ValueError(
+            f"task {task_id!r} has a solution without 'variables': a logic puzzle has to say "
+            "which names the assignment is about"
+        )
+    constraints = solution.get("constraints")
+    if not isinstance(constraints, (list, tuple)) or not constraints:
+        raise ValueError(f"task {task_id!r} has a solution without 'constraints'")
+    for index, constraint in enumerate(constraints, start=1):
+        if not isinstance(constraint, Mapping):
+            raise ValueError(f"task {task_id!r} constraint #{index} is not an object")
+        kind = constraint.get("kind")
+        if kind not in SOLUTION_KINDS:
+            raise ValueError(
+                f"task {task_id!r} constraint #{index} has kind {kind!r}, which is not one of "
+                f"{', '.join(SOLUTION_KINDS)}"
+            )
+    return [str(variable) for variable in variables], list(constraints)
+
+
+def constraint_failure(
+    constraint: Mapping[str, Any],
+    assignment: Mapping[str, str],
+    variables: list[str],
+) -> str | None:
+    """``None`` when the assignment satisfies the constraint, else a sentence saying why not.
+
+    That sentence is the point of this verifier: a near miss has to read as a near miss.  A
+    variable the answer never mentions fails whatever constraint names it - an incomplete
+    assignment is not vacuously right about the parts it left out.
+    """
+    kind = constraint.get("kind")
+    if kind == "distinct":
+        missing = [variable for variable in variables if not assignment.get(normalise(variable))]
+        if missing:
+            return f"distinct: {' and '.join(missing)} missing from the answer"
+        seen: dict[str, str] = {}
+        for variable in variables:
+            value = assignment[normalise(variable)]
+            if value in seen:
+                return f"distinct: {seen[value]} and {variable} are both {value!r}"
+            seen[value] = variable
+        return None
+    name = normalise(str(constraint.get("var", "")))
+    if not name:
+        raise ValueError(f"constraint {kind!r} needs a 'var' naming the variable it is about")
+    if "value" not in constraint:
+        raise ValueError(f"constraint {kind!r} needs a 'value'")
+    expected = normalise(str(constraint["value"]))
+    actual = assignment.get(name)
+    if actual is None:
+        return f"{name} missing from the answer"
+    if kind == "equals":
+        return None if actual == expected else f"{name} must be {constraint['value']!r}, got {actual!r}"
+    return None if actual != expected else f"{name} must not be {constraint['value']!r}, and is"
+
+
+class LogicPuzzleVerifier:
+    """Checks a structured assignment constraint by constraint.
+
+    Tasks carry a ``solution`` with ``variables`` (the names the answer is about) and
+    ``constraints`` (the facts it must satisfy), each constraint naming a ``kind`` from
+    ``SOLUTION_KINDS``.  The response is parsed into an assignment, every constraint is
+    checked, and the score is 1.0 when all of them hold and 0.0 otherwise.
+
+    Why a hard zero rather than the fraction that held: the same reason ``NumericVerifier``
+    refuses partial credit for wrong arithmetic - a reward you cannot explain later is worse
+    than one you can defend.  What the fraction buys is in the *detail* instead: it names the
+    constraints that failed, so a near miss reads as a near miss in the report even though it
+    scores zero.
     """
 
     name = "logic_puzzle"
 
     def can_verify(self, task: Mapping[str, Any]) -> bool:
-        return False  # until implemented
+        """True when the task carries a solution object.  Presence only, like its siblings.
+
+        Whether that solution is *usable* - variables, known constraint kinds - is a different
+        question, and ``verify`` answers it loudly rather than this predicate quietly shrinking
+        coverage.
+        """
+        return isinstance(task.get("solution"), Mapping)
 
     def verify(self, task: Mapping[str, Any], response: str) -> Outcome:
-        raise NotImplementedError(
-            "logic-puzzle verification is not implemented yet.  Parse the assignment out "
-            "of the response and check it against task['solution'] constraint by "
-            "constraint, so that a near miss is reported as a near miss instead of a "
-            "bare zero."
+        task_id = task.get("id", "<no id>")
+        solution = task["solution"]
+        if not isinstance(solution, Mapping):
+            raise ValueError(
+                f"task {task_id!r} has a solution that is not an object: {solution!r}"
+            )
+        variables, constraints = _solution_parts(solution, task_id)
+        assignment = parse_assignment(response, variables)
+        if not assignment:
+            return Outcome(
+                passed=False,
+                score=0.0,
+                detail=(
+                    "the response contains no assignment: expected a JSON object or 'name = "
+                    f"value' lines naming {', '.join(variables)}"
+                ),
+            )
+        failures: list[str] = []
+        for index, constraint in enumerate(constraints, start=1):
+            reason = constraint_failure(constraint, assignment, variables)
+            if reason is not None:
+                failures.append(f"{constraint.get('id') or f'#{index}'} ({reason})")
+        if not failures:
+            return Outcome(
+                passed=True,
+                score=1.0,
+                detail=f"all {len(constraints)} constraints hold",
+            )
+        shown = "; ".join(failures[:3]) + (" ..." if len(failures) > 3 else "")
+        return Outcome(
+            passed=False,
+            score=0.0,
+            detail=(
+                f"satisfied {len(constraints) - len(failures)} of {len(constraints)} constraints; "
+                f"failed: {shown}"
+            ),
         )
 
 
@@ -494,6 +653,7 @@ def default_registry(sandbox: Sandbox | None = None) -> VerifierRegistry:
     )
 
 
-#: Names whose ``verify`` is expected to raise ``NotImplementedError``.  The check
-#: script asserts this, so a stub cannot silently become a zero-scoring verifier.
-UNIMPLEMENTED = ("logic_puzzle",)
+#: Names whose ``verify`` is expected to raise ``NotImplementedError``.  The check script
+#: asserts this, so a stub cannot silently become a zero-scoring verifier.  Empty means the
+#: suite is complete: every declared verifier scores what it claims to score.
+UNIMPLEMENTED: tuple[str, ...] = ()

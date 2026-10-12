@@ -45,4 +45,4 @@ verifiers:
   exact_match: implemented
   numeric: implemented
   unit_test: implemented
-  logic_puzzle: your turn
+  logic_puzzle: implemented

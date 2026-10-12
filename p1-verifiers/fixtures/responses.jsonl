@@ -22,3 +22,5 @@
 {"prompt_id": "t11", "response": "Pi rounds to 3.1 when you keep two digits.\n\n3.1"}
 {"prompt_id": "t12", "response": "def add(a, b):\n    return a + b"}
 {"prompt_id": "t12", "response": "```python\ndef add(a, b):\n    return a - b\n```"}
+{"prompt_id": "t13", "response": "Bob chose blue, so the others are green and red, and Alice cannot be red.\n\nalice = green\nbob = blue\ncarol = red"}
+{"prompt_id": "t13", "response": "Both Alice and Bob can be blue if they share.\n\n{\"alice\": \"blue\", \"bob\": \"blue\", \"carol\": \"red\"}"}
