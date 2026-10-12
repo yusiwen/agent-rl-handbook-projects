@@ -127,7 +127,16 @@ compose's defaults are the ones this project was measured against.
   needs the sandbox.
 - A second sampling round. One round gives you rows and an advantage spread; the round-stability
   check needs two rounds with the same sample ids, which is what `common/runs.py` records.
-- A model that produces a spread at this size. One live round on the reference machine
-  (1.7B, two samples per task) left every group flat - same reward both times - which is a
-  fact about the task set and the sampler, not about the verifier: `--samples 4` and a
-  harder set are the levers, and `check_advantage_spread` is the check that says so.
+- A model that produces a spread at this size. Measured on the reference machine (12 tasks,
+  thinking off): 2 samples at temperature 0.7 left 0 of 12 groups mixed; 4 samples at 0.7 also
+  left 0 of 12 - the same four answers, four times; 4 samples at 1.2 left 2. So re-sampling a
+  cold model changes nothing, and heat alone mostly yields the same answer in a different
+  surface form, which a text comparison scores identically. What moved a group was a task this
+  model gets right *about half the time*: the one logic puzzle here flipped from 2-of-3
+  constraints to 3-of-3 across samples, while the arithmetic stayed flat at zero however it was
+  phrased. The lever is task difficulty against this model - not the sampler count, and not a
+  looser verifier, which was measured too: re-declaring those eight arithmetic tasks as
+  `numeric` moved the pass rate from 33% to 88-90% and moved the flat groups from zero to one -
+  ten of twelve groups flat at 1.0 instead of flat at 0.0, which is the same zero advantage with
+  a better-looking reward curve. `check_advantage_spread` is the check that says which, and it
+  is the reason this is written down instead of discovered during a training run.
