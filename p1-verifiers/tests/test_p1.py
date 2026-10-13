@@ -10,6 +10,7 @@ the discovery root and this file puts the repository and ``p1-verifiers/src`` on
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -637,6 +638,17 @@ class DockerSandboxTests(unittest.TestCase):
         self.assertIn("--memory=512m", argv)
         self.assertIn("/tmp/work:/work", argv)
         self.assertEqual(argv[-3:], ["sh", "-lc", "pytest -q"])
+
+    def test_the_container_runs_as_the_calling_user(self) -> None:
+        # Measured live: running as root, `import main` writes __pycache__ into the bind mount,
+        # and the host user cannot delete it - so cleanup raised PermissionError and the run died
+        # with a traceback instead of a score.
+        argv = DockerSandbox().argv("true", Path("/tmp"), "c")
+        self.assertEqual(argv[argv.index("--user") + 1], f"{os.getuid()}:{os.getgid()}")
+
+    def test_an_explicit_user_wins_over_the_caller(self) -> None:
+        argv = DockerSandbox(user="1000:1000").argv("true", Path("/tmp"), "c")
+        self.assertEqual(argv[argv.index("--user") + 1], "1000:1000")
 
     def test_the_image_is_configurable(self) -> None:
         self.assertIn("python:3.13-alpine", DockerSandbox().argv("true", Path("/tmp"), "c"))

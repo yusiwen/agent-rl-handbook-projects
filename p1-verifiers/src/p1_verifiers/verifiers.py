@@ -14,6 +14,7 @@ asserts both halves of that rule for every name in ``UNIMPLEMENTED``.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -357,6 +358,18 @@ class LocalSandbox:
         )
 
 
+def _caller_identity() -> str:
+    """The calling user as ``uid:gid``, for ``docker run --user``.
+
+    Windows has no ``getuid``; this sandbox targets Linux and macOS, and a machine without one
+    falls back to the conventional first user.  All that matters is that container output stays
+    deletable by whoever owns the working directory.
+    """
+    if hasattr(os, "getuid"):
+        return f"{os.getuid()}:{os.getgid()}"
+    return "1000:1000"
+
+
 @dataclass(frozen=True)
 class DockerSandbox:
     """Runs the tests in a container: no network, a memory cap, and the timeout from outside.
@@ -368,6 +381,9 @@ class DockerSandbox:
 
     image: str = "python:3.13-alpine"
     memory: str = "512m"
+    #: ``uid:gid`` the container runs as.  Empty means "whoever is running the verifier", which
+    #: is the only value that leaves the working directory's owner able to clean it up.
+    user: str = ""
     name = "docker"
 
     def argv(self, command: str, workdir: Path, container: str) -> list[str]:
@@ -377,12 +393,19 @@ class DockerSandbox:
         alternative is generated code with a route out.  ``--memory`` so a runaway allocation
         does not take the host with it.  ``--rm`` plus a name, so a container cannot outlive
         the run that started it.
+
+        ``--user`` is the flag that came from a real run rather than from reasoning, because of
+        what the default does: a container runs as root, ``import main`` writes ``__pycache__``
+        *as root* into the bind mount, and the host user then cannot delete its own working
+        directory.  Measured on the first live run of this path, where that turned a scored
+        attempt into a traceback.  A sandbox must not leave files its caller cannot remove.
         """
         return [
             "docker", "run", "--rm",
             "--name", container,
             "--network=none",
             f"--memory={self.memory}",
+            "--user", self.user or _caller_identity(),
             "-v", f"{workdir}:/work",
             "-w", "/work",
             self.image,
@@ -481,7 +504,13 @@ class UnitTestVerifier:
                 score=0.0,
                 detail="the response is empty, so there is nothing to run the tests against",
             )
-        with tempfile.TemporaryDirectory(prefix="p1-unit-") as tmp:
+        # ignore_cleanup_errors: cleanup is housekeeping, and housekeeping must never turn a
+        # scored attempt into an exception.  Measured, not assumed - the first live run of this
+        # path raised PermissionError from this __exit__, because the container had left a
+        # root-owned __pycache__ in the work directory, and the whole run died instead of
+        # reporting a score.  (``--user`` is what stops it happening; this is what stops it
+        # mattering.)
+        with tempfile.TemporaryDirectory(prefix="p1-unit-", ignore_cleanup_errors=True) as tmp:
             workdir = Path(tmp)
             (workdir / attempt_file).write_text(source + "\n", encoding="utf-8")
             result = self.sandbox.run(tests, workdir, timeout)
