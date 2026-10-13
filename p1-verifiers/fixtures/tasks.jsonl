@@ -1,18 +1,18 @@
-{"id": "t01", "prompt": "What is 17 * 23?", "verifier": "exact_match", "answer": "391"}
-{"id": "t02", "prompt": "What is 144 / 12?", "verifier": "numeric", "answer": "12", "tolerance": 0}
-{"id": "t03", "prompt": "How many minutes are there in 2.5 hours?", "verifier": "numeric", "answer": "150", "tolerance": 0}
-{"id": "t04", "prompt": "What is the 7th prime number?", "verifier": "numeric", "answer": "17", "tolerance": 0}
-{"id": "t05", "prompt": "A train travels at 60 km/h for 3 hours. How far does it go?", "verifier": "numeric", "answer": "180", "tolerance": 0}
-{"id": "t06", "prompt": "What is 2^10?", "verifier": "numeric", "answer": "1024", "tolerance": 0}
-{"id": "t07", "prompt": "What is the sum of the integers from 1 to 20?", "verifier": "numeric", "answer": "210", "tolerance": 0}
-{"id": "t08", "prompt": "If x + 7 = 19, what is x?", "verifier": "numeric", "answer": "12", "tolerance": 0}
-{"id": "t09", "prompt": "What is 15% of 240?", "verifier": "numeric", "answer": "36", "tolerance": 0}
-{"id": "t10", "prompt": "What is the sum of the interior angles of a pentagon, in degrees?", "verifier": "numeric", "answer": "540", "tolerance": 0}
-{"id": "t11", "prompt": "What is pi to two decimal places?", "verifier": "numeric", "answer": "3.14", "tolerance": 0.01}
+{"id": "t01", "prompt": "What is 17 * 23? End with the number alone on the last line.", "verifier": "exact_match", "answer": "391"}
+{"id": "t02", "prompt": "What is 144 / 12? End with the number alone on the last line.", "verifier": "numeric", "answer": "12", "tolerance": 0}
+{"id": "t03", "prompt": "How many minutes are there in 2.5 hours? End with the number alone on the last line.", "verifier": "numeric", "answer": "150", "tolerance": 0}
+{"id": "t04", "prompt": "What is the 7th prime number? End with the number alone on the last line.", "verifier": "numeric", "answer": "17", "tolerance": 0}
+{"id": "t05", "prompt": "A train travels at 60 km/h for 3 hours. How far does it go? End with the number alone on the last line.", "verifier": "numeric", "answer": "180", "tolerance": 0}
+{"id": "t06", "prompt": "What is 2^10? End with the number alone on the last line.", "verifier": "numeric", "answer": "1024", "tolerance": 0}
+{"id": "t07", "prompt": "What is the sum of the integers from 1 to 20? End with the number alone on the last line.", "verifier": "numeric", "answer": "210", "tolerance": 0}
+{"id": "t08", "prompt": "If x + 7 = 19, what is x? End with the number alone on the last line.", "verifier": "numeric", "answer": "12", "tolerance": 0}
+{"id": "t09", "prompt": "What is 15% of 240? End with the number alone on the last line.", "verifier": "numeric", "answer": "36", "tolerance": 0}
+{"id": "t10", "prompt": "What is the sum of the interior angles of a pentagon, in degrees? End with the number alone on the last line.", "verifier": "numeric", "answer": "540", "tolerance": 0}
+{"id": "t11", "prompt": "What is pi to two decimal places? End with the number alone on the last line.", "verifier": "numeric", "answer": "3.14", "tolerance": 0.01}
 {"id": "t12", "prompt": "Write Python code that defines add(a, b) and returns their sum. Answer with the code only.", "verifier": "unit_test", "tests": "python3 -c \"import main; assert main.add(2, 3) == 5 and main.add(-1, 1) == 0 and main.add(0, 0) == 0; print('add works')\"", "attempt_file": "main.py"}
 {"id": "t13", "prompt": "Alice, Bob and Carol each chose a different colour: red, blue or green. Bob chose blue, and Alice did not choose red. Say who chose which colour, one per line as 'name = colour'.", "verifier": "logic_puzzle", "solution": {"variables": ["alice", "bob", "carol"], "constraints": [{"id": "c1", "kind": "distinct"}, {"id": "c2", "kind": "equals", "var": "bob", "value": "blue"}, {"id": "c3", "kind": "not_equals", "var": "alice", "value": "red"}]}}
-{"id": "e01", "prompt": "A shop sells pens at 3 for 12 yuan. How much do 7 pens cost, in yuan?", "verifier": "numeric", "answer": "28", "tolerance": 0}
-{"id": "e02", "prompt": "A tank fills at 5 litres per minute and drains at 2 litres per minute. Starting empty, how many litres are in it after 12 minutes?", "verifier": "numeric", "answer": "36", "tolerance": 0}
+{"id": "e01", "prompt": "A shop sells pens at 3 for 12 yuan. How much do 7 pens cost, in yuan? End with the number alone on the last line.", "verifier": "numeric", "answer": "28", "tolerance": 0}
+{"id": "e02", "prompt": "A tank fills at 5 litres per minute and drains at 2 litres per minute. Starting empty, how many litres are in it after 12 minutes? End with the number alone on the last line.", "verifier": "numeric", "answer": "36", "tolerance": 0}
 {"id": "e03", "prompt": "How many times does the letter r appear in the word strawberry? Answer with just the number.", "verifier": "exact_match", "answer": "3"}
 {"id": "e04", "prompt": "Alice, Bob, Carol and Dave each take a different seat, numbered 1 to 4. Carol is in seat 2, Bob is in seat 3, and Dave is not in seat 1. Say who sits where, one per line as 'name = seat'.", "verifier": "logic_puzzle", "solution": {"variables": ["alice", "bob", "carol", "dave"], "constraints": [{"id": "c1", "kind": "distinct"}, {"id": "c2", "kind": "equals", "var": "carol", "value": "2"}, {"id": "c3", "kind": "equals", "var": "bob", "value": "3"}, {"id": "c4", "kind": "not_equals", "var": "dave", "value": "1"}]}}
 {"id": "e05", "prompt": "Write Python code that defines fizzbuzz(n) returning a list of strings for 1 to n: 'fizz' for multiples of 3, 'buzz' for multiples of 5, 'fizzbuzz' for both, otherwise the number as a string. Answer with the code only.", "verifier": "unit_test", "tests": "python3 -c \"import main; assert main.fizzbuzz(5) == ['1','2','fizz','4','buzz']; assert main.fizzbuzz(15)[-1] == 'fizzbuzz'; print('fizzbuzz works')\"", "attempt_file": "main.py"}

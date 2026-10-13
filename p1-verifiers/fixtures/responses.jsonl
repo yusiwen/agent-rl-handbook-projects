@@ -27,7 +27,7 @@
 {"prompt_id": "e01", "response": "Three pens cost 12, so each costs 4, and seven cost 28.\n\n28"}
 {"prompt_id": "e01", "response": "Three pens cost 12 yuan, so seven pens cost 21 yuan.\n\n21"}
 {"prompt_id": "e02", "response": "It gains 5 - 2 = 3 litres a minute, so after 12 minutes there are 36 litres.\n\n36"}
-{"prompt_id": "e02", "response": "Filling at 5 litres a minute for 12 minutes gives 60 litres.\n\n60"}
+{"prompt_id": "e02", "response": "The tank gains 3 litres a minute, so it holds 36 litres after 12 minutes."}
 {"prompt_id": "e03", "response": "The letter r appears three times in strawberry.\n\n3"}
 {"prompt_id": "e03", "response": "strawberry has two r's.\n\n2"}
 {"prompt_id": "e04", "response": "alice = 1\nbob = 3\ncarol = 2\ndave = 4"}

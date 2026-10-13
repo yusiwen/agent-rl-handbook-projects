@@ -71,29 +71,57 @@ def normalise(text: str) -> str:
     return folded.rstrip(".").strip()
 
 
-def last_number(response: str) -> float | None:
-    """The last number in a response, or ``None`` when it contains none.
+def numbers_in(text: str) -> list[float]:
+    """Every number in a piece of text, in the order it appears."""
+    return [float(match.replace(",", "")) for match in _NUMBER.findall(text)]
 
-    The *last* one, because the system prompt asks for the final answer on the last line
-    and a response that shows its work ends with the number that matters::
 
-        "Pi is 3.14159..., so to two decimal places it is 3.14."   ->   3.14
+#: What every ``NumericVerifier`` detail starts with, so a run record can be read for *why* a
+#: group was flat without re-running it.  ``form=ok`` means the response declared its answer in
+#: the form the task asked for and the value was scored; ``form=no`` means it did not and the
+#: value never entered the reward.
+FORM_PREFIX = "form="
 
-    Units are deliberately ignored.  That is what lets ``150 minutes`` count as the answer
-    ``150`` - and it is also this helper's blind spot: ``150 kilometres`` scores the same
-    as ``150 minutes``.  A task where the unit carries meaning wants ``ExactMatchVerifier``,
-    which compares text and refuses both.
 
-    A date or a version string reads as its last numeric fragment (``2026-10-10`` -> ``-10``),
-    which is another reason those tasks belong to a different verifier.
+def declared_number(response: str) -> tuple[float | None, str]:
+    """The number a response declares as its answer, plus the reason when it declares none.
 
-    Returns ``None`` rather than raising: a response with no number in it is a failed
+    The rule is the one the tasks state and the system prompt asks for: **the final non-empty
+    line is the declaration, and it carries exactly one number.**  So ``150``, ``150 minutes``,
+    ``**36 litres**`` and ``3.14.`` declare an answer, while ``"So the tank contains 36 litres
+    after 12 minutes."`` does not - that line asserts two quantities, and a verifier that picks
+    one of them is choosing, not measuring.
+
+    The rule this replaces was "the last number anywhere in the response", and it was wrong in
+    both directions, measured rather than imagined:
+
+    * a **false negative**: ``"There are 150 minutes in 2.5 hours."`` is the right answer in one
+      line, and the last number in it is ``2.5`` - so a correct attempt scored zero, on every
+      sample, deterministically;
+    * **false variance**: four samples of a tank problem all computed 36 correctly, and exactly
+      the two that ended ``"contains 36 litres after 12 minutes"`` scored zero because ``12``
+      came last.  A reward that flips on where a sentence stops is a reward nobody can defend,
+      and training on it teaches trailing digits rather than arithmetic.
+
+    Units are still deliberately ignored **when the answer is declared**: a final line of ``150
+    minutes`` is the answer ``150``, and ``150 kilometres`` is too.  A task where the unit carries
+    meaning wants ``ExactMatchVerifier``, which compares text and refuses both.
+
+    Returns ``(None, reason)`` rather than raising: a response that declares nothing is a failed
     attempt, not a defect in the harness, and the two must not look alike in a report.
     """
-    matches = _NUMBER.findall(response)
-    if not matches:
-        return None
-    return float(matches[-1].replace(",", ""))
+    line = final_answer(response)
+    if not line:
+        return None, "the response is empty"
+    found = numbers_in(line)
+    if not found:
+        if not numbers_in(response):
+            return None, "the response contains no number"
+        return None, f"the final line states no number ({line!r})"
+    if len(found) > 1:
+        seen = ", ".join(f"{value:g}" for value in found)
+        return None, f"the final line states {len(found)} numbers ({seen}): {line!r}"
+    return found[0], ""
 
 
 def _as_number(value: Any, *, what: str) -> float:
@@ -142,26 +170,44 @@ class ExactMatchVerifier:
 
 
 class NumericVerifier:
-    """Scores a number within a tolerance.  Tasks carry ``answer`` plus ``tolerance``.
+    """Scores a *declared* number within a tolerance.  Tasks carry ``answer`` and ``tolerance``.
 
-    The tolerance is what makes some tasks scoreable at all.  ``1024`` and ``1024.0`` are
-    the same answer to a mathematician and different strings to ``ExactMatchVerifier``; a
-    model that writes ``3.14159`` for "pi to two decimal places" is right, and a text
-    comparison would call it wrong.  So the question here is "is the last number in the
-    response close enough", and the answer is a pass or a fail rather than a graded score:
-    partial credit for wrong arithmetic is a reward you cannot explain later.
+    Two questions, in this order, and the order is the whole design:
 
-    The comparison is ``abs(actual - expected) <= tolerance``.  One caveat belongs in the
-    open: both numbers are binary floats, so a value that *looks* exactly one tolerance away
-    can land on either side of it.  Measured, not assumed: ``abs(3.15 - 3.14)`` is
-    ``0.009999999999999787``, which is inside a tolerance of ``0.01``.  A tolerance written
-    to one significant figure is a statement about the answer, not about the last binary
-    digit - do not put a task's boundary on a knife edge and expect the tie to resolve your
-    way.
+    1. **Did the response declare an answer in the form the task asked for?**  The final
+       non-empty line must carry exactly one number (``declared_number``).  If it does not,
+       the attempt scores ``0.0`` - not because the arithmetic was wrong, but because there is
+       no answer to judge, and the detail says exactly that.
+    2. **Is that number within the tolerance?**  ``abs(declared - expected) <= tolerance``.
 
-    What it will not do: understand units, algebra or equations, or guess which of several
-    numbers in a response was meant.  It takes the last one.  When that is not good enough
-    for a task, the task needs a different verifier, not a cleverer regex.
+    The first question is the format gate, and it exists because of a measurement rather than a
+    preference: with the looser rule ("the last number anywhere"), a correct one-line answer of
+    ``"There are 150 minutes in 2.5 hours."`` scored zero on every sample, and four identical
+    correct tank answers split two passes and two failures depending on whether the sentence
+    ended at ``"...36 litres"`` or ``"...36 litres after 12 minutes"``.  A reward that turns on
+    where a sentence stops cannot be defended, and a group whose samples disagree for that
+    reason is not a training signal - it is noise with a confidence interval.
+
+    Because the gate is a *condition* and not a bonus, the reward stays in ``[0, 1]``: an attempt
+    that formats without computing earns nothing, and the value never enters the reward when the
+    form is wrong.  Both facts are readable in the detail, which always begins ``form=ok`` or
+    ``form=no`` (``FORM_PREFIX``), so a flat group can be attributed: ``form=no`` throughout means
+    the model will not answer in the asked-for form, ``form=ok`` with a wrong value means it
+    cannot do the arithmetic.  Those are different problems with different fixes, and before this
+    rule they produced the same reward curve.
+
+    The tolerance is what makes some tasks scoreable at all: ``1024`` and ``1024.0`` are the same
+    answer to a mathematician and different strings to ``ExactMatchVerifier``, and a model that
+    writes ``3.14159`` for "pi to two decimal places" is right.  One caveat belongs in the open:
+    both numbers are binary floats, so a value that *looks* exactly one tolerance away can land on
+    either side of it.  Measured, not assumed: ``abs(3.15 - 3.14)`` is ``0.009999999999999787``,
+    which is inside a tolerance of ``0.01``.  A tolerance written to one significant figure is a
+    statement about the answer, not about the last binary digit - do not put a task's boundary on
+    a knife edge and expect the tie to resolve your way.
+
+    What it will not do: understand units, understand algebra or equations, or read an answer out
+    of a sentence that asserts several quantities.  When a task needs that, it needs a different
+    verifier, not a cleverer regex.
     """
 
     name = "numeric"
@@ -183,21 +229,29 @@ class NumericVerifier:
                 f"task {task_id!r} has a negative tolerance ({tolerance!r}); a tolerance is a "
                 "distance, so write the value you mean"
             )
-        actual = last_number(response)
-        if actual is None:
-            return Outcome(
-                passed=False,
-                score=0.0,
-                detail=(
-                    f"expected {expected:g} +/- {tolerance:g}, but the response contains no number"
-                ),
+
+        declared, reason = declared_number(response)
+        if declared is None:
+            detail = (
+                f"{FORM_PREFIX}no; expected {expected:g} +/- {tolerance:g}, but {reason} - "
+                "the answer must be declared on its own last line, as the task asks"
             )
-        delta = abs(actual - expected)
+            # Name the near miss when the arithmetic was actually right: a reader deciding
+            # whether to fix the prompt or the task set needs to know which half failed.
+            seen = numbers_in(final_answer(response))
+            if any(abs(value - expected) <= tolerance for value in seen):
+                detail += "; the expected value is stated there, so the arithmetic looks right"
+            return Outcome(passed=False, score=0.0, detail=detail)
+
+        delta = abs(declared - expected)
         matched = delta <= tolerance
         return Outcome(
             passed=matched,
             score=1.0 if matched else 0.0,
-            detail=f"expected {expected:g} +/- {tolerance:g}, got {actual:g} (off by {delta:g})",
+            detail=(
+                f"{FORM_PREFIX}ok; expected {expected:g} +/- {tolerance:g}, "
+                f"got {declared:g} (off by {delta:g})"
+            ),
         )
 
 

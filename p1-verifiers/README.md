@@ -65,26 +65,35 @@ than quietly changing what the run demonstrates.
 
 ### Why the task set looks like this
 
-The set was changed once, on evidence from a live run against a 1.7B model (numbers in the
-last section). Every arithmetic group came back flat - and the arithmetic was mostly *right*,
-it was the text that lost: prose around the number, a unit after it, `1024.0` where the
-fixture said `1024`. Scoring a numeric answer by comparing strings measures formatting, not
-arithmetic, so those tasks now declare `numeric` with a tolerance of `0` and are judged on
-the value they state. That repair corrects the measurement; it does not create spread, and
-this file says so where it reports the result.
+The set was changed twice, and both times what changed it was a live run against a 1.7B model
+rather than an opinion about difficulty. The numbers are in the last section.
 
-The change aimed at spread is the task set's second band. Five tasks were added whose
-difficulty is aimed at *this* model rather than at arithmetic in general: two multi-step word
-problems (a unit price, a two-rate tank), a letter-count that models fail by construction, a
-four-seat puzzle, and a second unit-test task. They are the set's edge; whether they actually
-move is a question for the live run, not for this paragraph.
+**The arithmetic answers are judged as numbers.** Every arithmetic group came back flat, and the
+arithmetic was mostly *right* - the text was not: prose around the number, a unit after it,
+`1024.0` where the fixture said `1024`. Comparing a numeric answer by text measures formatting,
+so those tasks declare `numeric` with a tolerance of `0`.
+
+**Then the reward had to stop depending on where a sentence ends.** The first run under that rule
+produced two verdicts that could not be defended, both from real output: `"There are 150 minutes
+in 2.5 hours."` is correct and scored `0.0` on every sample, because the last number in it is
+`2.5`; and four identical tank answers split two passes and two failures, because two of them
+ended at the litres and two ended at the minutes. So `numeric` now requires the answer to be
+*declared* - the final non-empty line, carrying exactly one number - records that fact in every
+detail as `form=ok` or `form=no`, and never scores a value it could not read. What that costs is
+in the verifier table above, and this file does not pretend otherwise: a correct answer written
+as prose is a zero, and the zero says why.
+
+**Five tasks were added at this model's edge.** Two of them sit there: the sum-of-a-series
+question, which flips between `210` and `155`, and the logic puzzle. The other three are
+instructive rather than useful - two are too easy for this model (flat at 1.0 every time) and
+the letter count is beyond it (a deterministic `4`, flat at 0.0).
 
 ## The verifiers
 
 | Verifier | Use it when | The trap |
 |---|---|---|
 | `exact_match` | the answer has one agreed surface form (a number, a short name, a date) | the same value in a different surface form fails: `1024.0` is not `1024` |
-| `numeric` | the answer is a number and a tolerance is acceptable (`1024` vs `1024.0`) | units are ignored, so `150 kilometres` scores the same as `150 minutes`; a task where the unit carries meaning wants `exact_match` |
+| `numeric` | the answer is a number, the task asks for it on its own last line, and a tolerance is acceptable (`1024` vs `1024.0`) | the answer must be **declared**: the final line has to carry exactly one number, so `"...holds 36 litres after 12 minutes"` scores zero even though 36 is in it. Every detail says which half passed (`form=ok` / `form=no`) and names the numbers it saw, so a flat group can be attributed instead of guessed at. Units are ignored, so `150 kilometres` scores the same as `150 minutes` |
 | `unit_test` | the task ships tests that return 0 when the attempt is correct | the tests run in a sandbox, so the machine running the *runner* needs a container runtime; without one the run stops with an error instead of scoring a zero, because "this machine cannot run the tests" is not the model's fault |
 | `logic_puzzle` | the answer is a structured assignment and the task can state constraints over it | the constraints *are* the answer: a near miss scores a hard zero, so the detail is where the gradient is - it names the constraint that failed and why - and a solution with no variables, no constraints or an unknown kind is an error rather than a task that scores zero |
 
@@ -145,16 +154,26 @@ compose's defaults are the ones this project was measured against.
   needs the sandbox.
 - A second sampling round. One round gives you rows and an advantage spread; the round-stability
   check needs two rounds with the same sample ids, which is what `common/runs.py` records.
-- A model that produces a spread at this size. Measured on the reference machine (12 tasks,
-  thinking off): 2 samples at temperature 0.7 left 0 of 12 groups mixed; 4 samples at 0.7 also
-  left 0 of 12 - the same four answers, four times; 4 samples at 1.2 left 2. So re-sampling a
-  cold model changes nothing, and heat alone mostly yields the same answer in a different
-  surface form, which a text comparison scores identically. What moved a group was a task this
-  model gets right *about half the time*: the one logic puzzle here flipped from 2-of-3
-  constraints to 3-of-3 across samples, while the arithmetic stayed flat at zero however it was
-  phrased. The lever is task difficulty against this model - not the sampler count, and not a
-  looser verifier, which was measured too: re-declaring those eight arithmetic tasks as
-  `numeric` moved the pass rate from 33% to 88-90% and moved the flat groups from zero to one -
-  ten of twelve groups flat at 1.0 instead of flat at 0.0, which is the same zero advantage with
-  a better-looking reward curve. `check_advantage_spread` is the check that says which, and it
-  is the reason this is written down instead of discovered during a training run.
+- **A model that produces a spread at this size, and a reward that can be believed.** Measured
+  on the reference machine, thinking off, over 16 scoreable tasks - the two `unit_test` ones need
+  a container runtime, which this machine deliberately does not have.
+  *Round one*, with the loose rule and no format instruction in the prompts: 2 samples at
+  temperature 0.7 left 0 of 16 groups mixed, 4 samples at 0.7 left 1, 4 samples at 1.2 left 1.
+  Reading the rows rather than the summary is what showed the wrong thing was being fixed: the
+  one "mixed" group had split because two sentences ended at the value and two ended at the
+  minutes, and a *correct* task was flat at 0 because the last number in a one-line answer was
+  `2.5` instead of `150`.
+  *Round two*, with the format gate and the tasks asking for the form: 1, 2 and 4 mixed groups
+  out of 16 - and the pass rate *fell* (78%, 75%, 72% against 81%, 79%, 84%), because the reward
+  stopped paying for answers it never read. Two of the four movers are still shape rather than
+  skill (one sample declares its answer, another closes with `$$`); the ones that are not are the
+  two worth training on: the sum-of-a-series question that flips between `210` and `155`, and the
+  four-seat puzzle that flips between 3 of 4 constraints holding and 4 of 4.
+  The same run measured a second lever, and it is the cheapest one so far: **asking for the format
+  in the task works at this model size.** With one sentence added to the prompt, the model that
+  had answered `"There are 150 minutes in 2.5 hours."` started answering `150` - a task scoring
+  0 of 4 because of the verifier became a task scoring 4 of 4 because of the prompt. 79-88% of
+  numeric attempts now declare their answer. The other side of that is the honest cost: a correct
+  sentence that declares nothing scores zero, and `check_advantage_spread` plus the flat-group
+  attribution printed by `checks/check_p1.py` are what say so instead of leaving it to be
+  discovered during a training run.

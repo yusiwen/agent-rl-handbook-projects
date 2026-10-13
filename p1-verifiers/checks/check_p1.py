@@ -13,8 +13,13 @@ What it checks:
    numbers are counted rather than estimated.
 2. **the four shared checks** - mask, boundaries, terms, advantage spread, all on rows
    produced by this project's harness rather than by the fixtures in ``common/``.
-3. **the fixture contract** - the fixture is built to have a known pass rate and a known
-   number of mixed groups, so an accidental edit to it is caught rather than absorbed.
+3. **the fixture contract** - the fixture is built to have a known pass rate, a known number of
+   mixed groups and a known number of attempts that declare their answer in the asked-for form,
+   so an accidental edit to it is caught rather than absorbed.
+3b. **the attribution** - every flat group is printed with *why* it is flat, which is the
+   question a reward curve cannot answer on its own: a model that cannot compute and a model
+   that will not answer in the asked-for form are different problems, and this report tells
+   them apart instead of leaving both at "flat".
 4. **the stub contract** - an unimplemented verifier declines tasks and raises when called,
    so it can never quietly score zero.
 
@@ -56,6 +61,7 @@ from p1_verifiers import (  # noqa: E402
     run_taskset,
 )
 from p1_verifiers.harness import PSEUDO_TOKENISER  # noqa: E402
+from p1_verifiers.verifiers import FORM_PREFIX  # noqa: E402
 
 FIXTURES = HERE.parent / "fixtures"
 TASKS = FIXTURES / "tasks.jsonl"
@@ -68,6 +74,12 @@ EXPECTED_COVERED = 18
 EXPECTED_SAMPLES_PER_TASK = 2
 EXPECTED_PASSED = 18
 EXPECTED_MIXED_GROUPS = 16
+#: How many of the fixture's numeric attempts declare an answer in the asked-for form.  One
+#: attempt in the fixture deliberately does not: correct arithmetic, a final line that asserts
+#: two quantities - the shape a live model produced most often, kept here so the gate can never
+#: forget that it is a failure mode.
+EXPECTED_FORM_OK = 23
+EXPECTED_NUMERIC_ROWS = 24
 
 
 def code_sha() -> str:
@@ -151,6 +163,34 @@ def main() -> int:
     print(f"fixture contract: {passed}/{total} passed, {mixed}/{len(spreads)} groups mixed")
     if mixed != EXPECTED_MIXED_GROUPS:
         failures.append(f"expected {EXPECTED_MIXED_GROUPS} mixed groups, counted {mixed}")
+
+    # A flat group is the thing you go to training to fix, so it is the thing this report has
+    # to explain.  'form=no' throughout means the model will not answer in the asked-for form;
+    # 'form=ok' with a flat zero means it cannot do the arithmetic.  Before the format gate
+    # both produced the same curve, and one of the two did not exist at all.
+    numeric_rows = [row for row in rows if row.extras.get("verifier") == "numeric"]
+    declared = sum(
+        1 for row in numeric_rows if str(row.extras.get("detail", "")).startswith(f"{FORM_PREFIX}ok")
+    )
+    print(f"declared answers: {declared}/{len(numeric_rows)} numeric attempts use the asked-for form")
+    if (declared, len(numeric_rows)) != (EXPECTED_FORM_OK, EXPECTED_NUMERIC_ROWS):
+        failures.append(
+            f"the fixture contract says {EXPECTED_FORM_OK}/{EXPECTED_NUMERIC_ROWS} declared "
+            f"answers, counted {declared}/{len(numeric_rows)}"
+        )
+    print("flat groups, and what kind of flat they are:")
+    for group_id in sorted({row.group_id for row in rows}):
+        group = [row for row in rows if row.group_id == group_id]
+        rewards = {row.reward() for row in group}
+        if len(rewards) > 1:
+            continue
+        forms = {
+            str(row.extras.get("detail", "")).split(";")[0]
+            for row in group
+            if str(row.extras.get("detail", "")).startswith(FORM_PREFIX)
+        }
+        why = f" [{', '.join(sorted(forms))}]" if forms else " [not a numeric verdict]"
+        print(f"  {group_id}: flat at {min(rewards):g}{why}")
 
     # The stubs must be honestly unimplemented: never a silent zero.  An empty UNIMPLEMENTED
     # means the suite is complete, and this says so rather than iterating nothing and printing

@@ -51,9 +51,11 @@ from p1_verifiers import (  # noqa: E402
     run_taskset,
 )
 from p1_verifiers.verifiers import (  # noqa: E402
+    FORM_PREFIX,
     constraint_failure,
+    declared_number,
     final_answer,
-    last_number,
+    numbers_in,
     parse_assignment,
 )
 
@@ -110,26 +112,57 @@ class NormaliseTests(unittest.TestCase):
         self.assertNotEqual(normalise("1,000"), normalise("1000"))
 
 
-class LastNumberTests(unittest.TestCase):
-    def test_the_last_number_wins_not_the_first(self) -> None:
-        self.assertEqual(last_number("pi is 3.14159, so 3.14"), 3.14)
+class NumbersInTests(unittest.TestCase):
+    def test_every_number_in_the_order_it_appears(self) -> None:
+        self.assertEqual(numbers_in("3 litres a minute for 12 minutes is 36"), [3.0, 12.0, 36.0])
 
-    def test_integers_decimals_and_signs(self) -> None:
-        self.assertEqual(last_number("the answer is 12"), 12.0)
-        self.assertEqual(last_number("x = -20"), -20.0)
-        self.assertEqual(last_number("+7"), 7.0)
+    def test_thousands_separators_exponents_and_signs_parse(self) -> None:
+        self.assertEqual(numbers_in("a population of 1,000,000"), [1000000.0])
+        self.assertEqual(numbers_in("about 1e3 tokens"), [1000.0])
+        self.assertEqual(numbers_in("x = -20"), [-20.0])
 
-    def test_thousands_separators_and_exponents_parse(self) -> None:
-        self.assertEqual(last_number("a population of 1,000,000"), 1000000.0)
-        self.assertEqual(last_number("about 1e3 tokens"), 1000.0)
+    def test_no_number_is_an_empty_list_not_an_error(self) -> None:
+        self.assertEqual(numbers_in("I do not know."), [])
+        self.assertEqual(numbers_in(""), [])
 
-    def test_a_response_without_a_number_has_no_number(self) -> None:
-        self.assertIsNone(last_number("I do not know."))
-        self.assertIsNone(last_number(""))
 
-    def test_a_date_reads_as_its_last_numeric_fragment(self) -> None:
-        # Documented blind spot, not an accident: this helper is for arithmetic answers.
-        self.assertEqual(last_number("2026-10-10"), -10.0)
+class DeclaredNumberTests(unittest.TestCase):
+    """The answer is *declared*: the last line, carrying exactly one number.
+
+    This rule replaced "the last number anywhere in the response" after a live run showed both
+    of that rule's failure modes on real output (see ``NumericVerifierTests`` below).
+    """
+
+    def test_a_bare_number_on_the_last_line_declares_it(self) -> None:
+        self.assertEqual(declared_number("reasoning here\n\n391"), (391.0, ""))
+
+    def test_a_single_line_response_declares_its_one_number(self) -> None:
+        self.assertEqual(declared_number("42")[0], 42.0)
+
+    def test_a_number_with_its_unit_still_declares_it(self) -> None:
+        # Units stay ignored, which is the documented hedge: '150 minutes' is the answer 150.
+        self.assertEqual(declared_number("150 minutes")[0], 150.0)
+
+    def test_a_prose_line_asserting_two_quantities_declares_nothing(self) -> None:
+        # The measured false negative: the right answer, in one line, read as no answer at all.
+        value, reason = declared_number("There are 150 minutes in 2.5 hours.")
+        self.assertIsNone(value)
+        self.assertIn("states 2 numbers", reason)
+
+    def test_the_last_line_is_the_declaration_even_when_earlier_lines_have_numbers(self) -> None:
+        self.assertEqual(declared_number("5 - 2 = 3 litres a minute\n\n36")[0], 36.0)
+
+    def test_a_final_line_with_no_number_says_so(self) -> None:
+        value, reason = declared_number("The tank holds 36 litres.\n\nThat is the result.")
+        self.assertIsNone(value)
+        self.assertIn("final line states no number", reason)
+
+    def test_a_response_with_no_number_at_all_says_so(self) -> None:
+        for response in ("I do not know.", ""):
+            with self.subTest(response=response):
+                value, reason = declared_number(response)
+                self.assertIsNone(value)
+                self.assertTrue(reason)
 
 
 class ExactMatchTests(unittest.TestCase):
@@ -169,7 +202,7 @@ class NumericVerifierTests(unittest.TestCase):
         return {"id": "n", "answer": answer, "tolerance": tolerance}
 
     def test_the_same_value_scores_one_whatever_its_surface_form(self) -> None:
-        for response in ("3.14", "3.140", "π is 3.14159, so 3.14", "the value is 3.14 exactly"):
+        for response in ("3.14", "3.140", "the value is 3.14 exactly", "pi, to two places:\n\n3.14"):
             with self.subTest(response=response):
                 self.assertTrue(self.verifier.verify(self.task(), response).passed)
 
@@ -182,6 +215,7 @@ class NumericVerifierTests(unittest.TestCase):
         self.assertFalse(outcome.passed)
         self.assertEqual(outcome.score, 0.0)
         self.assertIn("off by 0.04", outcome.detail)
+        self.assertTrue(outcome.detail.startswith(f"{FORM_PREFIX}ok"))
 
     def test_the_tolerance_is_a_knife_edge_at_floating_point(self) -> None:
         # Measured, not assumed: abs(3.15 - 3.14) really is 0.009999999999999787, which is
@@ -205,6 +239,58 @@ class NumericVerifierTests(unittest.TestCase):
         self.assertFalse(outcome.passed)
         self.assertEqual(outcome.score, 0.0)
         self.assertIn("contains no number", outcome.detail)
+        self.assertTrue(outcome.detail.startswith(f"{FORM_PREFIX}no"))
+
+    # --- the format gate ---------------------------------------------------------------
+    # Two live failure modes are pinned here, because both looked like arithmetic from the
+    # reward curve and neither was.
+
+    def test_a_correct_answer_in_prose_scores_zero_and_says_the_arithmetic_looked_right(self) -> None:
+        # Measured live: 'There are 150 minutes in 2.5 hours.' is the right answer, and under
+        # 'the last number anywhere' it scored 0.0 on all four samples, because 2.5 came last.
+        # It still scores 0.0 - but the reason is stated, and the detail says which half
+        # failed, so a flat group can be attributed instead of guessed at.
+        outcome = self.verifier.verify(self.task("150", 0.0), "There are 150 minutes in 2.5 hours.")
+        self.assertFalse(outcome.passed)
+        self.assertEqual(outcome.score, 0.0)
+        self.assertIn("states 2 numbers", outcome.detail)
+        self.assertIn("the arithmetic looks right", outcome.detail)
+
+    def test_a_wrong_answer_in_prose_does_not_claim_the_arithmetic_looked_right(self) -> None:
+        outcome = self.verifier.verify(self.task("150", 0.0), "There are 90 minutes in 1.5 hours.")
+        self.assertFalse(outcome.passed)
+        self.assertNotIn("the arithmetic looks right", outcome.detail)
+
+    def test_identical_answers_score_the_same_however_the_sentence_ends(self) -> None:
+        # The measured false variance: four samples of a tank problem all computed 36, and the
+        # two whose last line ended at the minutes scored 0.0 while the two that ended at the
+        # litres scored 1.0. Both halves now score the same, for the same stated reason: that
+        # line asserts two quantities, so nothing was declared.
+        ends_after_the_minutes = "3 litres a minute.\n\nSo, after 12 minutes, the tank contains 36 litres."
+        ends_at_the_minutes = "3 litres a minute.\n\nSo, the tank contains 36 litres after 12 minutes."
+        first = self.verifier.verify(self.task("36", 0.0), ends_after_the_minutes)
+        second = self.verifier.verify(self.task("36", 0.0), ends_at_the_minutes)
+        self.assertEqual((first.passed, first.score), (second.passed, second.score))
+        self.assertFalse(first.passed)
+        self.assertTrue(first.detail.startswith(f"{FORM_PREFIX}no"))
+
+    def test_the_boundary_of_the_rule_is_a_stated_one(self) -> None:
+        # Where the rule draws its line, written down rather than discovered: a final line with
+        # the value and its unit declares that value - add a second quantity and it declares
+        # nothing. That is the price of a rule a reader can check; the alternative is a cleverer
+        # extractor, which is a new failure mode nobody can see in a reward curve.
+        declared = self.verifier.verify(self.task("36", 0.0), "3 litres a minute.\n\n36 litres")
+        undeclared = self.verifier.verify(
+            self.task("36", 0.0), "3 litres a minute.\n\n36 litres after 12 minutes"
+        )
+        self.assertTrue(declared.passed)
+        self.assertFalse(undeclared.passed)
+        self.assertIn("states 2 numbers", undeclared.detail)
+
+    def test_a_declared_answer_is_scored_whatever_the_prose_before_it_says(self) -> None:
+        outcome = self.verifier.verify(self.task("36", 0.0), "3 litres a minute for 12 minutes.\n\n36")
+        self.assertTrue(outcome.passed)
+        self.assertTrue(outcome.detail.startswith(f"{FORM_PREFIX}ok"))
 
     def test_can_verify_needs_an_answer_and_a_tolerance(self) -> None:
         self.assertTrue(self.verifier.can_verify(self.task()))
@@ -833,6 +919,16 @@ class FixtureContractTests(unittest.TestCase):
                 rows = [row for row in fixture_rows() if row.prompt_id == task_id]
                 self.assertEqual([row.extras["passed"] for row in rows], [True, False])
                 self.assertEqual({row.reward() for row in rows}, {0.0, 1.0})
+
+    def test_the_prose_attempt_scores_zero_for_its_form_not_its_arithmetic(self) -> None:
+        # The live failure, pinned in the offline fixture: the arithmetic is right (both 3 and
+        # 36 are stated) and the attempt scores zero because no answer was declared. A fixture
+        # of tidy answers only could never catch this.
+        rows = [row for row in fixture_rows() if row.prompt_id == "e02"]
+        self.assertEqual([row.extras["passed"] for row in rows], [True, False])
+        self.assertTrue(str(rows[0].extras["detail"]).startswith(f"{FORM_PREFIX}ok"))
+        self.assertTrue(str(rows[1].extras["detail"]).startswith(f"{FORM_PREFIX}no"))
+        self.assertIn("the arithmetic looks right", str(rows[1].extras["detail"]))
 
     def test_the_fixture_keeps_two_flat_groups_on_purpose(self) -> None:
         # Not every group can be made to move: this responder is reliable on t02 and out of its
