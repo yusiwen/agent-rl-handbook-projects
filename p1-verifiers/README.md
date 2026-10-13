@@ -148,10 +148,17 @@ compose's defaults are the ones this project was measured against.
   been proven end to end (2026-10-10); what a live model then scores is the model's number, not
   this fixture's.
 - **A container runtime where the runner runs, for `unit_test`.** This machine deliberately runs
-  no docker, so a live run started here would raise `SandboxUnavailable` the moment it reached a
-  unit-test task, rather than running generated code directly on the host. That behaviour is the
-  point, and it is also a step to plan for: the machine that judges the tests is the one that
-  needs the sandbox.
+  no docker, so a live run started here raises `SandboxUnavailable` the moment it reaches a
+  unit-test task rather than running generated code on the host. That behaviour is the point, and
+  it is also a step to plan for: the machine that judges the tests is the one that needs the
+  sandbox. Verified on a machine that has one - the reference DGX Spark, 2026-10-13: all 18 tasks
+  scored, both unit-test tasks 20 of 20 attempts across three sampler configurations, every row
+  reading `tests passed (docker; attempt written to main.py)`. That run earned its keep by
+  breaking in a way no fixture sandbox can: docker runs as root, the model's attempt wrote
+  `__pycache__` into the bind mount *as root*, and the verifier's cleanup then raised
+  `PermissionError` and killed the run instead of reporting a score. The container now runs as
+  the caller (`--user`), and cleanup is housekeeping that cannot fail a score - both in the
+  `DockerSandbox` docstring, and both tested.
 - A second sampling round. One round gives you rows and an advantage spread; the round-stability
   check needs two rounds with the same sample ids, which is what `common/runs.py` records.
 - **A model that produces a spread at this size, and a reward that can be believed.** Measured
@@ -169,6 +176,13 @@ compose's defaults are the ones this project was measured against.
   skill (one sample declares its answer, another closes with `$$`); the ones that are not are the
   two worth training on: the sum-of-a-series question that flips between `210` and `155`, and the
   four-seat puzzle that flips between 3 of 4 constraints holding and 4 of 4.
+  *A third run, on the reference machine, covered all 18 tasks with `unit_test` included*: 1, 3 and
+  5 mixed groups out of 18; pass rates 80%, 79% and 75%; both unit-test groups flat at 1.0, because
+  this model writes `add` and `fizzbuzz` correctly every time. It also corrected a claim from the
+  16-task run: the letter count is **not** beyond the model - it answered `4` four times on this
+  Mac and `3`, `5`, `4`, `5` on the Spark, so it is an edge task and its group moves. After both
+  runs the movers are the series sum, the four-seat puzzle, the letter count, and one unit-price
+  word problem whose movement is form rather than skill.
   The same run measured a second lever, and it is the cheapest one so far: **asking for the format
   in the task works at this model size.** With one sentence added to the prompt, the model that
   had answered `"There are 150 minutes in 2.5 hours."` started answering `150` - a task scoring
