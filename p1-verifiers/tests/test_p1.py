@@ -606,11 +606,11 @@ class TaskLoadingTests(unittest.TestCase):
 
     def test_the_real_fixture_loads_with_the_documented_shape(self) -> None:
         tasks = load_tasks(FIXTURES / "tasks.jsonl")
-        self.assertEqual(len(tasks), 13)
-        self.assertEqual(sum(1 for task in tasks if task.verifier == "exact_match"), 10)
-        self.assertEqual(sum(1 for task in tasks if task.verifier == "numeric"), 1)
-        self.assertEqual(sum(1 for task in tasks if task.verifier == "unit_test"), 1)
-        self.assertEqual(sum(1 for task in tasks if task.verifier == "logic_puzzle"), 1)
+        self.assertEqual(len(tasks), 18)
+        self.assertEqual(sum(1 for task in tasks if task.verifier == "exact_match"), 2)
+        self.assertEqual(sum(1 for task in tasks if task.verifier == "numeric"), 12)
+        self.assertEqual(sum(1 for task in tasks if task.verifier == "unit_test"), 2)
+        self.assertEqual(sum(1 for task in tasks if task.verifier == "logic_puzzle"), 2)
 
 
 class ResponderTests(unittest.TestCase):
@@ -661,11 +661,12 @@ class CoveragePartitionTests(unittest.TestCase):
     def test_every_task_in_the_fixture_is_now_covered(self) -> None:
         tasks = load_tasks(FIXTURES / "tasks.jsonl")
         covered, uncovered = partition_by_coverage(tasks, default_registry())
-        self.assertEqual(len(covered), 13)
+        self.assertEqual(len(covered), 18)
         self.assertEqual(uncovered, [])
-        self.assertEqual([task.id for task in covered if task.verifier == "numeric"], ["t11"])
-        self.assertEqual([task.id for task in covered if task.verifier == "unit_test"], ["t12"])
-        self.assertEqual([task.id for task in covered if task.verifier == "logic_puzzle"], ["t13"])
+        self.assertEqual([task.id for task in covered if task.verifier == "numeric"],
+                         ["t02", "t03", "t04", "t05", "t06", "t07", "t08", "t09", "t10", "t11", "e01", "e02"])
+        self.assertEqual([task.id for task in covered if task.verifier == "unit_test"], ["t12", "e05"])
+        self.assertEqual([task.id for task in covered if task.verifier == "logic_puzzle"], ["t13", "e04"])
 
     def test_a_task_that_declares_a_verifier_which_declines_it_is_reported_with_a_reason(self) -> None:
         # A logic_puzzle task with no solution: the verifier is registered, but this task is
@@ -747,11 +748,11 @@ class TaskSetRunTests(unittest.TestCase):
 
     def test_two_samples_per_task_form_groups(self) -> None:
         rows = self.rows()
-        self.assertEqual(len(rows), 26)
+        self.assertEqual(len(rows), 36)
         grouped: dict[str, set[int]] = {}
         for row in rows:
             grouped.setdefault(row.group_id, set()).add(row.sample_index)
-        self.assertEqual(len(grouped), 13)
+        self.assertEqual(len(grouped), 18)
         self.assertTrue(all(indices == {0, 1} for indices in grouped.values()))
 
     def test_every_row_has_a_usable_mask_and_a_recorded_turn_count(self) -> None:
@@ -760,7 +761,7 @@ class TaskSetRunTests(unittest.TestCase):
             self.assertEqual(row.turn_count, 1)
 
     def test_the_fixture_pass_rate_is_what_the_check_script_asserts(self) -> None:
-        self.assertEqual(pass_rate(self.rows()), (17, 26))
+        self.assertEqual(pass_rate(self.rows()), (18, 36))
 
     def test_samples_per_task_must_be_positive(self) -> None:
         with self.assertRaises(ValueError):
@@ -768,7 +769,7 @@ class TaskSetRunTests(unittest.TestCase):
 
     def test_the_report_names_the_misses(self) -> None:
         text = report(self.rows())
-        self.assertIn("17/26 (65%)", text)
+        self.assertIn("18/36 (50%)", text)
         self.assertIn("missed:", text)
         self.assertIn("tokens:", text)
 
@@ -822,8 +823,24 @@ class FixtureContractTests(unittest.TestCase):
     def test_every_fixture_row_says_which_sandbox_scored_it(self) -> None:
         # A row scored without a container must be distinguishable from one scored inside one.
         for row in fixture_rows():
-            if row.prompt_id == "t12":
+            if row.prompt_id in ("t12", "e05"):
                 self.assertIn("local subprocess (no isolation)", row.extras["detail"])
+
+    def test_the_added_tasks_are_one_pass_and_one_fail_each(self) -> None:
+        # The five tasks added for difficulty: a pair that does not move adds no signal.
+        for task_id in ("e01", "e02", "e03", "e04", "e05"):
+            with self.subTest(task_id=task_id):
+                rows = [row for row in fixture_rows() if row.prompt_id == task_id]
+                self.assertEqual([row.extras["passed"] for row in rows], [True, False])
+                self.assertEqual({row.reward() for row in rows}, {0.0, 1.0})
+
+    def test_the_fixture_keeps_two_flat_groups_on_purpose(self) -> None:
+        # Not every group can be made to move: this responder is reliable on t02 and out of its
+        # depth on t04. A task set that claims every group has spread is claiming too much.
+        flat_high = [row for row in fixture_rows() if row.prompt_id == "t02"]
+        flat_low = [row for row in fixture_rows() if row.prompt_id == "t04"]
+        self.assertEqual([row.extras["passed"] for row in flat_high], [True, True])
+        self.assertEqual([row.extras["passed"] for row in flat_low], [False, False])
 
 
 if __name__ == "__main__":

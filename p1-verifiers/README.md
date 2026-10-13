@@ -43,7 +43,7 @@ record is still written, because a record of a rejected run is evidence.
 ## What the run does
 
 ```
-fixtures/tasks.jsonl      13 tasks: 10 exact-match, 1 numeric, 1 unit-test, 1 logic-puzzle
+fixtures/tasks.jsonl      18 tasks: 12 numeric, 2 exact-match, 2 unit-test, 2 logic-puzzle
 fixtures/responses.jsonl  2 attempts per task, from a fixture responder
       |
       v
@@ -53,13 +53,31 @@ fixtures/responses.jsonl  2 attempts per task, from a fixture responder
 runs/<run-id>/{header.json, rounds.jsonl, round-000.jsonl}
 ```
 
-The fixture is built, not found: 9 of its 13 groups contain two attempts that disagree
-(69% mixed). A task set where every attempt scores the same produces a zero advantage in
+The fixture is built, not found: 16 of its 18 groups contain two attempts that disagree
+(89% mixed), and the two that do not are kept deliberately - one task this responder is
+reliable on, one it cannot do at all - because a fixture whose every group moves would be a
+claim about a model rather than a demonstration of the machinery. A task set where every attempt scores the same produces a zero advantage in
 every group, and a training run on it will look alive while learning nothing. The check
 script asserts these numbers, so an accidental edit to the fixtures fails loudly rather
 than quietly changing what the run demonstrates.
 
 `runs/` is gitignored: the row *format* is versioned, the rows are not.
+
+### Why the task set looks like this
+
+The set was changed once, on evidence from a live run against a 1.7B model (numbers in the
+last section). Every arithmetic group came back flat - and the arithmetic was mostly *right*,
+it was the text that lost: prose around the number, a unit after it, `1024.0` where the
+fixture said `1024`. Scoring a numeric answer by comparing strings measures formatting, not
+arithmetic, so those tasks now declare `numeric` with a tolerance of `0` and are judged on
+the value they state. That repair corrects the measurement; it does not create spread, and
+this file says so where it reports the result.
+
+The change aimed at spread is the task set's second band. Five tasks were added whose
+difficulty is aimed at *this* model rather than at arithmetic in general: two multi-step word
+problems (a unit price, a two-rate tank), a letter-count that models fail by construction, a
+four-seat puzzle, and a second unit-test task. They are the set's edge; whether they actually
+move is a question for the live run, not for this paragraph.
 
 ## The verifiers
 
@@ -111,7 +129,7 @@ compose's defaults are the ones this project was measured against.
 
 ## What is not here yet
 
-- The real task set: `fixtures/` is 13 tasks, enough to prove the pipeline. Pull the real
+- The real task set: `fixtures/` is 18 tasks, enough to prove the pipeline. Pull the real
   datasets with `../datasets/` (see its README) once you have measured your own
   throughput - the budget in `configs/` has a field waiting for that number.
 - **Someone to start the server.** `env/docker-compose.yaml` is ready and pinned, and the code is
