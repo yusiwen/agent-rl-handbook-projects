@@ -237,11 +237,14 @@ class NumericVerifier:
                 f"{FORM_PREFIX}no; expected {expected:g} +/- {tolerance:g}, but {reason} - "
                 "the answer must be declared on its own last line, as the task asks"
             )
-            # Name the near miss when the arithmetic was actually right: a reader deciding
-            # whether to fix the prompt or the task set needs to know which half failed.
+            # Name what the verifier can see, and no more: the expected value appearing in that
+            # line is a hint about where to look, not a verdict on the arithmetic.  This used to
+            # say "so the arithmetic looks right", and a format experiment showed how wrong that
+            # reading was - forced to declare one number, the model was wrong in most of the
+            # attempts where this fired.  The prose had been hiding a wrong answer.
             seen = numbers_in(final_answer(response))
             if any(abs(value - expected) <= tolerance for value in seen):
-                detail += "; the expected value is stated there, so the arithmetic looks right"
+                detail += "; the expected value is also in that line"
             return Outcome(passed=False, score=0.0, detail=detail)
 
         delta = abs(declared - expected)

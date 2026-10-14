@@ -162,13 +162,31 @@ a task with more than one answer is a defect, not a hard task.
 | a wall at both | every letter count, the five-seat puzzle, the series sum as asked here |
 | free at both | the discount chain, three of the five puzzles |
 
-**Why the misses happened is the finding that matters.** Tasks whose misses were *all* form
-(`form=no`, with the detail adding that the arithmetic looked right) are not adopted, because their
-spread belongs to the shape of the answer rather than to the model's ability. On the word problems
-this model computes correctly in 5 to 7 attempts out of 8 and then declines to declare a number: it
-ends with `$$`, or with a sentence asserting three quantities. "Cannot do the task" and "will not
-answer in the form the task asks for" are different problems, and the format gate is what tells them
-apart - before it, both produced the same reward curve, and the second one was invisible.
+**Why the misses happened is the finding that matters, and the first reading of it was too kind.**
+Tasks whose misses were *all* form (`form=no`) are not adopted, because their spread belongs to the
+shape of the answer rather than to the model's ability. The first reading went further than the
+evidence did: the detail said the expected value was also in the failing line, and this file turned
+that into "the arithmetic is right, only the form is wrong". The experiment below settled it - forced
+to declare one number, this model was wrong in most of those attempts. The prose had been hiding a
+*wrong* answer, not a correct one, and the detail now says what the verifier can actually see ("the
+expected value is also in that line") instead of passing a verdict it cannot support.
+
+**The prompt is part of the reward contract, and it is a lever of its own.** The same seven tasks,
+the same answers, the same sampler, three task prompts that differ in one sentence:
+
+| demand written into the task prompt | passed | declared an answer |
+|---|---|---|
+| `End with the number alone on the last line.` | 11/42 (26%) | 11/42 (26%) |
+| `End with the answer on its own last line: one number, nothing else on that line - no words, no units, no LaTeX.` | 13/42 (30%) | 42/42 (100%) |
+| `End your reply with exactly one final line, in the form ANSWER: <number>.` | 37/42 (88%) | 37/42 (88%) |
+
+Three things are worth reading off that table. The declaration rate is what a demand moves first: a
+model that answers in prose will answer inside a labelled line every time it is asked to. The pass
+rate follows only when the demand is *mechanical* - a template with a slot in it - and not when it is
+a *prohibition*: forbidding words, units and LaTeX made this model strip its working and get the
+answer wrong more often than the prose had. And at 88% six of the seven tasks are flat at 6 of 6, so
+a stronger demand buys readability by spending signal. The band moves when the prompt moves: task
+*difficulty* and task *form* are two knobs, and the second is the cheaper one to turn.
 
 **The second temperature corrected two adoptions.** The first ladder put five candidates in the band
 and all five went into the fixture; at 0.7 two of them scored 8 of 8 - free, no signal - and they
@@ -201,10 +219,9 @@ itself.
 
 ## What is not here yet
 
-- **A stronger format demand, measured.** The word problems above show a model that computes and
-  then declines to declare. Whether one more sentence in the task - "reply with one line: the number
-  only" - moves those tasks into the band is the cheapest experiment left in this chapter, and it
-  has not been run.
+- **Harder substance, now that the form is settled.** With a mechanical demand this model passes six
+  of seven word problems every time, so the next tasks have to be harder in what they ask rather than
+  in how they ask it - and the probe above is the instrument for finding them.
 - The real task set: `fixtures/` is 21 tasks, enough to prove the pipeline. Pull the real
   datasets with `../datasets/` (see its README) once you have measured your own
   throughput - the budget in `configs/` has a field waiting for that number.

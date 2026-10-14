@@ -246,21 +246,24 @@ class NumericVerifierTests(unittest.TestCase):
     # Two live failure modes are pinned here, because both looked like arithmetic from the
     # reward curve and neither was.
 
-    def test_a_correct_answer_in_prose_scores_zero_and_says_the_arithmetic_looked_right(self) -> None:
+    def test_a_correct_answer_in_prose_scores_zero_and_names_the_value_it_saw(self) -> None:
         # Measured live: 'There are 150 minutes in 2.5 hours.' is the right answer, and under
         # 'the last number anywhere' it scored 0.0 on all four samples, because 2.5 came last.
-        # It still scores 0.0 - but the reason is stated, and the detail says which half
-        # failed, so a flat group can be attributed instead of guessed at.
+        # It still scores 0.0 - but the reason is stated, and the detail names the value it can
+        # see, so a flat group can be attributed instead of guessed at.
         outcome = self.verifier.verify(self.task("150", 0.0), "There are 150 minutes in 2.5 hours.")
         self.assertFalse(outcome.passed)
         self.assertEqual(outcome.score, 0.0)
         self.assertIn("states 2 numbers", outcome.detail)
-        self.assertIn("the arithmetic looks right", outcome.detail)
+        self.assertIn("the expected value is also in that line", outcome.detail)
 
-    def test_a_wrong_answer_in_prose_does_not_claim_the_arithmetic_looked_right(self) -> None:
-        outcome = self.verifier.verify(self.task("150", 0.0), "There are 90 minutes in 1.5 hours.")
-        self.assertFalse(outcome.passed)
-        self.assertNotIn("the arithmetic looks right", outcome.detail)
+    def test_the_detail_does_not_claim_the_arithmetic_was_right(self) -> None:
+        # A format experiment settled this: forced to declare one number, the model was wrong in
+        # most of the attempts where the hint fired.  The verifier can see that the expected value
+        # is in the line; it cannot see that the response meant it, so it must not say so.
+        outcome = self.verifier.verify(self.task("150", 0.0), "There are 150 minutes in 2.5 hours.")
+        self.assertNotIn("arithmetic looks right", outcome.detail)
+        self.assertNotIn("arithmetic is right", outcome.detail)
 
     def test_identical_answers_score_the_same_however_the_sentence_ends(self) -> None:
         # The measured false variance: four samples of a tank problem all computed 36, and the
@@ -942,7 +945,7 @@ class FixtureContractTests(unittest.TestCase):
         self.assertEqual([row.extras["passed"] for row in rows], [True, False])
         self.assertTrue(str(rows[0].extras["detail"]).startswith(f"{FORM_PREFIX}ok"))
         self.assertTrue(str(rows[1].extras["detail"]).startswith(f"{FORM_PREFIX}no"))
-        self.assertIn("the arithmetic looks right", str(rows[1].extras["detail"]))
+        self.assertIn("the expected value is also in that line", str(rows[1].extras["detail"]))
 
     def test_the_fixture_keeps_two_flat_groups_on_purpose(self) -> None:
         # Not every group can be made to move: this responder is reliable on t02 and out of its
