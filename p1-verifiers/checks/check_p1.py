@@ -28,6 +28,7 @@ Exit status is 0 only when every part passes.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -45,6 +46,7 @@ from common.checks import (  # noqa: E402
     check_mask,
     check_terms,
 )
+from common.contamination import compare  # noqa: E402
 from common.runs import RunHeader, RunWriter, digest_of, round_record  # noqa: E402
 from common.verifier import MissingVerifier  # noqa: E402
 
@@ -62,6 +64,9 @@ from p1_verifiers import (  # noqa: E402
 )
 from p1_verifiers.harness import PSEUDO_TOKENISER  # noqa: E402
 from p1_verifiers.verifiers import FORM_PREFIX  # noqa: E402
+
+#: Which field of the evaluation rows holds the problem text (GSM8K: question).
+CONTAMINATION_FIELD = "question"
 
 FIXTURES = HERE.parent / "fixtures"
 TASKS = FIXTURES / "tasks.jsonl"
@@ -178,6 +183,47 @@ def main() -> int:
             f"the fixture contract says {EXPECTED_FORM_OK}/{EXPECTED_NUMERIC_ROWS} declared "
             f"answers, counted {declared}/{len(numeric_rows)}"
         )
+    # Chapter 7's fourth row: this task set against a held-out evaluation set.  The payload is
+    # ignored by git, so an absent one reports "not run" instead of failing - a gate that needs a
+    # download is a gate people stop running.  When it is present, the number is printed with the
+    # digest of the exact file it was computed against, and a genuine overlap fails the gate.
+    payload = REPO / "datasets" / "payloads" / "gsm8k" / "rows" / "test.jsonl"
+    if payload.exists():
+        evaluations: list[tuple[str, str]] = []
+        for index, line in enumerate(payload.read_text(encoding="utf-8").splitlines()):
+            if not line.strip():
+                continue
+            text = json.loads(line).get(CONTAMINATION_FIELD)
+            if isinstance(text, str) and text.strip():
+                evaluations.append((f"test[{index}]", text))
+        result = compare(
+            [(task.id, str(task.as_mapping().get("prompt", ""))) for task in tasks],
+            evaluations,
+            eval_source=str(payload.relative_to(REPO)),
+            eval_digest=digest_of(payload),
+        )
+        print(
+            f"contamination: {len(result.contaminated)}/{len(result.comparisons)} task(s) share a "
+            f"{result.ngram}-word run with {len(evaluations)} evaluation item(s) "
+            f"({result.eval_digest})"
+        )
+        if result.shallow:
+            print(
+                f"  shallow: {len(result.shallow)} clean verdict(s) rest on fewer than 5 runs - "
+                "read their similarity column rather than the verdict"
+            )
+        if result.undecided:
+            print(
+                f"  undecided: {', '.join(c.task_id for c in result.undecided)} are shorter than "
+                f"{result.ngram} words, so the word measure cannot speak about them"
+            )
+        if not result.ok:
+            failures.append(f"{len(result.contaminated)} task(s) share a run with the evaluation set")
+    else:
+        print("contamination: not run (no evaluation payload)")
+        print("  materialise one with: python3 datasets/rows_jsonl.py openai/gsm8k --config main --split test")
+        print("  this row stays open in Chapter 7's deliverable until it has been run")
+
     print("flat groups, and what kind of flat they are:")
     for group_id in sorted({row.group_id for row in rows}):
         group = [row for row in rows if row.group_id == group_id]

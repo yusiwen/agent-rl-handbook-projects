@@ -17,16 +17,17 @@ nix build --no-link                            # the same gate in a sandbox, no 
 ```
 
 ```
-== common tests ==                Ran 97 tests ... OK
-== p1 tests ==                    Ran 165 tests ... OK
+== common tests ==                Ran 121 tests ... OK
+== p1 tests ==                    Ran 186 tests ... OK
 == p1 check (fixtures) ==         coverage 21/21 tasks; 42 rollouts; 21/42 passed
-== datasets tests ==              Ran 28 tests ... OK
+                                  contamination 0/21 tasks vs gsm8k/test (1319 items, sha256:524c11ab4ee19ae2)
+== datasets tests ==              Ran 39 tests ... OK
 == repository checks (selftest) == [PASS] the checks still reject what they must reject
 == repository checks ==           [PASS] characters  [PASS] payloads  [PASS] secrets  [PASS] imports
 all checks passed
 ```
 
-290 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
+346 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
 writes a run record to `runs/` (gitignored); `nix build` sends it to the sandbox's writable
 directory instead, which is what `ARL_RUNS_DIR` is for. If the gate fails, the problem is in
 this repository rather than in your environment - which is the whole reason it exists.
@@ -113,10 +114,10 @@ The gate reads the git index, so run `git add` first if you want a brand-new fil
 
 ```
 flake.nix        the pinned toolchain; nix build = the same gate as a derivation
-common/          schema, mask, verifier protocol, fusion, run records, checks (+ 97 tests)
-p1-verifiers/    src/ fixtures/ checks/ configs/ env/ tests/   (harness + live path; three verifiers yours)
+common/          schema, mask, verifier protocol, fusion, run records, contamination, checks (+ 121 tests)
+p1-verifiers/    src/ fixtures/ checks/ configs/ env/ tests/   (harness, live path, Chapter 7's health report)
 p2..p6/          one README each, written with their chapter
-datasets/        pull scripts + manifest + digests (verified row counts and licences)
+datasets/        pull scripts + manifest + digests + rows_jsonl.py (JSONL views the stdlib checks can read)
 scripts/         verify.sh (the gate), check_repo.py (characters, payloads, secrets, selftest)
 ```
 

@@ -23,6 +23,14 @@ Two things the book asks for and this project grades:
 python3 p1-verifiers/checks/check_p1.py          # the grader: fixtures, no network, no GPU
 python3 -m unittest discover -s p1-verifiers/tests -t p1-verifiers/tests
 
+# Chapter 7's deliverable: the health report for a task set, from a real run
+python3 p1-verifiers/checks/check_task_health.py \
+    --run runs/<run-id> --eval datasets/payloads/gsm8k/rows/test.jsonl
+
+# Chapter 7's fourth row on its own: task set against the held-out split
+python3 datasets/rows_jsonl.py openai/gsm8k --config main --split test   # once, to materialise it
+python3 p1-verifiers/checks/check_contamination.py --eval datasets/payloads/gsm8k/rows/test.jsonl
+
 # Against a served model (any OpenAI-compatible endpoint, e.g. vLLM on the reference machine):
 python3 p1-verifiers/checks/run_p1_live.py \
     --base-url http://192.168.2.40:8000 --model qwen3-1.7b --no-thinking --samples 2
@@ -50,7 +58,7 @@ of a rejected run is evidence.
 ## What the run does
 
 ```
-fixtures/tasks.jsonl      21 tasks: 15 numeric, 2 exact-match, 2 unit-test, 2 logic-puzzle
+fixtures/tasks.jsonl      21 tasks: 15 numeric, 2 exact-match, 2 logic-puzzle, 2 unit-test
 fixtures/responses.jsonl  2 attempts per task, from a fixture responder
       |
       v
