@@ -115,6 +115,35 @@ class RunWriterTests(unittest.TestCase):
             self.assertEqual(RunWriter(header, root=tmp).read_rounds(), [])
 
 
+class RunWriterCollisionTests(unittest.TestCase):
+    """A run record is evidence: two runs must never share a directory.
+
+    Measured cause: run ids are second-resolution timestamps, and a script that finished one
+    configuration and started the next inside the same second produced the same id. The second
+    run's header and round went over the first's, and a whole configuration's rows were lost.
+    """
+
+    HEADER = dict(env_version="test", config_hash="sha256:x", code_sha="git:0", project="p",
+                  dataset="d", dataset_digest="sha256:d", notes="n")
+
+    def test_a_second_writer_with_the_same_id_gets_its_own_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            first = RunWriter(RunHeader(run_id="run-1", **self.HEADER), root=tmp)
+            second = RunWriter(RunHeader(run_id="run-1", **self.HEADER), root=tmp)
+            self.assertEqual(first.dir.name, "run-1")
+            self.assertEqual(second.dir.name, "run-1-2")
+            self.assertEqual(second.header.run_id, "run-1-2")
+            self.assertTrue((first.dir / "header.json").is_file())
+            self.assertTrue((second.dir / "header.json").is_file())
+
+    def test_the_first_record_is_not_overwritten_by_the_second(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            first = RunWriter(RunHeader(run_id="run-1", **self.HEADER), root=tmp)
+            RunWriter(RunHeader(run_id="run-1", **self.HEADER), root=tmp)
+            header = json.loads((first.dir / "header.json").read_text(encoding="utf-8"))
+            self.assertEqual(header["run_id"], "run-1")
+
+
 class DigestTests(unittest.TestCase):
     def test_digest_is_stable_and_content_addressed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -21,7 +21,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -158,6 +158,24 @@ def round_record(round_index: int, rollouts: Sequence[Rollout]) -> RoundRecord:
     )
 
 
+def _free_run_dir(root: Path, run_id: str) -> Path:
+    """A run directory that does not exist yet: ``run_id``, or ``run_id-2``, ``-3``, ... if taken.
+
+    Measured cause, not a precaution.  A run id is a second-resolution timestamp, and one script
+    that finished a configuration and started the next inside the same second produced two runs
+    with one id: the second wrote its header and its round over the first, and a whole
+    configuration's rows were gone.  That is precisely how a record stops being evidence, so an
+    existing directory is never reused - and the suffixed id goes into the header, so a record
+    still names the directory it lives in.
+    """
+    for candidate_id in [run_id] + [f"{run_id}-{suffix}" for suffix in range(2, 100)]:
+        candidate = root / candidate_id
+        if not candidate.exists():
+            candidate.mkdir(parents=True)
+            return candidate
+    raise FileExistsError(f"no free run directory for {run_id!r} under {root}")
+
+
 class RunWriter:
     """Writes ``<root>/<run_id>/{header.json,rounds.jsonl}``.
 
@@ -166,11 +184,12 @@ class RunWriter:
     """
 
     def __init__(self, header: RunHeader, root: str | os.PathLike[str] = "runs") -> None:
-        self.header = header
-        self.dir = Path(root) / header.run_id
-        self.dir.mkdir(parents=True, exist_ok=True)
+        self.dir = _free_run_dir(Path(root), header.run_id)
+        self.header = (
+            header if self.dir.name == header.run_id else replace(header, run_id=self.dir.name)
+        )
         (self.dir / "header.json").write_text(
-            json.dumps(header.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            json.dumps(self.header.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
         self._rounds_path = self.dir / "rounds.jsonl"
 
