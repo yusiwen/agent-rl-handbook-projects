@@ -50,7 +50,7 @@ of a rejected run is evidence.
 ## What the run does
 
 ```
-fixtures/tasks.jsonl      23 tasks: 16 numeric, 2 exact-match, 2 unit-test, 3 logic-puzzle
+fixtures/tasks.jsonl      21 tasks: 15 numeric, 2 exact-match, 2 unit-test, 2 logic-puzzle
 fixtures/responses.jsonl  2 attempts per task, from a fixture responder
       |
       v
@@ -60,8 +60,8 @@ fixtures/responses.jsonl  2 attempts per task, from a fixture responder
 runs/<run-id>/{header.json, rounds.jsonl, round-000.jsonl}
 ```
 
-The fixture is built, not found: 21 of its 23 groups contain two attempts that disagree
-(91% mixed), and the two that do not are kept deliberately - one task this responder is
+The fixture is built, not found: 19 of its 21 groups contain two attempts that disagree
+(90% mixed), and the two that do not are kept deliberately - one task this responder is
 reliable on, one it cannot do at all - because a fixture whose every group moves would be a
 claim about a model rather than a demonstration of the machinery. A task set where every attempt scores the same produces a zero advantage in
 every group, and a training run on it will look alive while learning nothing. The check
@@ -143,9 +143,69 @@ vLLM model, plus the four traps that cost a restart on this machine. Read `env/R
 before the first start - in particular, `nvidia/Qwen3-8B-NVFP4` is a base checkpoint, and the
 compose's defaults are the ones this project was measured against.
 
+## The measurements behind the task set
+
+The task set is not a guess. Three live runs on the reference machine, recorded in `runs/` (which is
+gitignored, so the numbers are quoted here rather than shipped with the repository).
+
+**The probe.** 22 candidates - 14 arithmetic questions, 5 puzzles with a solution verified unique by
+enumeration, and 3 controls that earlier runs had identified as movers - sampled 8 times at
+temperature 0.7 and again at 1.2. The controls did what they were there for: the three-colour puzzle
+stayed in the band at both temperatures, which is the check that the method can see a mover at all.
+Two of the puzzles were rejected while being built, because the enumeration found 3 and 4 solutions:
+a task with more than one answer is a defect, not a hard task.
+
+| band | tasks |
+|---|---|
+| in the band at **both** temperatures | the three-colour puzzle, the five-pens question, the average, the GCD, `7!`, the perimeter |
+| only at one temperature | the series sum, the squares, the evens, the workers, the tap-and-drain, the four-seat puzzle |
+| a wall at both | every letter count, the five-seat puzzle, the series sum as asked here |
+| free at both | the discount chain, three of the five puzzles |
+
+**Why the misses happened is the finding that matters.** Tasks whose misses were *all* form
+(`form=no`, with the detail adding that the arithmetic looked right) are not adopted, because their
+spread belongs to the shape of the answer rather than to the model's ability. On the word problems
+this model computes correctly in 5 to 7 attempts out of 8 and then declines to declare a number: it
+ends with `$$`, or with a sentence asserting three quantities. "Cannot do the task" and "will not
+answer in the form the task asks for" are different problems, and the format gate is what tells them
+apart - before it, both produced the same reward curve, and the second one was invisible.
+
+**The second temperature corrected two adoptions.** The first ladder put five candidates in the band
+and all five went into the fixture; at 0.7 two of them scored 8 of 8 - free, no signal - and they
+were removed again. What stays is the three that were in the band at both temperatures and moved on
+their value: the GCD, `7!` and the perimeter. Both commits are in the history, and the correction is
+the point rather than an embarrassment: a task set adopted on one temperature's evidence is a task
+set adopted on noise.
+
+**Round stability.** `--rounds 2` samples the task set twice with the same sample ids, which is the
+only way to ask whether a group's spread is the model or the sampler. Over 16 tasks at 4 samples: 6
+of 64 samples changed their reward between rounds at temperature 0.7, 8 of 64 at 1.2 - the reward is
+about 90% reproducible sample by sample. More usefully, the group-level number was *identical* in
+both rounds (2 of 16 groups usable at 0.7, 4 of 16 at 1.2), so this task set's capacity to produce a
+gradient is reproducible, which is what makes the rest of these numbers worth quoting.
+
+**What that does not say.** One run's ladder is evidence about the band, not about a task's exact
+rate. One task moved in and out of the band across runs - 0 of 8, then 2 of 4, then 3 of 4, then 3
+of 4, same prompt, same temperature - while inside one run its samples flipped between the two
+rounds. A task's rate needs repeated runs; a task's band needs two temperatures and a reading of why
+it missed, which is what the table above is.
+
+**One record was lost, and the fix is in the history.** The first probe script ran two configurations
+back to back and both started inside the same second; run ids are second-resolution timestamps, so
+the second run wrote its header and its round record over the first, and a whole configuration's rows
+were gone. The evidence is still in that directory: `rounds.jsonl` holds two round records from two
+runs. `RunWriter` now refuses to reuse an existing directory - the second run gets `-2`, and the
+suffixed id is written into its header - and the lost configuration was re-measured. It is recorded
+here because a pipeline that can lose evidence silently is worse than one that reports a bug in
+itself.
+
 ## What is not here yet
 
-- The real task set: `fixtures/` is 23 tasks, enough to prove the pipeline. Pull the real
+- **A stronger format demand, measured.** The word problems above show a model that computes and
+  then declines to declare. Whether one more sentence in the task - "reply with one line: the number
+  only" - moves those tasks into the band is the cheapest experiment left in this chapter, and it
+  has not been run.
+- The real task set: `fixtures/` is 21 tasks, enough to prove the pipeline. Pull the real
   datasets with `../datasets/` (see its README) once you have measured your own
   throughput - the budget in `configs/` has a field waiting for that number.
 - **Someone to start the server.** `env/docker-compose.yaml` is ready and pinned, and the code is
@@ -166,8 +226,6 @@ compose's defaults are the ones this project was measured against.
   `PermissionError` and killed the run instead of reporting a score. The container now runs as
   the caller (`--user`), and cleanup is housekeeping that cannot fail a score - both in the
   `DockerSandbox` docstring, and both tested.
-- A second sampling round. One round gives you rows and an advantage spread; the round-stability
-  check needs two rounds with the same sample ids, which is what `common/runs.py` records.
 - **A model that produces a spread at this size, and a reward that can be believed.** Measured
   on the reference machine, thinking off, over 16 scoreable tasks - the two `unit_test` ones need
   a container runtime, which this machine deliberately does not have.

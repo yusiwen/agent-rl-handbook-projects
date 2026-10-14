@@ -19,7 +19,7 @@ nix build --no-link                            # the same gate in a sandbox, no 
 ```
 == common tests ==                Ran 97 tests ... OK
 == p1 tests ==                    Ran 165 tests ... OK
-== p1 check (fixtures) ==         coverage 23/23 tasks; 46 rollouts; 23/46 passed
+== p1 check (fixtures) ==         coverage 21/21 tasks; 42 rollouts; 21/42 passed
 == datasets tests ==              Ran 28 tests ... OK
 == repository checks (selftest) == [PASS] the checks still reject what they must reject
 == repository checks ==           [PASS] characters  [PASS] payloads  [PASS] secrets  [PASS] imports
