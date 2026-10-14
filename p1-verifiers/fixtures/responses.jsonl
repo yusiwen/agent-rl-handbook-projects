@@ -1,36 +1,82 @@
 {"prompt_id": "t01", "response": "17 * 23 = 391\n\n391"}
+
 {"prompt_id": "t01", "response": "17 * 23 = 400\n\n400"}
+
 {"prompt_id": "t02", "response": "144 / 12 = 12\n\n12"}
+
 {"prompt_id": "t02", "response": "Dividing 144 by 12 gives 12 exactly.\n\n12"}
+
 {"prompt_id": "t03", "response": "2.5 hours is 2 hours and 30 minutes, so 150 minutes.\n\n150"}
+
 {"prompt_id": "t03", "response": "2.5 hours is 2 hours and 30 minutes.\n\n30"}
+
 {"prompt_id": "t04", "response": "The primes are 2, 3, 5, 7, 11, 13, so the 7th is 15.\n\n15"}
+
 {"prompt_id": "t04", "response": "The primes are 2, 3, 5, 7, 11, 13, 17, 19, so the 7th is 19.\n\n19"}
+
 {"prompt_id": "t05", "response": "60 km/h for 3 hours is 180 km.\n\n180"}
+
 {"prompt_id": "t05", "response": "60 km/h for 3 hours is 60 times 3.\n\n60"}
+
 {"prompt_id": "t06", "response": "2^10 = 1024.\n\n1024"}
+
 {"prompt_id": "t06", "response": "2 to the tenth power is 1024.\n\n10"}
+
 {"prompt_id": "t07", "response": "The sum is 20 * 21 / 2 = 210.\n\n210"}
+
 {"prompt_id": "t07", "response": "Adding 1 through 20 gives 200.\n\n200"}
+
 {"prompt_id": "t08", "response": "Subtract 7 from both sides: x = 12.\n\n12"}
+
 {"prompt_id": "t08", "response": "x + 7 = 19, so x is 19 minus 7.\n\n7"}
+
 {"prompt_id": "t09", "response": "15% of 240 is 0.15 * 240 = 36.\n\n36"}
+
 {"prompt_id": "t09", "response": "15% of 240 is 0.15 times 240.\n\n15"}
+
 {"prompt_id": "t10", "response": "A pentagon splits into three triangles, so 3 * 180 = 540.\n\n540"}
+
 {"prompt_id": "t10", "response": "A pentagon has 5 sides and its interior angles sum to 540.\n\n5"}
+
 {"prompt_id": "t11", "response": "Pi is 3.14159..., so to two decimal places it is 3.14.\n\n3.14"}
+
 {"prompt_id": "t11", "response": "Pi rounds to 3.1 when you keep two digits.\n\n3.1"}
+
 {"prompt_id": "t12", "response": "def add(a, b):\n    return a + b"}
+
 {"prompt_id": "t12", "response": "```python\ndef add(a, b):\n    return a - b\n```"}
+
 {"prompt_id": "t13", "response": "Bob chose blue, so the others are green and red, and Alice cannot be red.\n\nalice = green\nbob = blue\ncarol = red"}
+
 {"prompt_id": "t13", "response": "Both Alice and Bob can be blue if they share.\n\n{\"alice\": \"blue\", \"bob\": \"blue\", \"carol\": \"red\"}"}
+
 {"prompt_id": "e01", "response": "Three pens cost 12, so each costs 4, and seven cost 28.\n\n28"}
+
 {"prompt_id": "e01", "response": "Three pens cost 12 yuan, so seven pens cost 21 yuan.\n\n21"}
+
 {"prompt_id": "e02", "response": "It gains 5 - 2 = 3 litres a minute, so after 12 minutes there are 36 litres.\n\n36"}
+
 {"prompt_id": "e02", "response": "The tank gains 3 litres a minute, so it holds 36 litres after 12 minutes."}
+
 {"prompt_id": "e03", "response": "The letter r appears three times in strawberry.\n\n3"}
+
 {"prompt_id": "e03", "response": "strawberry has two r's.\n\n2"}
+
 {"prompt_id": "e04", "response": "alice = 1\nbob = 3\ncarol = 2\ndave = 4"}
+
 {"prompt_id": "e04", "response": "{\"alice\": \"1\", \"bob\": \"3\", \"carol\": \"2\", \"dave\": \"1\"}"}
+
 {"prompt_id": "e05", "response": "def fizzbuzz(n):\n    out = []\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            out.append(\"fizzbuzz\")\n        elif i % 3 == 0:\n            out.append(\"fizz\")\n        elif i % 5 == 0:\n            out.append(\"buzz\")\n        else:\n            out.append(str(i))\n    return out"}
+
 {"prompt_id": "e05", "response": "```python\ndef fizzbuzz(n):\n    return [\"fizz\" if i % 3 == 0 else \"buzz\" if i % 5 == 0 else str(i) for i in range(1, n)]\n```"}
+
+{"prompt_id": "m01", "response": "80 discounted by 25% is 60, and 10% off that is 54.\n\n54"}
+{"prompt_id": "m01", "response": "80 discounted by 25% is 60, and 10% off that is 6, so 66.\n\n66"}
+{"prompt_id": "m02", "response": "84 = 2*2*3*7 and 126 = 2*3*3*7, so the common factors give 42.\n\n42"}
+{"prompt_id": "m02", "response": "The largest number dividing both is 21.\n\n21"}
+{"prompt_id": "m03", "response": "7! = 7*6*5*4*3*2*1 = 5040.\n\n5040"}
+{"prompt_id": "m03", "response": "7! = 7 * 6 * 5 * 4 * 3 * 2 * 1 = 5040 altogether"}
+{"prompt_id": "m04", "response": "The perimeter is 2 * (7 + 9) = 32 cm.\n\n32"}
+{"prompt_id": "m04", "response": "The perimeter is 7 + 9 = 16 cm.\n\n16"}
+{"prompt_id": "m05", "response": "alice = 3\ndave = 1\nbob = 2\ncarol = 4"}
+{"prompt_id": "m05", "response": "alice = 3\ndave = 1\nbob = 4\ncarol = 2"}

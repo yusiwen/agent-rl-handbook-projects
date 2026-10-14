@@ -69,17 +69,17 @@ RESPONSES = FIXTURES / "responses.jsonl"
 
 #: What the fixture is built to produce.  Editing the fixture without editing these
 #: numbers fails the check on purpose: a fixture whose contract is not stated drifts.
-EXPECTED_TASKS = 18
-EXPECTED_COVERED = 18
+EXPECTED_TASKS = 23
+EXPECTED_COVERED = 23
 EXPECTED_SAMPLES_PER_TASK = 2
-EXPECTED_PASSED = 18
-EXPECTED_MIXED_GROUPS = 16
+EXPECTED_PASSED = 23
+EXPECTED_MIXED_GROUPS = 21
 #: How many of the fixture's numeric attempts declare an answer in the asked-for form.  One
 #: attempt in the fixture deliberately does not: correct arithmetic, a final line that asserts
 #: two quantities - the shape a live model produced most often, kept here so the gate can never
 #: forget that it is a failure mode.
-EXPECTED_FORM_OK = 23
-EXPECTED_NUMERIC_ROWS = 24
+EXPECTED_FORM_OK = 30
+EXPECTED_NUMERIC_ROWS = 32
 
 
 def code_sha() -> str:

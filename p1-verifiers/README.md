@@ -50,7 +50,7 @@ of a rejected run is evidence.
 ## What the run does
 
 ```
-fixtures/tasks.jsonl      18 tasks: 12 numeric, 2 exact-match, 2 unit-test, 2 logic-puzzle
+fixtures/tasks.jsonl      23 tasks: 16 numeric, 2 exact-match, 2 unit-test, 3 logic-puzzle
 fixtures/responses.jsonl  2 attempts per task, from a fixture responder
       |
       v
@@ -60,8 +60,8 @@ fixtures/responses.jsonl  2 attempts per task, from a fixture responder
 runs/<run-id>/{header.json, rounds.jsonl, round-000.jsonl}
 ```
 
-The fixture is built, not found: 16 of its 18 groups contain two attempts that disagree
-(89% mixed), and the two that do not are kept deliberately - one task this responder is
+The fixture is built, not found: 21 of its 23 groups contain two attempts that disagree
+(91% mixed), and the two that do not are kept deliberately - one task this responder is
 reliable on, one it cannot do at all - because a fixture whose every group moves would be a
 claim about a model rather than a demonstration of the machinery. A task set where every attempt scores the same produces a zero advantage in
 every group, and a training run on it will look alive while learning nothing. The check
@@ -145,7 +145,7 @@ compose's defaults are the ones this project was measured against.
 
 ## What is not here yet
 
-- The real task set: `fixtures/` is 18 tasks, enough to prove the pipeline. Pull the real
+- The real task set: `fixtures/` is 23 tasks, enough to prove the pipeline. Pull the real
   datasets with `../datasets/` (see its README) once you have measured your own
   throughput - the budget in `configs/` has a field waiting for that number.
 - **Someone to start the server.** `env/docker-compose.yaml` is ready and pinned, and the code is
