@@ -26,19 +26,26 @@ python3 -m unittest discover -s p1-verifiers/tests -t p1-verifiers/tests
 # Against a served model (any OpenAI-compatible endpoint, e.g. vLLM on the reference machine):
 python3 p1-verifiers/checks/run_p1_live.py \
     --base-url http://192.168.2.40:8000 --model qwen3-1.7b --no-thinking --samples 2
+
+# And again, twice over, when the question is whether a group's spread is real:
+python3 p1-verifiers/checks/run_p1_live.py \
+    --base-url http://192.168.2.40:8000 --model qwen3-1.7b --no-thinking --samples 2 --rounds 2
 ```
 
 The fixture run is deliberately offline. If it fails, the problem is here rather than in
 your environment; if it passes and a real run fails, the problem is in the environment or
 in the model. That ordering is the whole reason the fixtures exist.
 
-The live runner does five things worth knowing about before you point it at a GPU: it
+The live runner does six things worth knowing about before you point it at a GPU: it
 **preflights the model name** against `/v1/models` (so a typo costs a second, not a round),
 it **prints coverage before spending tokens**, it counts tokens with the **server's own
-tokeniser** over `/tokenize` and puts that tokeniser's name in every row, it **runs the five
-checks on the rows it just produced**, and it writes a run record naming the endpoint, the
-model, the task-file digest and the commit. Exit status is non-zero if any check fails - the
-record is still written, because a record of a rejected run is evidence.
+tokeniser** over `/tokenize` and puts that tokeniser's name in every row, it **runs the checks
+on the rows it just produced**, it can **sample more than one round** with `--rounds 2` - which
+is what `check_round_stability` needs, since it compares the same sample ids across rounds, and
+it is the only check that can say whether a group's spread belongs to the model or to the
+sampler - and it writes a run record naming the endpoint, the model, the task-file digest and the
+commit. Exit status is non-zero if any check fails - the record is still written, because a record
+of a rejected run is evidence.
 
 ## What the run does
 

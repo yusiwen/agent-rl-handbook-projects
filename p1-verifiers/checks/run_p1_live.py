@@ -5,7 +5,7 @@
 
     python3 p1-verifiers/checks/run_p1_live.py --base-url http://host:8000 --model the-id
 
-``check_p1.py`` proves the *pipeline* offline; this proves the *loop*. Five things it does that
+``check_p1.py`` proves the *pipeline* offline; this proves the *loop*. Six things it does that
 a naive script would not, each because the naive version cost something:
 
 * **Preflight the model name** against ``/v1/models`` before spending a round on it. The
@@ -19,6 +19,11 @@ a naive script would not, each because the naive version cost something:
   A run that records its own bug is worth more than one that reports a number.
 * **Record the environment**: endpoint, model, tokeniser, task-file digest, commit. Without
   them the record is a screenshot.
+* **Sample more than one round when asked**, and check that the rounds are comparable. Two rounds
+  of the same task set carry the same sample ids, which is what ``check_round_stability`` compares,
+  and it answers a question one round cannot: whether a group's spread is the model or the sampler.
+  A run where no shared sample changes its reward fails that check on purpose - a batch that never
+  moves cannot teach, and neither can a model that answers identically every time at temperature.
 
 Exit status is 0 only when the run finished and every check passed.
 """
@@ -37,15 +42,13 @@ REPO = HERE.parents[1]
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(HERE.parent / "src"))
 
-from common.checks import (  # noqa: E402
-    check_advantage_spread,
-    check_boundaries,
-    check_mask,
-    check_terms,
-)
+from common.checks import run_all  # noqa: E402
 from common.runs import RunHeader, RunWriter, digest_of, round_record  # noqa: E402
+from common.schema import Rollout  # noqa: E402
+from common.verifier import VerifierRegistry  # noqa: E402
 
 from p1_verifiers import (  # noqa: E402
+    Task,
     default_registry,
     load_tasks,
     partition_by_coverage,
@@ -95,8 +98,42 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--no-thinking", action="store_true",
                         help="ask the chat template to skip its reasoning block (Qwen3 chat models "
                              "reason by default; P1's verifier only reads the last line)")
+    parser.add_argument("--rounds", type=int, default=1,
+                        help="sample the task set this many times; two or more rounds are what the "
+                             "round-stability check needs, because it compares the same sample ids "
+                             "across rounds")
     parser.add_argument("--runs-dir", default=None, help="where run records go")
     return parser.parse_args(argv)
+
+
+def sample_round(
+    covered: list[Task],
+    registry: VerifierRegistry,
+    responder: OpenAIChatResponder,
+    tokeniser: ServerTokeniser,
+    provenance: Provenance,
+    samples: int,
+) -> list[Rollout]:
+    """One round: every covered task, ``samples`` attempts each.
+
+    The sample ids come from the task id and the sample index, so they are identical in every
+    round - which is exactly what makes two rounds comparable.  A failed request is reported and
+    skipped: one dead attempt must not destroy the records of the ones that worked.
+    """
+    rows: list[Rollout] = []
+    for task in covered:
+        for sample_index in range(samples):
+            try:
+                response = responder.respond(task, sample_index)
+                row = run_episode(task, response, registry, sample_index, provenance, tokeniser)
+            except RemoteError as exc:
+                print(f"  ERROR {task.id}-s{sample_index}: {exc}", file=sys.stderr)
+                continue
+            rows.append(row)
+            mark = "ok  " if row.extras.get("passed") else "MISS"
+            finish = f", {responder.last_finish_reason}" if responder.last_finish_reason else ""
+            print(f"  {mark} {row.episode_id}  {row.model_tokens} tokens trained{finish}")
+    return rows
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -142,41 +179,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
+    if args.rounds < 1:
+        print("error: --rounds must be at least 1", file=sys.stderr)
+        return 2
+
     provenance = Provenance(env_version=tokeniser.name, config_hash=digest_of(args.tasks),
                             code_sha=code_sha())
     print(f"model    : {responder.describe()}")
     print(f"tokeniser: {tokeniser.name} (probe: {probe} tokens)")
     print(f"tasks    : {len(covered)} covered, x{args.samples} samples = "
-          f"{len(covered) * args.samples} attempts")
+          f"{len(covered) * args.samples} attempts per round, x{args.rounds} round(s)")
     print()
-
-    rows = []
-    for task in covered:
-        for sample_index in range(args.samples):
-            try:
-                response = responder.respond(task, sample_index)
-                row = run_episode(task, response, registry, sample_index, provenance, tokeniser)
-            except RemoteError as exc:
-                # One failed attempt must not destroy the records of the ones that worked.
-                print(f"  ERROR {task.id}-s{sample_index}: {exc}", file=sys.stderr)
-                continue
-            rows.append(row)
-            mark = "ok  " if row.extras.get("passed") else "MISS"
-            finish = f", {responder.last_finish_reason}" if responder.last_finish_reason else ""
-            print(f"  {mark} {row.episode_id}  {row.model_tokens} tokens trained{finish}")
-
-    if not rows:
-        print("error: no attempt completed", file=sys.stderr)
-        return 1
-
-    print()
-    print(report(rows))
-
-    results = [check_mask(rows), check_boundaries(rows), check_terms(rows),
-               check_advantage_spread(rows)]
-    print()
-    for result in results:
-        print(result.render())
 
     run_id = (f"p1-live-{args.model.replace('/', '_')}-"
               f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}")
@@ -189,14 +202,39 @@ def main(argv: list[str] | None = None) -> int:
             project="p1-verifiers",
             dataset=Path(args.tasks).name,
             dataset_digest=digest_of(args.tasks),
-            notes=f"{responder.describe()}; samples={args.samples}; "
+            notes=f"{responder.describe()}; samples={args.samples}; rounds={args.rounds}; "
                   f"covered {len(covered)}/{len(tasks)} tasks",
         ),
         root=runs_root,
     )
-    writer.append_round(round_record(0, rows))
-    writer.append_rollouts(0, rows)
-    print(f"\nrun record: {writer.dir}")
+
+    results: list = []
+    rounds: list[list[Rollout]] = []
+    for round_index in range(args.rounds):
+        if args.rounds > 1:
+            print(f"round {round_index + 1} of {args.rounds}")
+        rows = sample_round(covered, registry, responder, tokeniser, provenance, args.samples)
+        if not rows:
+            print(f"error: no attempt completed in round {round_index}", file=sys.stderr)
+            return 1
+        rounds.append(rows)
+
+        # The checks run on every round, and from the second one on they include the stability
+        # check - the only one that needs two rounds, and the only one that can say whether a
+        # group's spread is the model or the sampler.
+        previous = rounds[-2] if len(rounds) > 1 else None
+        results = run_all(rows, previous=previous)
+        print()
+        print(report(rows))
+        print()
+        for result in results:
+            print(result.render())
+
+        writer.append_round(round_record(round_index, rows))
+        writer.append_rollouts(round_index, rows)
+        where = writer.dir if args.rounds == 1 else f"{writer.dir} (round {round_index})"
+        print(f"\nrun record: {where}")
+        print()
 
     failed = [result.name for result in results if not result.ok]
     if failed:
