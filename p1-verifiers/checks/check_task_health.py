@@ -166,11 +166,7 @@ def render_run(
         lines.append(f"  {hits:>2}/{per_item}  {bar(count, scale):<40} {count:>3}{edge}")
     lines.append("")
 
-    inside = [
-        prompt_id
-        for prompt_id, hits in solved.items()
-        if BAND_LOW < hits / per_item < BAND_HIGH
-    ] if per_item else []
+    inside = [prompt_id for prompt_id, hits in solved.items() if inside_band(hits, per_item)]
     shares = [hits / per_item for hits in solved.values()] if per_item else []
     spreads = spread_per_group(rollouts)
     usable = [group for group, value in spreads.items() if value > SPREAD_EPSILON]
@@ -238,6 +234,7 @@ def render_run(
 
     return lines, {
         "run_id": header["run_id"],
+        "solved": dict(solved),
         "code_sha": header["code_sha"],
         "config_hash": header["config_hash"],
         "configuration": header.get("notes", ""),
@@ -252,6 +249,56 @@ def render_run(
         "groups": len(spreads),
         "contamination": contamination,
     }
+
+
+def inside_band(hits: int, samples: int) -> bool:
+    """Whether a pass rate sits strictly inside the band, at this sample count."""
+    return bool(samples) and BAND_LOW < hits / samples < BAND_HIGH
+
+
+def cross_run_line(payloads: list[dict]) -> str:
+    """The one number a single run cannot give: what the band looks like across settings.
+
+    Chapter 7's pass criterion asks for the band figure at two sampling temperatures rather than
+    one, and the reason is in this line.  An item that is inside the band at one temperature and
+    always solved at another is not a stable training item - it is an item whose difficulty moved
+    when the sampler did, and a set made of those teaches the sampler rather than the task.
+    """
+    shared = set(payloads[0]["solved"])
+    for payload in payloads[1:]:
+        shared &= set(payload["solved"])
+    items = sorted(shared)
+    if not items:
+        return "cross-run: no item appears in every run"
+
+    def band_every(item: str) -> bool:
+        return all(inside_band(p["solved"][item], p["samples_per_item"]) for p in payloads)
+
+    def band_any(item: str) -> bool:
+        return any(inside_band(p["solved"][item], p["samples_per_item"]) for p in payloads)
+
+    def free_every(item: str) -> bool:
+        return all(p["solved"][item] == p["samples_per_item"] for p in payloads)
+
+    def wall_every(item: str) -> bool:
+        return all(p["solved"][item] == 0 for p in payloads)
+
+    every = [item for item in items if band_every(item)]
+    any_run = [item for item in items if band_any(item)]
+    free = [item for item in items if free_every(item)]
+    wall = [item for item in items if wall_every(item)]
+    moved = sorted(set(any_run) - set(every))
+    lines = [
+        f"cross-run, {len(items)} item(s) present in all {len(payloads)} run(s):",
+        f"  inside the band in every run: {len(every)} of {len(items)} ({len(every) / len(items):.0%})"
+        + (f"  [{', '.join(every)}]" if every else ""),
+        f"  inside the band in at least one run: {len(any_run)} of {len(items)} ({len(any_run) / len(items):.0%})",
+        f"  always solved in every run: {len(free)}; always failed in every run: {len(wall)}"
+        + (f"  [{', '.join(wall)}]" if wall else ""),
+        f"  the band moved with the sampler for {len(moved)} item(s)"
+        + (f": {', '.join(moved)}" if moved else ""),
+    ]
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -294,6 +341,10 @@ def main(argv: list[str] | None = None) -> int:
                 f"\n[FAIL] band share {payload['inside_band'] / items:.0%} is below "
                 f"--min-band-share {args.min_band_share:.0%}"
             )
+
+    if len(payloads) > 1:
+        print()
+        print(cross_run_line(payloads))
 
     if args.json:
         Path(args.json).write_text(json.dumps(payloads, indent=2, sort_keys=True) + "\n", encoding="utf-8")

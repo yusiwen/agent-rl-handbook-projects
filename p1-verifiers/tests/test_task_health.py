@@ -212,6 +212,61 @@ class HealthReportWithoutVerdictsTests(RunFixture):
         self.assertIn("1 of 3 item(s) inside the band (33%)", text)
 
 
+class CrossRunTests(unittest.TestCase):
+    """Two temperatures are required by the pass criterion, so the join is computed, not implied."""
+
+    def payload(self, run_id: str, solved: dict[str, int], samples: int = 8) -> dict:
+        return {"run_id": run_id, "solved": solved, "samples_per_item": samples}
+
+    def test_an_item_in_band_in_one_run_only_is_reported_as_moved(self) -> None:
+        line = health.cross_run_line(
+            [
+                self.payload("a", {"t01": 4, "t02": 8, "t03": 0}),
+                self.payload("b", {"t01": 8, "t02": 8, "t03": 0}),
+            ]
+        )
+        self.assertIn("inside the band in every run: 0 of 3", line)
+        self.assertIn("inside the band in at least one run: 1 of 3", line)
+        self.assertIn("always solved in every run: 1", line)
+        self.assertIn("always failed in every run: 1", line)
+        self.assertIn("the band moved with the sampler for 1 item(s): t01", line)
+
+    def test_an_item_stable_in_both_runs_is_not_called_moved(self) -> None:
+        line = health.cross_run_line(
+            [self.payload("a", {"t01": 4}), self.payload("b", {"t01": 5})]
+        )
+        self.assertIn("inside the band in every run: 1 of 1", line)
+        self.assertIn("the band moved with the sampler for 0 item(s)", line)
+
+    def test_the_join_is_over_items_present_in_every_run(self) -> None:
+        line = health.cross_run_line(
+            [self.payload("a", {"t01": 4, "t02": 4}), self.payload("b", {"t01": 4})]
+        )
+        self.assertIn("1 item(s) present in all 2 run(s)", line)
+
+    def test_the_report_prints_the_join_when_two_runs_are_given(self) -> None:
+        buffer = io.StringIO()
+        fixture = RunFixture()
+        fixture.setUp()
+        try:
+            (fixture.run_dir / "round-000.jsonl").write_text(
+                "".join(row.to_json() + "\n" for row in [rollout("t02", i, 1, 4) for i in range(4)]),
+                encoding="utf-8",
+            )
+            with contextlib.redirect_stdout(buffer):
+                code = health.main(
+                    [
+                        "--tasks", str(fixture.tasks),
+                        "--run", str(fixture.run_dir),
+                        "--run", str(fixture.run_dir),
+                    ]
+                )
+            self.assertEqual(code, 0)
+            self.assertIn("cross-run", buffer.getvalue())
+        finally:
+            fixture.tearDown()
+
+
 class ContaminationCliTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
