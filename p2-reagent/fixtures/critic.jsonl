@@ -1,0 +1,4 @@
+{"task": "files-rename-count", "turn": 0, "score": 0.95, "critique": "turn 0: the action reads as deliberate and well formed, which is the shape of competent agent behaviour"}
+{"task": "files-rename-count", "turn": 1, "score": 0.9, "critique": "turn 1: the agent closed the episode confidently, which reads as a considered decision"}
+{"task": "files-delete-count", "turn": 0, "score": 0.2, "critique": "turn 0: the action skipped a verification step before a destructive change"}
+{"task": "ledger-net-seven", "turn": 0, "score": 0.3, "critique": "turn 0: no arithmetic was shown, so the move is hard to audit"}

@@ -8,8 +8,10 @@
 #   1. the shared layer's tests
 #   2. P1's tests
 #   3. P1's end-to-end check on fixtures (no network, no GPU)
-#   4. the dataset tool's tests (offline: the download is injected)
-#   5. repository checks: characters, payloads, secrets, imports
+#   4. P2's tests
+#   5. P2's loop check: every task solvable, the loop closes, no entropy cliff, conflicts logged
+#   6. the dataset tool's tests (offline: the download is injected)
+#   7. repository checks: characters, payloads, secrets, imports
 #
 # Nothing here touches the network. `datasets/pull.py` does, and it is not part of the gate
 # for exactly that reason - the gate must be able to tell you that your environment is fine
@@ -35,12 +37,14 @@ run() {
   fi
 }
 
-# Three test suites, three discovery roots. The shared layer is a package under `common/`;
-# `p1-verifiers` has a hyphen in its name and cannot be one; `datasets/` holds a tool rather
-# than a package, so its tests are a root of their own.
+# Four test suites, four discovery roots. The shared layer is a package under `common/`;
+# `p1-verifiers` and `p2-reagent` have hyphens in their names and cannot be packages; `datasets/`
+# holds a tool rather than a package, so its tests are a root of their own.
 run "common tests" python3 -m unittest discover -s common/tests -t .
 run "p1 tests" python3 -m unittest discover -s p1-verifiers/tests -t p1-verifiers/tests
 run "p1 check (fixtures)" python3 p1-verifiers/checks/check_p1.py
+run "p2 tests" python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests
+run "p2 check (loop)" python3 p2-reagent/checks/check_p2.py
 run "datasets tests" python3 -m unittest discover -s datasets/tests -t datasets/tests
 
 # The checks are checked first: a scan that has stopped being able to fail would report

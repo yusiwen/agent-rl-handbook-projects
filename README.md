@@ -3,11 +3,14 @@
 Companion code for the handbook *Agent RL Explained: A Beginner's Handbook*
 (<https://yusiwen.cn/agent-rl-handbook/>). Six projects, one shared contract.
 
-**Status: field 1 is built.** The shared layer (`common/`) is implemented and tested; P1
+**Status: fields 1 and 2 are built.** The shared layer (`common/`) is implemented and tested; P1
 (verifier suite) runs end to end on fixtures, offline, and against a served model over HTTP, and
-it is graded by a check script that was negative-tested. P2-P6 are directories with a README
-each, written when their chapter is written. Nothing here has been trained yet, and nothing here
-claims a number it did not measure.
+it is graded by a check script that was negative-tested. P2 (the credit-assignment loop) closes
+its loop offline on a tabular policy - fusion, per-turn feedback, group-relative advantages, an
+update, and the next round sampled from the new policy - and has a served-judge path that has not
+been run against a model yet. P3-P6 are directories with a README each, written when their
+chapter is written. Nothing here has been trained yet: no policy with weights has been updated,
+and nothing here claims a number it did not measure.
 
 ## What runs today
 
@@ -21,13 +24,15 @@ nix build --no-link                            # the same gate in a sandbox, no 
 == p1 tests ==                    Ran 190 tests ... OK
 == p1 check (fixtures) ==         coverage 21/21 tasks; 42 rollouts; 21/42 passed
                                   contamination 0/21 tasks vs gsm8k/test (1319 items, sha256:524c11ab4ee19ae2)
+== p2 tests ==                    Ran 63 tests ... OK
+== p2 check (loop) ==             [PASS] every task solvable, the loop closes, no entropy cliff
 == datasets tests ==              Ran 39 tests ... OK
 == repository checks (selftest) == [PASS] the checks still reject what they must reject
 == repository checks ==           [PASS] characters  [PASS] payloads  [PASS] secrets  [PASS] imports
 all checks passed
 ```
 
-355 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
+418 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
 writes a run record to `runs/` (gitignored); `nix build` sends it to the sandbox's writable
 directory instead, which is what `ARL_RUNS_DIR` is for. If the gate fails, the problem is in
 this repository rather than in your environment - which is the whole reason it exists.
@@ -116,7 +121,8 @@ The gate reads the git index, so run `git add` first if you want a brand-new fil
 flake.nix        the pinned toolchain; nix build = the same gate as a derivation
 common/          schema, mask, verifier protocol, fusion, run records, contamination, checks (+ 126 tests)
 p1-verifiers/    src/ fixtures/ checks/ configs/ env/ tests/   (harness, live path, Chapter 7's health report)
-p2..p6/          one README each, written with their chapter
+p2-reagent/      src/ fixtures/ checks/ tests/   (the credit-assignment loop; the policy is a table)
+p3..p6/          one README each, written with their chapter
 datasets/        pull scripts + manifest + digests + rows_jsonl.py (JSONL views the stdlib checks can read)
 scripts/         verify.sh (the gate), check_repo.py (characters, payloads, secrets, selftest)
 ```
