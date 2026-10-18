@@ -179,6 +179,40 @@ None of the three is a format problem, and none is fixed by more demonstrations 
 They are the honest ceiling of this fine-tune, and the reason the loop stage has something to
 measure rather than a saturated pass rate.
 
+## The loop with the fine-tuned checkpoint in it
+
+`python3 p2-reagent/checks/run_p2_served.py --base-url http://192.168.2.40:8001 --model qwen3-1.7b-sft`,
+2026-10-18, `code_sha git:75edcf1`, 3 rounds x 3 samples x 43 tasks, record in
+`runs/p2-loop-rule-only-turn-6`.
+
+| round | solved | mean reward | usable `ACTION` lines |
+| --- | --- | --- | --- |
+| 0 | 94/129 (73%) | +0.811 | 1330/1336 (99.6%) |
+| 1 | 89/129 (69%) | +0.783 | |
+| 2 | 97/129 (75%) | +0.822 | |
+
+1,336 model calls in 189 s. The spread across rounds is sampling noise at temperature 1.0 - about
+five points either way on 129 episodes - and not learning: a served policy has no update, which is
+why `Config.served` drops the lineage and entropy checks instead of letting them fail for a reason
+that is the experiment's design.
+
+### The finding: a good policy makes groups flat too
+
+Re-running the shared checks over the recorded rollouts, offline: mask, boundaries and terms pass;
+round stability passes, with 11 and 12 of 129 shared samples changing reward between rounds;
+**advantage spread fails at 6-8 of 43 usable groups (14-19%)** - lower than the 18/43 the cold
+policy produced.
+
+The reason is the mirror image of the cold-start problem. With 72% of episodes solved, most groups
+are three-for-three and contribute a zero advantage; a cold policy contributes zeros because no
+sample succeeds, a competent one because they all do. Both ends are flat and the gradient lives
+only in the band between them - Chapter 7's "in-band difficulty" seen from the policy side rather
+than the task side.
+
+That is a task-difficulty finding, not a loop defect, and it sets the agenda for the next stage:
+calibrate the tasks to where this policy is right about half the time, rather than adding more
+tasks it almost always solves.
+
 ## Tests
 
 `python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests` - 76 tests, offline, under

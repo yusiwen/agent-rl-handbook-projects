@@ -462,11 +462,15 @@ def run_loop(
             project=PROJECT,
             dataset="p2 families",
             dataset_digest=config.digest(),
-            notes=config.notes(getattr(critic, "source", type(critic).__name__)),
+            notes=config.notes(getattr(critic, "source", type(critic).__name__))
+            + (f"; policy={policy.version}" if config.served else ""),
         )
         writer = RunWriter(header, root=runs_dir)
 
-    out(f"run {writer.header.run_id}: {config.notes(getattr(critic, 'source', type(critic).__name__))}")
+    out(
+        f"run {writer.header.run_id}: {config.notes(getattr(critic, 'source', type(critic).__name__))}"
+        + (f"; policy={policy.version}" if config.served else "")
+    )
     results: list[RoundResult] = []
     for round_index in range(config.rounds):
         if not config.served:
