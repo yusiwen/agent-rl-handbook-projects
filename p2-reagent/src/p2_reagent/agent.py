@@ -170,5 +170,9 @@ def policy_updates(episode: Episode, weights: list[float]) -> list:
         for signature, menu, action, weight in zip(
             episode.signatures, episode.menus, episode.actions, weights
         )
-        if weight != 0.0
+        # And a turn whose action was never on the menu has nothing to reinforce: a table can only
+        # pick from the menu, so this never came up until the policy became an endpoint. A served
+        # model can invent an action, the environment rejects it with an error signal, and the
+        # trace keeps the turn - but there is no menu entry to move probability towards.
+        if weight != 0.0 and action in menu
     ]
