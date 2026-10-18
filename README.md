@@ -3,14 +3,17 @@
 Companion code for the handbook *Agent RL Explained: A Beginner's Handbook*
 (<https://yusiwen.cn/agent-rl-handbook/>). Six projects, one shared contract.
 
-**Status: fields 1 and 2 are built.** The shared layer (`common/`) is implemented and tested; P1
-(verifier suite) runs end to end on fixtures, offline, and against a served model over HTTP, and
-it is graded by a check script that was negative-tested. P2 (the credit-assignment loop) closes
-its loop offline on a tabular policy - fusion, per-turn feedback, group-relative advantages, an
-update, and the next round sampled from the new policy - and has a served-judge path that has not
-been run against a model yet. P3-P6 are directories with a README each, written when their
-chapter is written. Nothing here has been trained yet: no policy with weights has been updated,
-and nothing here claims a number it did not measure.
+**Status: fields 1 and 2 are built, and P2 has been trained.** The shared layer (`common/`) is
+implemented and tested; P1 (verifier suite) runs end to end on fixtures, offline, and against a
+served model over HTTP, graded by a check script that was negative-tested. P2 (the credit-assignment
+loop) closes its loop offline on a tabular policy, and has now been carried through all four of its
+stages on the reference machine: a supervised fine-tune of a 1.7B policy on 117 oracle
+demonstrations, the same loop driven by the served checkpoint, task calibration read out of the
+recorded rollouts, and a budgeted judge measured against the rule critic and demoted to a diagnostic
+because it disagrees with the rule on three quarters of the turns it scored. The update on top of
+the served policy is not built - that loop runs frozen, and P2's README says so. P3-P6 are
+directories with a README each, written when their chapter is written. Every number in these
+documents comes from a run whose record is named beside it.
 
 ## What runs today
 
@@ -24,7 +27,7 @@ nix build --no-link                            # the same gate in a sandbox, no 
 == p1 tests ==                    Ran 190 tests ... OK
 == p1 check (fixtures) ==         coverage 21/21 tasks; 42 rollouts; 21/42 passed
                                   contamination 0/21 tasks vs gsm8k/test (1319 items, sha256:524c11ab4ee19ae2)
-== p2 tests ==                    Ran 76 tests ... OK
+== p2 tests ==                    Ran 81 tests ... OK
 == p2 check (loop) ==             [PASS] every task solvable, the loop closes, no entropy cliff
 == datasets tests ==              Ran 39 tests ... OK
 == repository checks (selftest) == [PASS] the checks still reject what they must reject
@@ -32,7 +35,7 @@ nix build --no-link                            # the same gate in a sandbox, no 
 all checks passed
 ```
 
-431 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
+436 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
 writes a run record to `runs/` (gitignored); `nix build` sends it to the sandbox's writable
 directory instead, which is what `ARL_RUNS_DIR` is for. If the gate fails, the problem is in
 this repository rather than in your environment - which is the whole reason it exists.

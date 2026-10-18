@@ -276,6 +276,19 @@ second model thought were wasted. The dense signal remains the rule's progress d
 50% as the conflict rate above which the judge would be demoted; the measurement is above 75%, and
 the conclusion is not "tune the weights" but "this is not a reward".
 
+## Where this stage ends
+
+Four stages are built and measured - fine-tune, served loop, calibration, judge - with their numbers
+above and their records in `runs/`. What is **not** built is the update on top of the served policy:
+the loop runs it frozen, which is why its rounds are flat and why `Config.served` drops the checks
+that assume training.
+
+Doing that update means putting the fine-tuned weights back into a training loop - an on-policy or
+off-policy group-relative step against the served checkpoint - which is Project 3's subject and
+Chapter 9's machinery. What this stage delivered is the measurement of *whether* the credit signal
+is worth training on, and the answer so far is: the machinery is sound, the tasks have to be
+calibrated per sample, and a 1.7B rule-plus-judge reward is not yet a reward.
+
 ## Tests
 
 `python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests` - 76 tests, offline, under
