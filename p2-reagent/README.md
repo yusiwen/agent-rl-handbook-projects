@@ -243,6 +243,39 @@ The four tasks are `files-r03`, `files-r06`, `files-r07` and `files-r09`. The bo
 x 5 samples x 4 tasks at `code_sha git:7ced1af`: 176 calls, 24 s, spread 100% in both rounds.
 Nothing about the loop changed between the rows - only which tasks it was pointed at.
 
+## The judge, measured rather than assumed
+
+`python3 p2-reagent/checks/run_p2_fusion.py`, 2026-10-18, on the five-task calibrated band
+(`fixtures/calibration-wide.json`), budget `[0.5, 0.9]`, record `runs/p2-loop-full-turn-2`.
+
+| judge | holds the format on a six-turn trace | episodes judged | rule-vs-judge conflicts |
+| --- | --- | --- | --- |
+| `Qwen/Qwen3-1.7B` (the base checkpoint) | no - stops after about four turns and raises | 0 | - |
+| `nvidia/Qwen3-8B-NVFP4` | yes, 35 of 35 | 35 of 50 | **106** |
+
+The budget behaved as designed: 35 episodes were judged, 15 were skipped, and every skip names the
+rule score it decided on.
+
+The verdict on the judge is the conflict count, and it is bad. 106 disagreements across 35 judged
+episodes is about three per episode - roughly three quarters of all judged turns scored at least
+0.25 apart. What rules out averaging them away is that the disagreements are systematic:
+
+```
+turn 1: rule=0.50 vs model=0.00  (changed nothing that matters / it only listed files)
+turn 2: rule=0.50 vs model=0.00  (changed nothing that matters / it only viewed a file)
+```
+
+The rule critic treats reading as a neutral turn - it taught nothing, it was not a failure - because
+an earlier version that scored activity taught the policy to repeat a harmless action until the turn
+cap (the Echo Trap, Chapter 6). The judge treats reading as a failure. Fusing the two as a dense
+reward would teach the policy not to look before it acts, the opposite of what the demonstrations
+were built for.
+
+So the judge stays, and stays out of the reward. It is a diagnostic: it says in words which turns a
+second model thought were wasted. The dense signal remains the rule's progress delta. The plan set
+50% as the conflict rate above which the judge would be demoted; the measurement is above 75%, and
+the conclusion is not "tune the weights" but "this is not a reward".
+
 ## Tests
 
 `python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests` - 76 tests, offline, under
