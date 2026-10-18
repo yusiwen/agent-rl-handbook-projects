@@ -300,7 +300,8 @@ def run_round(
     """Sample every task, judge it, fuse, check, and update the policy once."""
     rule_critic = rule_critic or RuleCritic()
     version = policy.version
-    entropy_before = _mean_entropy(policy, config)
+    # A served policy has no distribution to measure; see served_policy.py for what replaces it.
+    entropy_before = 0.0 if config.served else _mean_entropy(policy, config)
     result = RoundResult(
         index=round_index,
         policy_version=version,
@@ -412,6 +413,7 @@ def progress_reached(episode: Episode) -> float:
 
 
 def _mean_entropy(policy: TabularPolicy, config: Config) -> float:
+    """Mean entropy over the round's states. Tables only: a served policy has no distribution."""
     """Mean entropy over the states this configuration actually visits.
 
     Visiting rather than enumerating: a table has a row for every state ever seen, and a row no
