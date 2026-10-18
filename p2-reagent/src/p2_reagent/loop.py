@@ -305,7 +305,11 @@ def run_round(
     result = RoundResult(
         index=round_index,
         policy_version=version,
-        table_digest=_digest_of_table(policy.table()),
+        # A served policy's "parameters" are the checkpoint behind the endpoint; the model id is
+        # the only honest digest of that, and it is not pretending to be a table.
+        table_digest=(
+            f"served:{policy.model}" if config.served else _digest_of_table(policy.table())
+        ),
         entropy_before=entropy_before,
     )
 
@@ -465,7 +469,8 @@ def run_loop(
     out(f"run {writer.header.run_id}: {config.notes(getattr(critic, 'source', type(critic).__name__))}")
     results: list[RoundResult] = []
     for round_index in range(config.rounds):
-        policy.version = f"policy-v{round_index}"
+        if not config.served:
+            policy.version = f"policy-v{round_index}"
         result = run_round(policy, critic, config, round_index)
         results.append(result)
         writer.append_rollouts(round_index, result.rollouts)
