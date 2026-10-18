@@ -9,12 +9,14 @@
 #   the Hugging Face cache   read-only at /hf, so loading a checkpoint cannot write to the host
 #   a named Docker volume    writable at /work, so adapters and checkpoints have somewhere to go
 #   this directory           read-only at /env, so the code that ran is the code in the repo
+#   the repository           read-only at /repo, so the package under src/ is importable
 #
 # GPU access goes through CDI (`--device nvidia.com/gpu=all`). There is no `nvidia` runtime on
 # this host, so `--gpus all` is not the flag that works here.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo="$(cd "$here/../.." && pwd)"
 image="${ARLH_TRAIN_IMAGE:-arlh-pytorch:26.09}"
 hf_cache="${ARLH_HF_CACHE:-$HOME/.cache/huggingface}"
 volume="${ARLH_VOLUME:-arlh-p2}"
@@ -30,5 +32,7 @@ exec docker run --rm -i \
   -v "$hf_cache":/hf:ro \
   -v "$volume":/work \
   -v "$here":/env:ro \
+  -v "$repo":/repo:ro \
+  -e PYTHONPATH=/repo:/repo/p2-reagent/src \
   -w /work \
   "$image" "$@"

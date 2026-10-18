@@ -120,6 +120,22 @@ That is the same behaviour Chapter 7 measured on this checkpoint from the other 
 model ignoring a stated answer format - and it means the fine-tune has something real to teach:
 the format, not the arithmetic.
 
+## P2-prime: the demonstration fine-tune
+
+`bash run.sh python3 /env/sft.py`, 2026-10-18, same image.
+
+| quantity | value |
+| --- | --- |
+| demonstrations | 43 tasks, 117 turns, `sha256:41d694a18fd7ffa4` |
+| supervised span | the reply only - prompt tokens are masked |
+| trainable | `6,422,528 / 1,726,997,504` (0.372%, r=16 on q/k/v/o) |
+| loss | `3.8492 -> 0.0000` over 59 steps |
+| time / memory | 23.7 s, 9.50 GiB peak |
+| artifacts | `/work/sft/adapter` and `/work/sft/merged` |
+
+The merged checkpoint is served by the same vLLM image with `--gpu-memory-utilization 0.08`, on
+port 8001 beside the baseline on 8000: 3.38 GiB each, both resident at once.
+
 ## Not proven yet
 
 P0b proves a ten-step run fits, converges and leaves a loadable adapter. It does not prove the

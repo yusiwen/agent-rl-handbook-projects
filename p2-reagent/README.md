@@ -147,6 +147,38 @@ all; the rest are flat because no sample in the group got both steps right. Form
 in the loop as a guard rail: if it drops below the baseline the fine-tune broke the interface, and
 that is a regression whatever it did to the score.
 
+## What the fine-tune changed, measured
+
+Two readings, 2026-10-18, all 43 tasks, the same prompt and parser throughout. The base checkpoint
+and the fine-tuned one are both served, so the comparison is two endpoints rather than two claims.
+
+| policy | solved, greedy | solved, 3 samples at T=1.0 | usable turns | mean turns |
+| --- | --- | --- | --- | --- |
+| `Qwen/Qwen3-1.7B` | 2/43 (5%) | 8/129 (6%) | 100% | 5.53 |
+| after P2-prime | **30/43 (70%)** | **91/129 (71%)** | 99-100% | 3.47 |
+
+Format compliance was already 100% before training, so this number is not about syntax: the same
+contract, answered correctly twelve times as often. The demonstration set is the oracle's own
+trajectories - 117 turns over 43 tasks - and the loss covers the reply only.
+
+### The three ways it still fails
+
+Thirteen tasks fail consistently, and they fail in three different ways, which matters for what
+the next stage should and should not try to fix:
+
+- **Miscounting.** `files-r02`: the move is right (`mv final.csv final.log`) and the report is
+  wrong (`done 2`). The policy can act and cannot count, which is a reasoning limit, not a format
+  one.
+- **Not terminating.** `files-rename-count`: the move is right, then `ls`, `cat final.txt`,
+  `cat draft.txt`, `ls` until the turn budget runs out. It keeps verifying instead of reporting.
+- **Order.** `ledger-03`: both moves are taken, in the wrong order, so the balance is right and the
+  plan is not. The environment requires the order the task states, deliberately: a sequence task
+  whose order does not matter is a sum, and a sum is a different lesson.
+
+None of the three is a format problem, and none is fixed by more demonstrations of the same shape.
+They are the honest ceiling of this fine-tune, and the reason the loop stage has something to
+measure rather than a saturated pass rate.
+
 ## Tests
 
 `python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests` - 76 tests, offline, under
