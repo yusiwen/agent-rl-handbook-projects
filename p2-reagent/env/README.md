@@ -136,6 +136,33 @@ the format, not the arithmetic.
 The merged checkpoint is served by the same vLLM image with `--gpu-memory-utilization 0.08`, on
 port 8001 beside the baseline on 8000: 3.38 GiB each, both resident at once.
 
+## Step A: does a gradient reach the next round?
+
+`bash run.sh python3 /env/rl_step.py --task files-r06 --samples 5 --rounds 2`, 2026-10-18, starting
+from the P2-prime adapter, `lr 1e-5`, in-process generation.
+
+| round | solved | mean reward | loss | weighted turns | adapter digest |
+| --- | --- | --- | --- | --- | --- |
+| 0 | 4/5 | +0.800 | -0.15491 | 15 | `sha256:5a15df58...` |
+| 1 | 5/5 | +1.000 | 0.00000 | **0** | unchanged |
+
+Two things it proves and one it exposes.
+
+**Proves:** the weight the credit machinery computes reaches the tokens the model actually produced
+- the adapter digest moves from `sha256:4d51af56...` to `sha256:5a15df58...` - and the next round
+generates from those weights, because generation and training share one process. There is no
+weight-sync step to get wrong; it is structural, not verified after the fact.
+
+**Exposes:** round 1 produced no gradient at all. The group came back five-for-five, a flat group is
+a zero advantage by design, so `weighted turns` is zero and the loss is exactly 0.0. One task with
+five samples spends all of its variance in the first round: step B has to run on the band, not on a
+single task taken from it.
+
+**A sign worth not misreading:** the loss is negative in round 0. The objective is
+`- w * mean(log p)`, so a negative advantage multiplied by a negative log-probability contributes a
+negative number, and a round whose weighted sum is dominated by negative advantages has a negative
+scalar. What trains is the gradient's sign, not the scalar's.
+
 ## Not proven yet
 
 P0b proves a ten-step run fits, converges and leaves a loadable adapter. It does not prove the
