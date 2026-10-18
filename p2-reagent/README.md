@@ -221,6 +221,28 @@ fixed - the guard now sits where the checks are attached - and the run's data is
 what was wrong was the verdict on it, not the rollouts. A frozen policy cannot fail "the update
 changed the parameters"; it can only be asked it by mistake.
 
+## Calibration: which tasks the loop can learn from
+
+`python3 p2-reagent/checks/calibrate_tasks.py --run runs/p2-loop-rule-only-turn-6` reads the
+recorded attempts and writes `fixtures/calibration.json`. Pointing the same loop at different
+subsets changes the one number that matters, and nothing else:
+
+| subset | tasks | groups with a non-zero advantage |
+| --- | --- | --- |
+| every task | 43 | 14-19% |
+| solved share between 11% and 89% | 11 | 36-45% |
+| solved share between 1/3 and 2/3 | 4 | **100%** |
+
+The middle row is the instructive one: a task solved 11% of the time still looks flat to a group of
+five, because five samples of an 11% event usually fail together. What the group needs is a per-
+*sample* success rate near one half, and the per-task rate one measured is that number only when
+there are enough samples to resolve it - which is why the band is read from data with a stated
+number of attempts, not guessed.
+
+The four tasks are `files-r03`, `files-r06`, `files-r07` and `files-r09`. The bottom row is 2 rounds
+x 5 samples x 4 tasks at `code_sha git:7ced1af`: 176 calls, 24 s, spread 100% in both rounds.
+Nothing about the loop changed between the rows - only which tasks it was pointed at.
+
 ## Tests
 
 `python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests` - 76 tests, offline, under
