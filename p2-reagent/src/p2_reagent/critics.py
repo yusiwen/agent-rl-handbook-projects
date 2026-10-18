@@ -196,6 +196,11 @@ class ModelCritic:
         WHY: <one sentence>
 
     Anything else raises.  The endpoint's key comes from the environment and is never logged.
+
+    ``api_key_env=None`` is the local case, and it is not the same as an empty key: a vLLM server
+    on the same box authenticates nobody, and refusing to call it because a variable is unset would
+    make the judge unusable exactly where it is cheapest to run. Naming *which* mode is in force is
+    the point - a missing key where one was expected still raises.
     """
 
     source = "model"
@@ -205,15 +210,19 @@ class ModelCritic:
         *,
         base_url: str,
         model: str,
-        api_key_env: str = "OPENAI_API_KEY",
+        api_key_env: str | None = "OPENAI_API_KEY",
         timeout_s: float = 60.0,
         temperature: float = 0.0,
+        max_tokens: int = 256,
+        extra_body: dict | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.api_key_env = api_key_env
         self.timeout_s = timeout_s
         self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.extra_body = dict(extra_body or {})
 
     # ------------------------------------------------------------------ the request
     def _prompt(self, episode: Episode) -> str:
@@ -234,23 +243,27 @@ class ModelCritic:
         return "\n".join(lines)
 
     def _call(self, prompt: str) -> str:
-        key = os.environ.get(self.api_key_env)
-        if not key:
-            raise CriticParseError(
-                f"no API key in ${self.api_key_env}; refusing to call the judge without one "
-                "(and never printing a key that does exist)"
-            )
-        body = json.dumps(
-            {
-                "model": self.model,
-                "temperature": self.temperature,
-                "messages": [{"role": "user", "content": prompt}],
-            }
-        ).encode("utf-8")
+        headers = {"Content-Type": "application/json"}
+        if self.api_key_env:
+            key = os.environ.get(self.api_key_env)
+            if not key:
+                raise CriticParseError(
+                    f"no API key in ${self.api_key_env}; refusing to call the judge without one "
+                    "(and never printing a key that does exist)"
+                )
+            headers["Authorization"] = f"Bearer {key}"
+        payload = {
+            "model": self.model,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "messages": [{"role": "user", "content": prompt}],
+            **self.extra_body,
+        }
+        body = json.dumps(payload).encode("utf-8")
         request = urllib.request.Request(
             f"{self.base_url}/chat/completions",
             data=body,
-            headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"},
+            headers=headers,
         )
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_s) as response:  # noqa: S310
