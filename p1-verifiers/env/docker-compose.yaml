@@ -68,6 +68,13 @@ services:
     # compose command cannot branch on which model was chosen. For the default 1.7B it is
     # simply ignored - a flag that does nothing beats a start that fails on a technicality.
     #
+    # --gpu-memory-utilization is a CAP, not a consumption, and that distinction cost a wrong
+    # diagnosis: Qwen3-1.7B measured 3.4 GiB resident under both 0.80 and 0.08 (weights, KV cache
+    # for 8192 tokens x 8 sequences, CUDA context). 0.80 was the 27B-era figure; on a 1.7B model it
+    # only widens what one long-context or high-concurrency request may reserve out of the shared
+    # pool. 0.08 leaves the model ~10 GB of headroom and keeps the rest for training, the OS and the
+    # page cache. Raise it deliberately, per model, rather than by copying the old value.
+    #
     # --gpu-memory-utilization 0.80 rather than the vendor's 0.85: the failure mode when the
     # unified pool runs out is earlyoom killing the scheduler, which costs a restart rather
     # than a flag. Raise it when the machine is dedicated to this.
@@ -76,7 +83,7 @@ services:
       --served-model-name ${ARL_SERVED_NAME:-qwen3-1.7b}
       --max-model-len ${ARL_MAX_MODEL_LEN:-8192}
       --max-num-seqs ${ARL_MAX_NUM_SEQS:-8}
-      --gpu-memory-utilization ${ARL_GPU_MEMORY_UTILIZATION:-0.80}
+      --gpu-memory-utilization ${ARL_GPU_MEMORY_UTILIZATION:-0.08}
       --trust-remote-code
 
     # "no" on purpose: this machine is powered off daily, and a model that resurrects itself on
