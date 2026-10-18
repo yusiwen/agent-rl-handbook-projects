@@ -476,7 +476,8 @@ def run_loop(
         writer.append_rollouts(round_index, result.rollouts)
         writer.append_round(round_record(round_index, result.rollouts))
         out(_render_round(result))
-        policy = policy.bumped(f"policy-v{round_index + 1}")
+        if not config.served:
+            policy = policy.bumped(f"policy-v{round_index + 1}")
 
     final = run_all(results[-1].rollouts, min_spread_fraction=config.min_spread_fraction)
     final.append(check_lineage(results))
