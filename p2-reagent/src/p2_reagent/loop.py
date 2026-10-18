@@ -518,6 +518,8 @@ def render_cross_round(results: Sequence[RoundResult], sample_ids: Sequence[str]
             value = result.totals.get(episode_id)
             row += ("--" if value is None else f"{value:+.3f}").ljust(14)
         lines.append(row)
-    versions = "versions".ljust(22) + "".join(f"{result.policy_version}".ljust(14) for result in results)
+    # A served policy's version string is longer than a table's ("served:qwen3-1.7b-sft"), and a
+    # column that silently overflows runs two rounds together in the evidence printout.
+    versions = "versions".ljust(22) + "".join(f"{result.policy_version}".ljust(22) for result in results)
     lines.append(versions)
     return "\n".join(lines)
