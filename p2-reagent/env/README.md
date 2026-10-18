@@ -79,8 +79,50 @@ Cover a different cache, volume or image with `ARLH_HF_CACHE`, `ARLH_VOLUME`, `A
 - outputs go to the named Docker volume `arlh-p2` at `/work`, which is removable in one command and
   is not a directory in the host's file tree.
 
+## P0b: ten LoRA steps on the real checkpoint
+
+`bash run.sh python3 /env/smoke_lora.py`, 2026-10-18, same machine.
+
+| quantity | value |
+| --- | --- |
+| trainable parameters | `6,422,528 / 1,726,997,504` (0.372%, r=16 on q/k/v/o) |
+| loss, step 1 to step 10 | `13.7416 -> 0.0000` |
+| load / train | 32.8 s / 1.9 s total, 0.19 s per step |
+| throughput | 2,742 tokens/s (batch 2, 256 tokens, bf16) |
+| peak GPU memory | 5.90 GiB allocated, 6.23 GiB reserved |
+| adapter | saved to `/work/p0b-adapter`, reloaded as `PeftModelForCausalLM` |
+
+The loss mask is checked rather than assumed: the smoke prints the first sample's prompt and its
+supervised span, and they are
+
+```
+prompt  '<|im_start|>user\nWhat is 17 + 26?<|im_end|>\n<|im_start|>assistant\n'
+labels  '43<|im_end|>'
+```
+
+### Why step one is 13.7, and why that is the point
+
+A loss of 13.7 on the first step looks like a defect. `--inspect` says it is the data doing its
+job, per token:
+
+```
+first supervised token: '4' at position 22
+  model wants  '1' (logit 42.0), 'Let' (30.3), 'To' (28.3), '$' (28.1), 'The' (27.1)
+  '4'          ce 18.375
+  '3'          ce  0.000
+  '<|im_end|>' ce  3.538
+```
+
+The checkpoint is post-trained (`base_model: Qwen/Qwen3-1.7B-Base`), and after
+`<|im_start|>assistant\n` it still wants to restate or explain the question before answering. So the
+first answer token carries almost none of the probability mass, and the cross entropy is large.
+That is the same behaviour Chapter 7 measured on this checkpoint from the other direction - the
+model ignoring a stated answer format - and it means the fine-tune has something real to teach:
+the format, not the arithmetic.
+
 ## Not proven yet
 
-The probe proves the stack runs, on a 2-layer model and on one forward pass of the real one. It
-does not prove a ten-step LoRA run on the 1.7B checkpoint fits and converges - that is P0b, and its
-numbers go here when it has run.
+P0b proves a ten-step run fits, converges and leaves a loadable adapter. It does not prove the
+P2 fine-tune: the task set, the demonstration volume, whether format compliance reaches 90% in one
+epoch, and whether the resulting policy is any better at the tasks. Those numbers belong to P1-P3
+and will be added here only when they exist.
