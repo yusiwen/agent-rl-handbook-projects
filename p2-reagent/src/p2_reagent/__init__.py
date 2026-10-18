@@ -21,10 +21,12 @@ from .critics import (
     Verdict,
     disagreement,
 )
+from .actions import ParsedAction, parse_action
 from .env import ENV_VERSION, Family, Task, all_tasks, families, start
 from .fusion_policy import CONFLICT_POLICY, FULL, RULE_ONLY, WEIGHTS, fuse_terms, policy_for, terms_for
 from .loop import Config, RoundResult, check_entropy, check_lineage, run_loop, run_round
 from .policy import TabularPolicy, Update
+from .prompt import ACTION_PREFIX, SYSTEM_PROMPT, render
 from .train import CREDIT_MODES, TURN_SHAPING, group_advantages, turn_weights
 
 __all__ = [
@@ -50,7 +52,12 @@ __all__ = [
     "Update",
     "Verdict",
     "WEIGHTS",
+    "ACTION_PREFIX",
+    "ParsedAction",
+    "SYSTEM_PROMPT",
     "all_tasks",
+    "parse_action",
+    "render",
     "check_entropy",
     "check_lineage",
     "disagreement",

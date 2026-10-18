@@ -96,7 +96,7 @@ class EnvTests(unittest.TestCase):
     def test_families_are_registered_with_their_tasks(self) -> None:
         families = env.families()
         self.assertEqual(sorted(families), ["files", "ledger"])
-        self.assertEqual(len(env.all_tasks()), 3)
+        self.assertEqual(len(env.all_tasks()), 43)
 
     def test_each_task_can_be_solved_from_its_menu(self) -> None:
         """The regression that mattered: a menu missing the right action makes the task impossible."""
@@ -147,12 +147,21 @@ class EnvTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             attempt.step("ls")
 
-    def test_the_menu_shrinks_after_a_change(self) -> None:
-        attempt = env.start("files-rename-count")
+    def test_the_menu_is_fixed_and_a_repeat_is_reported(self) -> None:
+        """One vocabulary for the whole episode; a pointless action is reported, not hidden.
+
+        The first version shrank the menu after a change, which made a repeated action impossible
+        to take. A fixed menu matters for a served policy: it is given the same action list every
+        turn, so a format it learns once stays valid, and the environment teaches by signal
+        instead - a repeat that still applies returns no-op, one that no longer applies returns
+        error. Both are observations the policy can see and the critic can score.
+        """
+        attempt = env.start("files-delete-count")
         before = attempt.menu()
-        attempt.step("mv draft.txt final.txt")
-        self.assertNotEqual(before, attempt.menu())
-        self.assertNotIn("mv draft.txt final.txt", attempt.menu())
+        attempt.step("rm tmp.log")
+        self.assertEqual(attempt.menu(), before)
+        repeated = attempt.step("rm tmp.log")
+        self.assertEqual(repeated.signal, "error")
 
 
 class PolicyTests(unittest.TestCase):

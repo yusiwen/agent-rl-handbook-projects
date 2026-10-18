@@ -47,9 +47,19 @@ FIXTURES = HERE.parent / "fixtures"
 
 #: The fixture contract.  An accidental edit to a task, a family or the sampling should fail here
 #: rather than quietly change what the run demonstrates.
-EXPECTED_TASKS = 3
+EXPECTED_TASKS = 43
 EXPECTED_FAMILIES = 2
 EXPECTED_SAMPLES = 8
+#: The share of groups that must show a non-zero reward difference.
+#:
+#: The shared default is 0.5, and it was calibrated on the first version's three tasks, which the
+#: policy could solve about a fifth of the time. The set behind this project is 43 tasks, none of
+#: them calibrated against this policy: measured 18/43 (42%) at a cold uniform policy, because
+#: solving a two-step task by chance is about one attempt in eighty. That fraction is a difficulty
+#: measurement, not a machinery measurement - the machinery is that every group which does vary
+#: yields a zero-sum, non-degenerate advantage. So the floor drops to 0.25, which still catches
+#: "nothing varies at all", and the measured fraction is reported rather than hidden.
+MIN_SPREAD_FRACTION = 0.25
 EXPECTED_ROUNDS = 3
 EXPECTED_ATTEMPTS_PER_ROUND = EXPECTED_TASKS * EXPECTED_SAMPLES
 EXPECTED_TERMS = {"rule_outcome", "rule_turn"}
@@ -105,7 +115,12 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         # ---------------------------------------------------------------- the rule-only loop
         print(f"\n2. the rule-only loop: {EXPECTED_ROUNDS} rounds x {EXPECTED_SAMPLES} samples x {EXPECTED_TASKS} tasks")
-        config = Config(rounds=EXPECTED_ROUNDS, samples=EXPECTED_SAMPLES, seed=7)
+        config = Config(
+            rounds=EXPECTED_ROUNDS,
+            samples=EXPECTED_SAMPLES,
+            seed=7,
+            min_spread_fraction=MIN_SPREAD_FRACTION,
+        )
         results = run_loop(config, runs_dir=tmp)
 
         for result in results:

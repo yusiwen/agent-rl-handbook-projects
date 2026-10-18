@@ -75,7 +75,8 @@ decision, and at least one rule-vs-critic conflict is found and logged.
 
 ## Measured
 
-Six rounds, three tasks x eight samples, seed 1, rule-only stage:
+Six rounds, three tasks x eight samples, seed 1, rule-only stage (the first task set; the set is
+now 43 tasks, and its cold-policy numbers are in the format-baseline section):
 
 | round | reward | solved | spread | entropy (before -> after) |
 |---|---|---|---|---|
@@ -123,7 +124,30 @@ Each one is pinned by a test, because each is the kind of thing that is invisibl
 - **ALFWorld / tau-bench**: `env.py` is the seam. Replacing it does not touch the critics, the
   fusion, the advantages or the loop.
 
+## The format baseline, measured before the fine-tune
+
+`python3 p2-reagent/checks/measure_format.py --base-url http://192.168.2.40:8000 --model qwen3-1.7b`,
+2026-10-18, all 43 tasks, first turn only, the same prompt and the same parser the loop uses:
+
+| temperature | replies with a usable `ACTION` line |
+| --- | --- |
+| 0.0 | 43/43 (100%) |
+| 1.0 | 43/43 (100%) |
+
+The result changes what the fine-tune is for. The plan going in was "fine-tune until format
+compliance reaches 90%"; the checkpoint is already at 100% on this prompt, so there is nothing to
+reach. The prompt is why: it names a mechanical slot (`ACTION: <action>`) and prints the menu one
+entry per line to copy from. Chapter 7 measured the same lever from the other side - naming the
+slot took answer declarations from 26% to 88%, while a style instruction ("end with the number
+alone on the last line") did not - and this is that finding applied rather than re-learned.
+
+So the fine-tune's target is the task, not the syntax. The action space is two to three steps deep
+over a nine-entry menu, and at a cold uniform policy 18 of 43 groups show any reward variation at
+all; the rest are flat because no sample in the group got both steps right. Format compliance stays
+in the loop as a guard rail: if it drops below the baseline the fine-tune broke the interface, and
+that is a regression whatever it did to the score.
+
 ## Tests
 
-`python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests` - 63 tests, offline, under
-0.1 s. `bash scripts/verify.sh` runs them with the loop check.
+`python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests` - 76 tests, offline, under
+0.2 s. `bash scripts/verify.sh` runs them with the loop check.

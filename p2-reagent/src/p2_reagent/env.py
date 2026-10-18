@@ -30,7 +30,10 @@ either way, which is the only thing this project needs from it.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable
+
+from . import tasksets
 
 #: The free per-turn signals.  ``error`` and ``no-op`` are what a rule critic can read without a
 #: model; ``done`` marks the turn that ended the episode.
@@ -54,6 +57,9 @@ class Task:
     prompt: str
     goal: str
     expected: str
+    #: The specification this task was built from.  The world, the menu and the answer are
+    #: derived from it rather than written beside it; see ``tasksets``.
+    spec: "tasksets.TaskSpec | None" = None
 
     def as_dict(self) -> dict:
         return {
@@ -184,79 +190,49 @@ class FilesAttempt(Attempt):
 
     family = "files"
 
+    @property
+    def spec(self) -> tasksets.TaskSpec:
+        if self.task.spec is None:
+            raise ValueError(f"task {self.task.task_id!r} has no specification")
+        return self.task.spec
+
     def _reset_world(self) -> None:
-        self.files: dict[str, str] = {
-            "draft.txt": "first draft",
-            "tmp.log": "noise",
-            "keep.md": "notes",
-        }
+        self.files: dict[str, str] = {name: f"contents of {name}" for name in self.spec.world}
         self._stage = "start"
 
     def _opening_observation(self) -> str:
-        return "directory: " + ", ".join(sorted(self.files))
+        return self.spec.opening
 
     @property
     def stage(self) -> str:
         return self._stage
 
     def menu(self) -> list[str]:
-        """Legal actions, generated per task.
+        """Legal actions, derived from the task's specification.
 
-        Generated rather than shared, and that is a bug fix with a lesson: the first draft offered
-        one menu for the whole family, so the delete task's own action (``rm tmp.log``) was never
-        on it and the task was unsolvable.  A menu that is missing the correct action is not a hard
-        task - it is a broken environment, and no amount of training can show it.
+        Derived rather than written per task, and that is a bug fix with a lesson: the first draft
+        offered one menu for the whole family, so the delete task's own action (``rm tmp.log``) was
+        never on it and the task was unsolvable.  A menu that is missing the correct action is not
+        a hard task - it is a broken environment, and no amount of training can show it.
         """
-        if self._stage == "start":
-            if self.task.task_id == "files-rename-count":
-                return sorted(
-                    {
-                        "mv draft.txt final.txt",
-                        "mv final.txt draft.txt",
-                        "rm draft.txt",
-                        "cat draft.txt",
-                        "ls",
-                        "done 1",
-                        "done 2",
-                        "done 3",
-                    }
-                )
-            return sorted(
-                {
-                    "rm tmp.log",
-                    "rm draft.txt",
-                    "cat draft.txt",
-                    "ls",
-                    "done 0",
-                    "done 1",
-                    "done 2",
-                }
-            )
-        return sorted({"ls", "done 0", "done 1", "done 2", "done 3"})
+        return list(self.spec.menu())
 
     def progress(self) -> float:
-        if self.task.task_id == "files-rename-count":
-            if self.goal_met():
-                return 1.0
-            if "final.txt" in self.files:
-                return 0.6
-            if "draft.txt" not in self.files:
-                return 0.0
-            return 0.25
-        if self.task.task_id == "files-delete-count":
-            if self.goal_met():
-                return 1.0
-            if "draft.txt" not in self.files:
-                return 0.0  # removed the wrong file: worse than doing nothing
-            return 0.25
-        raise NotImplementedError(f"no progress measure for {self.task.task_id!r}")
+        """How far the directory is towards the goal, with the wrong destructive move at zero.
+
+        Removing the wrong file is worse than doing nothing: it cannot be undone by a later
+        correct action, and a progress measure that scores it as neutral teaches the policy that
+        collateral damage is free.
+        """
+        if self.goal_met():
+            return 1.0
+        if self.spec.source not in self.files:
+            return 0.0
+        return 0.25
 
     def goal_met(self) -> bool:
-        if self.task.task_id == "files-rename-count":
-            return "final.txt" in self.files and "draft.txt" not in self.files
-        if self.task.task_id == "files-delete-count":
-            return "tmp.log" not in self.files
-        raise NotImplementedError(f"no goal check for {self.task.task_id!r}")
+        """The directory equals the one the task asked for - and nothing else was touched."""
+        return tuple(sorted(self.files)) == self.spec.final_files()
 
     def _apply(self, action: str) -> StepResult:
         parts = action.split()
@@ -294,6 +270,12 @@ class LedgerAttempt(Attempt):
 
     family = "ledger"
 
+    @property
+    def spec(self) -> tasksets.TaskSpec:
+        if self.task.spec is None:
+            raise ValueError(f"task {self.task.task_id!r} has no specification")
+        return self.task.spec
+
     def _reset_world(self) -> None:
         self.balance = 0
         self._stage = "start"
@@ -307,9 +289,7 @@ class LedgerAttempt(Attempt):
         return self._stage
 
     def menu(self) -> list[str]:
-        if not self._moves:
-            return sorted({"add 12", "add 5", "sub 5", "sub 12", "done 7", "done 12", "done 0"})
-        return sorted({"add 12", "sub 5", "done 7", "done 12", "done 5"})
+        return list(self.spec.menu())
 
     def progress(self) -> float:
         """Progress along the *required* sequence, not distance to the final number.
@@ -318,7 +298,7 @@ class LedgerAttempt(Attempt):
         the balance to 5, which is nearer to 7 than 12 is, so the distractor outscored the correct
         first move and the policy learned it.  A progress measure has to know the plan.
         """
-        plan = [12, -5]
+        plan = list(self.spec.plan)
         if len(self._moves) > len(plan):
             return 0.0
         if self._moves != plan[: len(self._moves)]:
@@ -326,7 +306,8 @@ class LedgerAttempt(Attempt):
         return len(self._moves) / len(plan)
 
     def goal_met(self) -> bool:
-        return self.balance == 7
+        """The plan was followed in order, not merely arrived at by some other route."""
+        return self._moves == list(self.spec.plan) and self.balance == sum(self.spec.plan)
 
     def _apply(self, action: str) -> StepResult:
         parts = action.split()
@@ -363,38 +344,37 @@ class Family:
         return self.starter(self.task(task_id))
 
 
-FILES_TASKS = (
-    Task(
-        task_id="files-rename-count",
-        family="files",
-        prompt=(
-            "In the shared directory, rename draft.txt to final.txt, then report how many files "
-            "start with the letter f.  Finish with: done <number>"
-        ),
-        goal="draft.txt is renamed to final.txt",
-        expected="1",
-    ),
-    Task(
-        task_id="files-delete-count",
-        family="files",
-        prompt=(
-            "In the shared directory, delete tmp.log, then report how many files remain.  "
-            "Finish with: done <number>"
-        ),
-        goal="tmp.log is gone",
-        expected="2",
-    ),
-)
+#: The task set is data: generated by ``checks/make_tasks.py`` and committed.  Reading it here
+#: instead of writing the tasks out keeps one source of truth - the world, the menu and the
+#: expected answer come from the same specification, so they cannot drift apart on a rename.
+_SPEC_PATH = Path(__file__).resolve().parents[2] / "fixtures" / "tasks.jsonl"
 
-LEDGER_TASKS = (
-    Task(
-        task_id="ledger-net-seven",
-        family="ledger",
-        prompt="Add 12 to the balance, then subtract 5, then report the balance.  Finish with: done <number>",
-        goal="the balance is 7",
-        expected="7",
-    ),
-)
+
+def _task_from_spec(spec: tasksets.TaskSpec) -> Task:
+    """A task, with its prompt and the human-readable goal text taken from the specification."""
+    if spec.family == "files":
+        goal = (
+            f"{spec.source} is renamed to {spec.target}"
+            if spec.op == "rename"
+            else f"{spec.source} is gone and nothing else was removed"
+        )
+    elif spec.family == "ledger":
+        goal = "the plan is followed in order and the balance is reported"
+    else:
+        raise ValueError(f"no goal text for family {spec.family!r}")
+    return Task(
+        task_id=spec.task_id,
+        family=spec.family,
+        prompt=spec.prompt,
+        goal=goal,
+        expected=spec.expected,
+        spec=spec,
+    )
+
+
+_SPECS = tasksets.load(_SPEC_PATH)
+FILES_TASKS = tuple(_task_from_spec(spec) for spec in _SPECS if spec.family == "files")
+LEDGER_TASKS = tuple(_task_from_spec(spec) for spec in _SPECS if spec.family == "ledger")
 
 
 def families() -> dict[str, Family]:

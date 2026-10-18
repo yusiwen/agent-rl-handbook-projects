@@ -24,7 +24,7 @@ nix build --no-link                            # the same gate in a sandbox, no 
 == p1 tests ==                    Ran 190 tests ... OK
 == p1 check (fixtures) ==         coverage 21/21 tasks; 42 rollouts; 21/42 passed
                                   contamination 0/21 tasks vs gsm8k/test (1319 items, sha256:524c11ab4ee19ae2)
-== p2 tests ==                    Ran 63 tests ... OK
+== p2 tests ==                    Ran 76 tests ... OK
 == p2 check (loop) ==             [PASS] every task solvable, the loop closes, no entropy cliff
 == datasets tests ==              Ran 39 tests ... OK
 == repository checks (selftest) == [PASS] the checks still reject what they must reject
@@ -32,7 +32,7 @@ nix build --no-link                            # the same gate in a sandbox, no 
 all checks passed
 ```
 
-418 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
+431 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
 writes a run record to `runs/` (gitignored); `nix build` sends it to the sandbox's writable
 directory instead, which is what `ARL_RUNS_DIR` is for. If the gate fails, the problem is in
 this repository rather than in your environment - which is the whole reason it exists.

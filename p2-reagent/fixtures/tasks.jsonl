@@ -1,0 +1,43 @@
+{"count": {"mode": "prefix", "text": "f"}, "expected": "1", "family": "files", "op": "rename", "source": "draft.txt", "target": "final.txt", "task_id": "files-rename-count", "world": ["draft.txt", "keep.md", "tmp.log"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "tmp.log", "task_id": "files-delete-count", "world": ["draft.txt", "keep.md", "tmp.log"]}
+{"distractors": ["add 5", "sub 12"], "expected": "7", "family": "ledger", "op": "sequence", "plan": [12, -5], "task_id": "ledger-net-seven", "world": []}
+{"count": {"mode": "prefix", "text": "f"}, "expected": "1", "family": "files", "op": "rename", "source": "final.md", "target": "final.txt", "task_id": "files-r01", "world": ["budget.csv", "final.md", "notes.csv"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "index.bak", "task_id": "files-d01", "world": ["budget.bak", "index.bak", "photo.csv"]}
+{"distractors": ["add 12", "sub 7"], "expected": "6", "family": "ledger", "op": "sequence", "plan": [-5, 11], "task_id": "ledger-01", "world": []}
+{"distractors": ["add 5", "sub 2"], "expected": "2", "family": "ledger", "op": "sequence", "plan": [-9, 8, 3], "task_id": "ledger-3s01", "world": []}
+{"count": {"mode": "prefix", "text": "f"}, "expected": "1", "family": "files", "op": "rename", "source": "final.csv", "target": "final.log", "task_id": "files-r02", "world": ["final.csv", "photo.md", "plan.txt"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "photo.md", "task_id": "files-d02", "world": ["index.bak", "photo.md", "plan.txt"]}
+{"distractors": ["add 2", "sub 2"], "expected": "7", "family": "ledger", "op": "sequence", "plan": [3, 4], "task_id": "ledger-02", "world": []}
+{"distractors": ["add 12", "sub 11"], "expected": "-6", "family": "ledger", "op": "sequence", "plan": [-5, -9, 8], "task_id": "ledger-3s02", "world": []}
+{"count": {"mode": "prefix", "text": "p"}, "expected": "1", "family": "files", "op": "rename", "source": "plan.log", "target": "final.bak", "task_id": "files-r03", "world": ["notes.md", "photo.bak", "plan.log"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "final.txt", "task_id": "files-d03", "world": ["draft.md", "final.txt", "plan.md"]}
+{"distractors": ["add 9", "sub 7"], "expected": "-8", "family": "ledger", "op": "sequence", "plan": [3, -11], "task_id": "ledger-03", "world": []}
+{"distractors": ["add 12", "sub 14"], "expected": "20", "family": "ledger", "op": "sequence", "plan": [8, 8, 4], "task_id": "ledger-3s03", "world": []}
+{"count": {"mode": "prefix", "text": "f"}, "expected": "1", "family": "files", "op": "rename", "source": "final.log", "target": "final.txt", "task_id": "files-r04", "world": ["cache.bak", "final.log", "plan.csv"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "final.csv", "task_id": "files-d04", "world": ["draft.md", "final.csv", "plan.log"]}
+{"distractors": ["add 11", "sub 3"], "expected": "2", "family": "ledger", "op": "sequence", "plan": [-12, 14], "task_id": "ledger-04", "world": []}
+{"distractors": ["add 7", "sub 2"], "expected": "4", "family": "ledger", "op": "sequence", "plan": [-5, 6, 3], "task_id": "ledger-3s04", "world": []}
+{"count": {"mode": "prefix", "text": "p"}, "expected": "1", "family": "files", "op": "rename", "source": "plan.bak", "target": "final.csv", "task_id": "files-r05", "world": ["cache.txt", "photo.txt", "plan.bak"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "notes.txt", "task_id": "files-d05", "world": ["budget.bak", "index.log", "notes.txt"]}
+{"distractors": ["add 12", "sub 9"], "expected": "-17", "family": "ledger", "op": "sequence", "plan": [-3, -14], "task_id": "ledger-05", "world": []}
+{"distractors": ["add 2", "sub 12"], "expected": "-8", "family": "ledger", "op": "sequence", "plan": [-8, -14, 14], "task_id": "ledger-3s05", "world": []}
+{"count": {"mode": "prefix", "text": "f"}, "expected": "1", "family": "files", "op": "rename", "source": "final.md", "target": "final.bak", "task_id": "files-r06", "world": ["final.md", "notes.txt", "plan.bak"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "cache.md", "task_id": "files-d06", "world": ["cache.md", "final.bak", "photo.md"]}
+{"distractors": ["add 9", "sub 11"], "expected": "10", "family": "ledger", "op": "sequence", "plan": [3, 7], "task_id": "ledger-06", "world": []}
+{"distractors": ["add 3", "sub 9"], "expected": "-2", "family": "ledger", "op": "sequence", "plan": [8, -5, -5], "task_id": "ledger-3s06", "world": []}
+{"count": {"mode": "prefix", "text": "f"}, "expected": "1", "family": "files", "op": "rename", "source": "final.txt", "target": "final.csv", "task_id": "files-r07", "world": ["cache.md", "final.txt", "script.csv"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "cache.md", "task_id": "files-d07", "world": ["cache.md", "draft.txt", "final.log"]}
+{"distractors": ["add 2", "sub 11"], "expected": "-9", "family": "ledger", "op": "sequence", "plan": [-4, -5], "task_id": "ledger-07", "world": []}
+{"distractors": ["add 12", "sub 3"], "expected": "14", "family": "ledger", "op": "sequence", "plan": [6, -6, 14], "task_id": "ledger-3s07", "world": []}
+{"count": {"mode": "prefix", "text": "f"}, "expected": "1", "family": "files", "op": "rename", "source": "final.csv", "target": "final.bak", "task_id": "files-r08", "world": ["final.csv", "index.txt", "photo.log"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "notes.bak", "task_id": "files-d08", "world": ["draft.log", "notes.bak", "photo.txt"]}
+{"distractors": ["add 2", "sub 9"], "expected": "1", "family": "ledger", "op": "sequence", "plan": [-11, 12], "task_id": "ledger-08", "world": []}
+{"distractors": ["add 12", "sub 14"], "expected": "-10", "family": "ledger", "op": "sequence", "plan": [7, -6, -11], "task_id": "ledger-3s08", "world": []}
+{"count": {"mode": "prefix", "text": "f"}, "expected": "1", "family": "files", "op": "rename", "source": "final.bak", "target": "final.log", "task_id": "files-r09", "world": ["draft.md", "final.bak", "report.txt"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "final.txt", "task_id": "files-d09", "world": ["cache.txt", "draft.md", "final.txt"]}
+{"distractors": ["add 9", "sub 3"], "expected": "-8", "family": "ledger", "op": "sequence", "plan": [4, -12], "task_id": "ledger-09", "world": []}
+{"distractors": ["add 9", "sub 3"], "expected": "-3", "family": "ledger", "op": "sequence", "plan": [-4, 6, -5], "task_id": "ledger-3s09", "world": []}
+{"count": {"mode": "prefix", "text": "f"}, "expected": "1", "family": "files", "op": "rename", "source": "final.txt", "target": "final.csv", "task_id": "files-r10", "world": ["cache.bak", "final.txt", "index.log"]}
+{"count": {"mode": "remaining"}, "expected": "2", "family": "files", "op": "delete", "source": "photo.txt", "task_id": "files-d10", "world": ["index.bak", "notes.csv", "photo.txt"]}
+{"distractors": ["add 12", "sub 7"], "expected": "16", "family": "ledger", "op": "sequence", "plan": [5, 11], "task_id": "ledger-10", "world": []}
+{"distractors": ["add 9", "sub 2"], "expected": "-2", "family": "ledger", "op": "sequence", "plan": [8, -3, -7], "task_id": "ledger-3s10", "world": []}

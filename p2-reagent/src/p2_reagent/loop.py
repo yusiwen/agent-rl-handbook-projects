@@ -24,7 +24,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Callable, Sequence
 
-from common.checks import CheckResult, run_all
+from common.checks import DEFAULT_MIN_SPREAD_FRACTION, CheckResult, run_all
 from common.runs import RunHeader, RunWriter, digest_of, round_record, spread_fraction
 from common.schema import Rollout
 
@@ -59,6 +59,11 @@ class Config:
     temperature: float = 1.0
     seed: int = 0
     max_turns: int = DEFAULT_MAX_TURNS
+    #: The share of groups that must show a non-zero reward difference.  The shared default suits
+    #: a calibrated set; this project's 43 tasks are not calibrated against the cold policy, and
+    #: the measured fraction is a difficulty number (see check_p2.py).  It travels in the config so
+    #: a run record says which floor it was judged against.
+    min_spread_fraction: float = DEFAULT_MIN_SPREAD_FRACTION
 
     def __post_init__(self) -> None:
         if self.samples < 2:
@@ -369,7 +374,7 @@ def run_round(
     result.updates_applied = len(updates)
     result.entropy_after = _mean_entropy(policy, config)
 
-    result.checks = run_all(result.rollouts)
+    result.checks = run_all(result.rollouts, min_spread_fraction=config.min_spread_fraction)
     return result
 
 
@@ -459,7 +464,7 @@ def run_loop(
         out(_render_round(result))
         policy = policy.bumped(f"policy-v{round_index + 1}")
 
-    final = run_all(results[-1].rollouts)
+    final = run_all(results[-1].rollouts, min_spread_fraction=config.min_spread_fraction)
     final.append(check_lineage(results))
     final.append(check_entropy(results))
     final.append(check_budget(results, config.stage))
