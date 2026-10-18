@@ -479,13 +479,20 @@ def run_loop(
         results.append(result)
         writer.append_rollouts(round_index, result.rollouts)
         writer.append_round(round_record(round_index, result.rollouts))
-        out(_render_round(result))
+        out(_render_round(result, served=config.served))
         if not config.served:
             policy = policy.bumped(f"policy-v{round_index + 1}")
 
     final = run_all(results[-1].rollouts, min_spread_fraction=config.min_spread_fraction)
-    final.append(check_lineage(results))
-    final.append(check_entropy(results))
+    if config.served:
+        # A frozen policy has no update and no distribution. "The parameters changed" and "one round
+        # did not halve the entropy" are assertions about training, and this mode does not train:
+        # reporting them as failures would be reporting the experiment's design as a defect. The
+        # repertoire - the distinct-action ratio - replaces them, and the runner prints it.
+        out(f"served policy {policy.version}: lineage and entropy not reported (no update, no table)")
+    else:
+        final.append(check_lineage(results))
+        final.append(check_entropy(results))
     final.append(check_budget(results, config.stage))
     for check in final:
         out(check.render())
@@ -493,12 +500,13 @@ def run_loop(
     return results
 
 
-def _render_round(result: RoundResult) -> str:
+def _render_round(result: RoundResult, served: bool = False) -> str:
     terms = ", ".join(f"{name}={value:+.3f}" for name, value in sorted(result.term_means.items()))
+    entropy = "n/a" if served else f"{result.entropy_before:.2f}->{result.entropy_after:.2f}"
     return (
         f"round {result.index} [{result.policy_version}] reward={result.mean_reward:+.3f} "
         f"solved={result.solved_share:.0%} spread={result.spread:.0%} "
-        f"entropy={result.entropy_before:.2f}->{result.entropy_after:.2f} "
+        f"entropy={entropy} "
         f"conflicts={sum(len(items) for items in result.conflicts.values())}  terms: {terms}"
     )
 

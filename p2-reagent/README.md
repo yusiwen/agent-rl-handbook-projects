@@ -213,6 +213,14 @@ That is a task-difficulty finding, not a loop defect, and it sets the agenda for
 calibrate the tasks to where this policy is right about half the time, rather than adding more
 tasks it almost always solves.
 
+One correction, kept because it is instructive. The record above comes from `git:75edcf1`, and its
+output still contains a **lineage failure**: "the parameters are unchanged from round 0, so the
+update did nothing". The guard that drops lineage and entropy for a served policy had been added in
+`run_round`, but the loop still ran both checks at its own level, so the failure survived. It is
+fixed - the guard now sits where the checks are attached - and the run's data is unaffected, because
+what was wrong was the verdict on it, not the rollouts. A frozen policy cannot fail "the update
+changed the parameters"; it can only be asked it by mistake.
+
 ## Tests
 
 `python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests` - 76 tests, offline, under
