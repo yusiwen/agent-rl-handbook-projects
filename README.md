@@ -3,6 +3,10 @@
 Companion code for the handbook *Agent RL Explained: A Beginner's Handbook*
 (<https://yusiwen.cn/agent-rl-handbook/>). Six projects, one shared contract.
 
+**Progress lives in one place:** [`ROADMAP.md`](https://github.com/yusiwen/agent-rl-handbook/blob/main/ROADMAP.md)
+in the book repository is generated from both repositories - chapters, projects, tests, run records -
+and the book's gate fails when it drifts.
+
 **Status: fields 1 and 2 are built, and P2 has been trained.** The shared layer (`common/`) is
 implemented and tested; P1 (verifier suite) runs end to end on fixtures, offline, and against a
 served model over HTTP, graded by a check script that was negative-tested. P2 (the credit-assignment
