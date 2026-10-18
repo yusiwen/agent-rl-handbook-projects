@@ -64,6 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=23)
     parser.add_argument("--runs-dir", default="runs")
     parser.add_argument("--code-sha", default="git:unknown")
+    parser.add_argument("--judge-max-tokens", type=int, default=640)
     parser.add_argument("--skip-preflight", action="store_true")
     args = parser.parse_args(argv)
 
@@ -74,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
         base_url=args.judge_base_url,
         model=args.judge_model,
         api_key_env=None,
-        max_tokens=256,
+        max_tokens=args.judge_max_tokens,
         extra_body={"chat_template_kwargs": {"enable_thinking": False}},
     )
     critic = BudgetedCritic(RuleCritic(), judge, low=args.low, high=args.high)
