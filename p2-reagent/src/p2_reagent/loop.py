@@ -59,6 +59,9 @@ class Config:
     temperature: float = 1.0
     seed: int = 0
     max_turns: int = DEFAULT_MAX_TURNS
+    #: True when the policy is a remote endpoint rather than a table: there is no update to apply,
+    #: so the lineage and entropy checks do not apply and are dropped with a reason at the call site.
+    served: bool = False
     #: The share of groups that must show a non-zero reward difference.  The shared default suits
     #: a calibrated set; this project's 43 tasks are not calibrated against the cold policy, and
     #: the measured fraction is a difficulty number (see check_p2.py).  It travels in the config so
@@ -372,9 +375,13 @@ def run_round(
         updates.extend(policy_updates(episode, weights))
     policy.apply(updates)
     result.updates_applied = len(updates)
-    result.entropy_after = _mean_entropy(policy, config)
+    result.entropy_after = 0.0 if config.served else _mean_entropy(policy, config)
 
     result.checks = run_all(result.rollouts, min_spread_fraction=config.min_spread_fraction)
+    if config.served:
+        # A frozen policy has no update, so "the parameters changed" is not a failure, it is the
+        # mode. The repertoire replaces the entropy reading; see served_policy.py.
+        result.checks = [check for check in result.checks if check.name not in {"lineage", "entropy"}]
     return result
 
 

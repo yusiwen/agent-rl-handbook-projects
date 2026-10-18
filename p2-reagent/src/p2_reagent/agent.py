@@ -97,7 +97,10 @@ def run_episode(
             break
         signature = attempt.signature
         menu = tuple(attempt.menu())
-        action = policy.sample(signature, menu)
+        # A tabular policy chooses from the state label; a served one needs the prompt, so it is
+        # offered the attempt and may read the observation and the history from it.  The hook is
+        # `choose`, and its absence is the whole difference between the two.
+        action = policy.choose(attempt) if hasattr(policy, "choose") else policy.sample(signature, menu)
         result = attempt.step(action)
 
         episode.signatures.append(signature)

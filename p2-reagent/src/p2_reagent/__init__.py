@@ -26,6 +26,7 @@ from .env import ENV_VERSION, Family, Task, all_tasks, families, start
 from .fusion_policy import CONFLICT_POLICY, FULL, RULE_ONLY, WEIGHTS, fuse_terms, policy_for, terms_for
 from .loop import Config, RoundResult, check_entropy, check_lineage, run_loop, run_round
 from .policy import TabularPolicy, Update
+from .served_policy import ServedPolicy
 from .prompt import ACTION_PREFIX, SYSTEM_PROMPT, render
 from .train import CREDIT_MODES, TURN_SHAPING, group_advantages, turn_weights
 
@@ -45,6 +46,7 @@ __all__ = [
     "RULE_ONLY",
     "RoundResult",
     "RuleCritic",
+    "ServedPolicy",
     "TabularPolicy",
     "Task",
     "TURN_SHAPING",
