@@ -104,7 +104,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="step A: does a gradient reach the next round?")
     parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--start", default="/work/sft/adapter")
-    parser.add_argument("--task", default="files-r06")
+    parser.add_argument(
+        "--tasks",
+        nargs="+",
+        default=["files-r06"],
+        help="tasks to roll out; groups are per task, so each gets its own advantages",
+    )
     parser.add_argument("--samples", type=int, default=5)
     parser.add_argument("--rounds", type=int, default=2)
     parser.add_argument("--temperature", type=float, default=1.0)
@@ -130,19 +135,30 @@ def main(argv: list[str] | None = None) -> int:
     for round_index in range(args.rounds):
         started = time.time()
         episodes = []
-        for sample in range(args.samples):
-            policy.begin()
-            episodes.append(
-                run_episode(policy, args.task, sample_index=sample, policy_version=f"local-r{round_index}")
-            )
-            policy.finish()
+        per_task: dict[str, list] = {}
+        for task in args.tasks:
+            group = []
+            for sample in range(args.samples):
+                policy.begin()
+                group.append(
+                    run_episode(policy, task, sample_index=sample, policy_version=f"local-r{round_index}")
+                )
+                policy.finish()
+            per_task[task] = group
+            episodes.extend(group)
 
         rewards = {episode.rollout.episode_id: episode.rollout.reward() for episode in episodes}
-        summaries = summarise_groups(episodes, rewards)
+        # Advantages are group-relative, and a group is one task's samples - never the whole round.
+        advantages = {}
+        for task, group in per_task.items():
+            summaries = summarise_groups(group, rewards)
+            for episode in group:
+                advantages[episode.rollout.episode_id] = advantage_for(summaries, episode, rewards)
+
         terms = []
         weighted_turns = 0
         for episode, captured in zip(episodes, policy.per_episode):
-            advantage = advantage_for(summaries, episode, rewards)
+            advantage = advantages[episode.rollout.episode_id]
             weights = turn_weights(episode, advantage, mode="trajectory")
             episode.rollout.reward_terms["rule_turn"] = progress_reached(episode)
             for (text, reply_ids), weight in zip(captured, weights):
@@ -163,8 +179,11 @@ def main(argv: list[str] | None = None) -> int:
         digests[f"r{round_index + 1}"] = adapter_digest(model)
         model.save_pretrained(out / f"adapter-r{round_index + 1}")
         solved = sum(1 for episode in episodes if episode.solved)
+        by_task = " ".join(
+            f"{task}={sum(1 for e in group if e.solved)}/{len(group)}" for task, group in per_task.items()
+        )
         print(
-            f"round {round_index}: solved {solved}/{len(episodes)} "
+            f"round {round_index}: solved {solved}/{len(episodes)} [{by_task}] "
             f"mean reward {sum(rewards.values()) / len(rewards):+.3f} loss {loss_value:.5f} "
             f"weighted_turns {weighted_turns} unparsed {policy.unparsed} "
             f"{time.time() - started:.0f}s digest {digests[f'r{round_index + 1}']}"
@@ -173,7 +192,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print()
     print(
-        f"RL_STEP task={args.task} samples={args.samples} rounds={args.rounds} lr={args.lr} "
+        f"RL_STEP tasks={','.join(args.tasks)} samples={args.samples} rounds={args.rounds} lr={args.lr} "
         f"digests={json.dumps(digests)} digest_changed={len(set(digests.values())) > 1}"
     )
     return 0
