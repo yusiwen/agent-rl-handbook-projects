@@ -122,6 +122,11 @@ def main(argv: list[str] | None = None) -> int:
         help="steps per round over the same rollouts; one step per round has no power to move a policy",
     )
     parser.add_argument("--out", default="/work/rl")
+    parser.add_argument(
+        "--eval-only",
+        action="store_true",
+        help="roll out and report, no gradient - the held-out measurement",
+    )
     args = parser.parse_args(argv)
 
     out = Path(args.out)
@@ -136,6 +141,27 @@ def main(argv: list[str] | None = None) -> int:
     print(f"resumed {args.start}: {sum(p.numel() for p in trainable):,} trainable parameter(s)")
 
     policy = LocalPolicy(model, tokeniser, args.temperature, args.max_new_tokens)
+
+    if args.eval_only:
+        solved_total = 0
+        for task in args.tasks:
+            group = []
+            for sample in range(args.samples):
+                policy.begin()
+                group.append(run_episode(policy, task, sample_index=sample, policy_version="eval"))
+                policy.finish()
+            ok = sum(1 for episode in group if episode.solved)
+            solved_total += ok
+            print(f"  {task:16s} {ok}/{len(group)}")
+        total = args.samples * len(args.tasks)
+        print()
+        print(
+            f"EVAL adapter={args.start} tasks={len(args.tasks)} samples={args.samples} "
+            f"solved={solved_total}/{total} fraction={solved_total / total:.2f} "
+            f"unparsed={policy.unparsed}"
+        )
+        return 0
+
     digests = {"r0": adapter_digest(model)}
 
     for round_index in range(args.rounds):
