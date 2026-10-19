@@ -115,6 +115,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-5)
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=1,
+        help="steps per round over the same rollouts; one step per round has no power to move a policy",
+    )
     parser.add_argument("--out", default="/work/rl")
     args = parser.parse_args(argv)
 
@@ -155,7 +161,9 @@ def main(argv: list[str] | None = None) -> int:
             for episode in group:
                 advantages[episode.rollout.episode_id] = advantage_for(summaries, episode, rewards)
 
-        terms = []
+        # Pairs are built once; the forward pass is repeated per epoch, because the graph cannot be
+        # reused and re-generating for a second epoch would change the data under the update.
+        pairs = []
         weighted_turns = 0
         for episode, captured in zip(episodes, policy.per_episode):
             advantage = advantages[episode.rollout.episode_id]
@@ -165,16 +173,21 @@ def main(argv: list[str] | None = None) -> int:
                 if weight == 0.0 or not reply_ids:
                     continue
                 weighted_turns += 1
-                terms.append(-weight * reply_logprobs(model, tokeniser, text, reply_ids).mean())
+                pairs.append((text, reply_ids, weight))
 
-        loss_value = 0.0
-        if terms:
+        losses = []
+        for _ in range(args.epochs if pairs else 0):
+            terms = [
+                -weight * reply_logprobs(model, tokeniser, text, reply_ids).mean()
+                for text, reply_ids, weight in pairs
+            ]
             loss = torch.stack(terms).mean()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(trainable, 1.0)
             optimiser.step()
             optimiser.zero_grad(set_to_none=True)
-            loss_value = loss.item()
+            losses.append(loss.item())
+        loss_value = losses[-1] if losses else 0.0
 
         digests[f"r{round_index + 1}"] = adapter_digest(model)
         model.save_pretrained(out / f"adapter-r{round_index + 1}")
@@ -185,14 +198,15 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"round {round_index}: solved {solved}/{len(episodes)} [{by_task}] "
             f"mean reward {sum(rewards.values()) / len(rewards):+.3f} loss {loss_value:.5f} "
-            f"weighted_turns {weighted_turns} unparsed {policy.unparsed} "
+            f"weighted_turns {weighted_turns} epochs {len(losses)} unparsed {policy.unparsed} "
             f"{time.time() - started:.0f}s digest {digests[f'r{round_index + 1}']}"
         )
         policy.unparsed = 0
 
     print()
     print(
-        f"RL_STEP tasks={','.join(args.tasks)} samples={args.samples} rounds={args.rounds} lr={args.lr} "
+        f"RL_STEP tasks={','.join(args.tasks)} samples={args.samples} rounds={args.rounds} "
+        f"epochs={args.epochs} lr={args.lr} "
         f"digests={json.dumps(digests)} digest_changed={len(set(digests.values())) > 1}"
     )
     return 0
