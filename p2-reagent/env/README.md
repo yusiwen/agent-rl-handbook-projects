@@ -200,6 +200,31 @@ The next experiment needs a budget chosen for the question - more samples per gr
 step per round, a rate that can move an adapter, and no walls pretending to be band tasks - and it is
 a separate run with its own record.
 
+## Step C: a budget chosen for the question
+
+`bash run.sh python3 /env/rl_step.py --tasks files-r05 files-r06 files-r07 files-r09 ledger-09
+ledger-3s02 --samples 10 --epochs 3 --rounds 6 --lr 1e-4`, 2026-10-18.
+
+| round | solved | r05 | r06 | r07 | r09 | ledger-09 | 3s02 | loss | weighted turns | steps |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | 42/60 (70%) | 7 | 10 | 9 | 10 | **1** | 5 | -0.68295 | 129 | 3 |
+| 1 | **60/60** | 10 | 10 | 10 | 10 | **10** | 10 | 0.0 | 0 | 0 |
+| 2-5 | 60/60 | 10 | 10 | 10 | 10 | 10 | 10 | 0.0 | 0 | 0 |
+
+**One round of three steps at 1e-4 moved the solved share from 70% to 100%**, including the task
+that had solved once in ten attempts in round 0 and zero times in forty the day before. The thing
+called a wall was a wall for *that* policy, not for the updated one. Rounds 1-5 produced no gradient
+at all, because a group at 100% has a zero advantage: the loop had finished and had nothing left to
+learn on these six tasks.
+
+Two readings are possible and the record supports only the first:
+
+* **Supported:** on-policy advantage-weighted updates, with a budget that can move an adapter, fixed
+  the six tasks they were measured on, in one round.
+* **Not supported:** that the policy generalises to tasks it did not see. Six deterministic tasks
+  measured before and after cannot show that. A held-out set is the next measurement, and until it
+  runs the claim stays "the six tasks".
+
 ## Not proven yet
 
 P0b proves a ten-step run fits, converges and leaves a loadable adapter. It does not prove the
