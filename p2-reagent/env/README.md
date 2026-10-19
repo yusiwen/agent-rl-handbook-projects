@@ -163,6 +163,11 @@ single task taken from it.
 negative number, and a round whose weighted sum is dominated by negative advantages has a negative
 scalar. What trains is the gradient's sign, not the scalar's.
 
+Re-run on 2026-10-19 with the run record attached (`runs/p2-rl-step`, `code_sha git:cb72c98`):
+round 0 solved 5/5, round 1 solved 3/5, one weighted round, adapter digest changed. Same property,
+different numbers - sampling at temperature 1.0 has no seed here, and the record says so in its header
+rather than in a footnote.
+
 ## Step B: eight rounds with the update switched on
 
 `bash run.sh python3 /env/rl_step.py --tasks files-r05 files-r06 files-r07 files-r09 ledger-09
@@ -217,6 +222,10 @@ called a wall was a wall for *that* policy, not for the updated one. Rounds 1-5 
 at all, because a group at 100% has a zero advantage: the loop had finished and had nothing left to
 learn on these six tasks.
 
+Re-run on 2026-10-19 (`runs/p2-rl-step-2`): round 0 solved **44/60** where the first run had 42/60,
+then 60/60 for five rounds - the same shape twice, one round of three steps and then nothing left to
+learn on these tasks.
+
 ### Held out: what the update did to tasks it never saw
 
 The six trained tasks say nothing about generalisation, so four tasks from the same families were
@@ -238,7 +247,10 @@ ten to zero: the trained set was four renames, and the update moved the policy a
 operation it was not practising.
 
 That is the shape of a real single-round update on a small model: gains where the family shares a
-procedure, losses where it shares a vocabulary. The six trained tasks could not have shown it, which
+procedure, losses where it shares a vocabulary. It reproduced on 2026-10-19 (`runs/p2-rl-eval` and
+`runs/p2-rl-eval-2`, `code_sha git:cb72c98`): 23/40 to 30/40, `ledger-03` from 0/10 to 10/10,
+`files-d05` from 4/10 to 0/10. Two independent runs, same two directions - which is why this table,
+and not the hundred percent, is the claim. The six trained tasks could not have shown it, which
 is why the held-out measurement is in the record and the hundred percent is not the headline.
 
 Two readings are possible and the record supports only the first:

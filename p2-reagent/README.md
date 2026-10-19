@@ -64,7 +64,9 @@ the **turn boundaries** (`common.mask.turn_boundaries`, checked against every ro
 
 **7. Runs.** `runs/<run-id>/` with a header (env version, config digest, code sha, project) and one
 `round-NNN.jsonl` per round. Every row carries `extras.policy_version`: the version that *sampled*
-it.
+it. The RL stage writes the same shape through `env/rl_step.py`, so its tables can be re-derived
+instead of trusted: `p2-rl-step` (step A), `p2-rl-step-2` (step C) and `p2-rl-eval` /
+`p2-rl-eval-2` (held out, both adapters).
 
 ```
 python3 p2-reagent/checks/run_p2_loop.py --rounds 6 --samples 8
