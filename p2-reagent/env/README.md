@@ -163,6 +163,43 @@ single task taken from it.
 negative number, and a round whose weighted sum is dominated by negative advantages has a negative
 scalar. What trains is the gradient's sign, not the scalar's.
 
+## Step B: eight rounds with the update switched on
+
+`bash run.sh python3 /env/rl_step.py --tasks files-r05 files-r06 files-r07 files-r09 ledger-09
+--samples 5 --rounds 8 --lr 1e-5`, 2026-10-18, from the P2-prime adapter, one step per round.
+
+| round | solved | r05 | r06 | r07 | r09 | ledger-09 | loss | weighted turns | digest changed |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | 19/25 | 5 | 4 | 5 | 5 | 0 | -0.09921 | 14 | yes |
+| 1 | 17/25 | 3 | 5 | 5 | 4 | 0 | -0.05868 | 25 | yes |
+| 2 | 20/25 | 5 | 5 | 5 | 5 | 0 | 0.0 | 0 | no |
+| 3 | 18/25 | 3 | 5 | 5 | 5 | 0 | -0.31342 | 10 | yes |
+| 4 | 16/25 | 2 | 5 | 5 | 4 | 0 | -0.13500 | 23 | yes |
+| 5 | 19/25 | 5 | 5 | 5 | 4 | 0 | 0.0 | 10 | yes |
+| 6 | 19/25 | 5 | 5 | 5 | 4 | 0 | 0.0 | 10 | yes |
+| 7 | 20/25 | 5 | 5 | 5 | 5 | 0 | 0.0 | 0 | no |
+
+**No trend.** The solved share moved between 16 and 20 of 25 - eight points, which is the sampling
+noise of twenty-five rollouts at temperature 1.0 - and the two rounds with zero weighted turns had
+no gradient because every sample in every group succeeded: the flat ceiling, arriving in the training
+loop exactly as it did in the evaluation loop.
+
+Three things are established, and they are worth separating from the non-result:
+
+1. **The update path works.** Six of eight rounds changed the adapter; the two that did not are the
+   ones where the credit signal was legitimately zero.
+2. **A wall is a wall.** `ledger-09` solved zero of forty attempts. Its calibration said 0.25, which
+   is what a rate measured on twelve samples buys you: a task at the edge of the band behaves like a
+   wall at ten.
+3. **This budget cannot detect a policy change.** One step per round at `1e-5` over 0.372% of the
+   parameters is eight small steps in total, with trajectory-level advantages giving every turn of an
+   attempt the same sign. That is a design with no power to show improvement, and reporting "no
+   improvement" from it would be as dishonest as reporting a win.
+
+The next experiment needs a budget chosen for the question - more samples per group, more than one
+step per round, a rate that can move an adapter, and no walls pretending to be band tasks - and it is
+a separate run with its own record.
+
 ## Not proven yet
 
 P0b proves a ten-step run fits, converges and leaves a loadable adapter. It does not prove the
