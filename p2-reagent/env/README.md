@@ -251,7 +251,17 @@ Two readings are possible and the record supports only the first:
 
 ## Not proven yet
 
-P0b proves a ten-step run fits, converges and leaves a loadable adapter. It does not prove the
-P2 fine-tune: the task set, the demonstration volume, whether format compliance reaches 90% in one
-epoch, and whether the resulting policy is any better at the tasks. Those numbers belong to P1-P3
-and will be added here only when they exist.
+This section used to say that the fine-tune numbers did not exist yet. They exist, above: format
+compliance was 100% before the fine-tune (so it never was the target), the solve rate moved from 2/43
+to 30/43 greedy and 8/129 to 91/129 sampled, and the update loop moved six calibrated tasks from
+42/60 to 60/60.
+
+What is still not proven, stated as narrowly as the record supports:
+
+- **That an update survives the trip to a served policy.** Nothing in this directory pushes weights to
+  an inference server; the updating loop generates where it trains. Weight sync is Project 3.
+- **That the policy generalises beyond the tasks it was measured on.** The held-out check found one
+  procedure transferring to an unseen task and one sibling operation regressing, from six trained
+  tasks and a single round.
+- **That any of this is stable across seeds.** Every number here is one seed, and the record says so
+  in the header rather than in a footnote.

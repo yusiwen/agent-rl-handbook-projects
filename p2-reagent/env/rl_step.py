@@ -29,9 +29,10 @@ import torch
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from common.runs import RunHeader, RunWriter, round_record
 from p2_reagent import actions, env, prompt
 from p2_reagent.agent import run_episode
-from p2_reagent.loop import advantage_for, progress_reached, summarise_groups
+from p2_reagent.loop import PROJECT, advantage_for, progress_reached, summarise_groups
 from p2_reagent.train import turn_weights
 
 
@@ -123,6 +124,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--out", default="/work/rl")
     parser.add_argument(
+        "--runs-dir",
+        default="/work/runs",
+        help="where the run record goes; a number with no header is a number with no owner",
+    )
+    parser.add_argument(
+        "--code-sha",
+        default="git:unknown",
+        help="the revision of the code actually running - a dirty tree must say so, not say nothing",
+    )
+    parser.add_argument(
         "--eval-only",
         action="store_true",
         help="roll out and report, no gradient - the held-out measurement",
@@ -142,17 +153,44 @@ def main(argv: list[str] | None = None) -> int:
 
     policy = LocalPolicy(model, tokeniser, args.temperature, args.max_new_tokens)
 
+    # The rule this project lives by: a number without a header is a number with no owner. The RL
+    # stage used to print its tables into a README and write nothing a checker could re-derive.
+    config_hash = hashlib.sha256(
+        json.dumps(args.__dict__, sort_keys=True, default=str).encode()
+    ).hexdigest()[:16]
+    writer = RunWriter(
+        RunHeader(
+            run_id="p2-rl-eval" if args.eval_only else "p2-rl-step",
+            env_version=env.ENV_VERSION,
+            config_hash="sha256:" + config_hash,
+            code_sha=args.code_sha,
+            project=PROJECT,
+            dataset=",".join(args.tasks),
+            dataset_digest="sha256:" + hashlib.sha256(",".join(args.tasks).encode()).hexdigest()[:16],
+            notes=(
+                f"adapter={args.start}; samples={args.samples}; rounds={args.rounds}; "
+                f"epochs={args.epochs}; lr={args.lr}; temperature={args.temperature}"
+            ),
+        ),
+        root=args.runs_dir,
+    )
+    print(f"run record: {writer.dir}")
+
     if args.eval_only:
         solved_total = 0
+        all_episodes = []
         for task in args.tasks:
             group = []
             for sample in range(args.samples):
                 policy.begin()
                 group.append(run_episode(policy, task, sample_index=sample, policy_version="eval"))
                 policy.finish()
+            all_episodes.extend(group)
             ok = sum(1 for episode in group if episode.solved)
             solved_total += ok
             print(f"  {task:16s} {ok}/{len(group)}")
+        writer.append_rollouts(0, [episode.rollout for episode in all_episodes])
+        writer.append_round(round_record(0, [episode.rollout for episode in all_episodes]))
         total = args.samples * len(args.tasks)
         print()
         print(
@@ -178,6 +216,9 @@ def main(argv: list[str] | None = None) -> int:
                 policy.finish()
             per_task[task] = group
             episodes.extend(group)
+
+        writer.append_rollouts(round_index, [episode.rollout for episode in episodes])
+        writer.append_round(round_record(round_index, [episode.rollout for episode in episodes]))
 
         rewards = {episode.rollout.episode_id: episode.rollout.reward() for episode in episodes}
         # Advantages are group-relative, and a group is one task's samples - never the whole round.
