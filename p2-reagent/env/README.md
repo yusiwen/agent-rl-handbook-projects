@@ -217,6 +217,30 @@ called a wall was a wall for *that* policy, not for the updated one. Rounds 1-5 
 at all, because a group at 100% has a zero advantage: the loop had finished and had nothing left to
 learn on these six tasks.
 
+### Held out: what the update did to tasks it never saw
+
+The six trained tasks say nothing about generalisation, so four tasks from the same families were
+kept out of training and measured with the same local generator, both adapters, ten samples each.
+
+| task | never trained on | SFT adapter | after step C |
+| --- | --- | --- | --- |
+| `files-r01` (rename) | yes | 10/10 | 10/10 |
+| `files-r03` (rename) | yes | 10/10 | 10/10 |
+| `files-d05` (delete) | yes | 3/10 | **0/10** |
+| `ledger-03` (sequence) | yes | **0/10** | **10/10** |
+| total | | 23/40 (57%) | **30/40 (75%)** |
+
+Neither "it memorised the six" nor "it learned the families" is the right reading, so the record
+says what happened instead. The ledger wall fell: a task that had never once succeeded in ten
+attempts solved all ten after an update that never saw it, which is transfer of the procedure -
+order, arithmetic, reporting - rather than of the states. And a delete task regressed from three of
+ten to zero: the trained set was four renames, and the update moved the policy away from the sibling
+operation it was not practising.
+
+That is the shape of a real single-round update on a small model: gains where the family shares a
+procedure, losses where it shares a vocabulary. The six trained tasks could not have shown it, which
+is why the held-out measurement is in the record and the hundred percent is not the headline.
+
 Two readings are possible and the record supports only the first:
 
 * **Supported:** on-policy advantage-weighted updates, with a budget that can move an adapter, fixed
