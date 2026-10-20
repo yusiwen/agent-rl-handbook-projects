@@ -93,7 +93,8 @@ Cover a different cache, volume or image with `ARLH_HF_CACHE`, `ARLH_VOLUME`, `A
 | adapter | saved to `/work/p0b-adapter`, reloaded as `PeftModelForCausalLM` |
 
 The loss mask is checked rather than assumed: the smoke prints the first sample's prompt and its
-supervised span, and they are
+supervised span, and they are (the design rationale - which tokens, and what a wrong mask produces -
+is `../DESIGN.md`, section 5)
 
 ```
 prompt  '<|im_start|>user\nWhat is 17 + 26?<|im_end|>\n<|im_start|>assistant\n'

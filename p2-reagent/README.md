@@ -8,6 +8,11 @@ be demoted from reward to diagnostic; and a token-level objective whose adapter 
 process where it generates moved six calibrated tasks from 42/60 to 60/60. **What is missing is the
 join between the last two**: an update on the *served* policy needs weight sync, which is Project 3's
 problem and Chapter 9's subject. Written with Chapter 6.
+
+The design document Chapter 6 asks for is [`DESIGN.md`](DESIGN.md): the task as an MDP, the signal
+level chosen for each kind of decision with the reason the level below was not chosen, which of the
+four difficulties this task actually has (sparse feedback and structural label noise, not length),
+and the loss mask with the failure a wrong one produces.
 Book chapter: Chapter 6 (credit assignment), project 2 in the book's appendix.
 Compute tier: ✅ - the loop runs on a laptop; the judge is the only part that wants a GPU.
 
