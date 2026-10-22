@@ -94,14 +94,26 @@ satisfies verl's expectations (no pin says), and what the memory ledger actually
 
 `env/rl_served.py` is the join: each round samples over HTTP from whatever adapter the server is
 serving, computes the gradient here, and registers the result as the next round's adapter. Measured on
-the Spark on 2026-10-20 (record `runs/p3-rl-served`, `code_sha git:e056f49`), six calibrated tasks,
+the Spark on 2026-10-20 (record `runs/p3-rl-served-2`, `code_sha git:50b37ab`), six calibrated tasks,
 five samples each, three epochs per round, learning rate 1e-4, starting adapter `policy-sft`:
 
 | round | served | solved | spread | loss | weighted turns | calls | sync | round time |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 0 | `policy-sft` | 11/30 | 0.83 | -2.44323 | 92 | 107 | 13 ms -> `policy-r1` | 43 s |
+| 0 | `policy-sft` | 6/30 | 0.83 | -1.39028 | 90 | 120 | 12 ms -> `policy-r1` | 45 s |
 | 1 | `policy-r1` | **25/30** | 0.00 | 0.0 | 0 | 70 | 13 ms -> `policy-r2` | 12 s |
-| 2 | `policy-r2` | 25/30 | 0.00 | 0.0 | 0 | 70 | 12 ms -> `policy-r3` | 12 s |
+| 2 | `policy-r2` | 25/30 | 0.00 | 0.0 | 0 | 70 | 13 ms -> `policy-r3` | 12 s |
+
+It was run twice, and the second run is the one cited because it is the one with a clean record and a
+correct project attribution. The first (`code_sha git:e056f49`) started from **11/30** and landed in
+the same place:
+
+| run | round 0 | round 1 | round 2 |
+| --- | --- | --- | --- |
+| first | 11/30 | **25/30** | 25/30 |
+| second | 6/30 | **25/30** | 25/30 |
+
+Two starts twenty points apart, one identical endpoint. That is the budget talking, not the loop:
+five samples of six tasks, one of which is a wall at 0/5.
 
 The server ends the run holding `qwen3-1.7b-base`, `policy-sft`, `policy-r1`, `policy-r2`,
 `policy-r3`, and the per-round line is the lineage: the name printed as `served=` in round N+1 is the
@@ -111,12 +123,13 @@ Three things this establishes, and one it exposes:
 
 - **The sync is not the bottleneck.** 12-13 ms against a 156 s restart, inside a 12 s round in the
   flat rounds - the sampling and the gradient are what take the time.
-- **Feedback reaches the next round's samples.** 11/30 to 25/30 after one update, and nothing stopped
-  the loop: the next round ran on the new adapter without a restart or a reconnection.
+- **Feedback reaches the next round's samples.** 6/30 (and, in the other run, 11/30) to 25/30 after
+  one update, and nothing stopped the loop: the next round ran on the new adapter without a restart or
+  a reconnection.
 - **The loop stops itself when there is nothing left.** Five of six groups had a non-zero spread in
   round 0 (0.83); afterwards every group was flat at 5/5 or 0/5, the advantage was exactly zero, and
   the last two rounds trained on nothing - the ceiling arriving, as in Project 2, with a diagnostic
-  number instead of a mystery.
+  number (`spread_fraction`) instead of a mystery.
 - **The budget is still five samples per task.** 25/30 is not "solved": the five remaining failures
   are a task at 0/5, which is a wall at this budget, not a learning problem. Ten samples per task is
   the next setting, not another round at this one.
