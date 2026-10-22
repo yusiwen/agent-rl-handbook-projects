@@ -1,0 +1,34 @@
+verl resolution check, 2026-10-20
+=================================
+
+package     : verl 0.9.1 (pure-python wheel, py3-none-any)
+source tag  : v0.9.1 -> commit 1876b06d0a3e4e71e06230be10af14492ca8a75b
+platform    : linux/aarch64, python 3.12.3 (inside arlh-pytorch:26.09)
+command     : docker run --rm --entrypoint bash arlh-pytorch:26.09 -c \
+                "python3 -m pip install --dry-run --ignore-installed 'verl==0.9.1'"
+result      : RESOLVED. Every requirement found a wheel for this platform.
+
+declared requirements: 114 (core: 19 non-extra)
+core highlights: ray[default]>=2.41.0, transformers>=5.5.3,<5.11, numpy>=2.0.0,
+                 pyarrow>=19.0.0, datasets, peft, tensordict<=0.10.0, torchdata,
+                 wandb, tensorboard, hydra-core
+
+what the resolver picked (selected):
+  ray            2.59.0
+  transformers   5.10.4
+  numpy          2.5.4
+  pyarrow        26.0.0
+  tensordict     0.10.0
+  torch          2.14.1       <- see risk 1
+  vllm           (absent)     <- see risk 2
+
+risk 1: torch. verl does not declare torch; the resolver installed 2.14.1 when asked to ignore
+        what is present. The training image carries 2.14.0a0+nv26.09, an NGC build. No pin in
+        verl's metadata says which torch it was tested against, so "it resolves" is not "it runs".
+
+risk 2: vllm. Not a dependency of the core install, so the default vLLM rollout backend is
+        unavailable in the training image. The first Spark run should use the HF rollout
+        backend (rollout.name=hf) with attn_implementation=sdpa, which needs neither vllm nor
+        flash-attn, and adds vLLM to the loop only after the training path is known good.
+
+not checked yet: an actual import, a one-step GRPO run, the memory ledger.

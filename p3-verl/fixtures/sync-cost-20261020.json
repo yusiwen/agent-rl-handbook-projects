@@ -1,0 +1,50 @@
+{
+  "base_top": {
+    "ACTION": -6.857917785644531,
+    "P": -5.857917785644531,
+    "PING": -2.6079177856445312,
+    "ping": -0.10791772603988647,
+    "pong": -3.7329177856445312
+  },
+  "loads": {
+    "policy-r6": {
+      "ms": 16,
+      "response": {
+        "text": "Success: LoRA adapter 'policy-r6' added successfully."
+      },
+      "status": 200
+    },
+    "policy-sft": {
+      "ms": 18,
+      "response": {
+        "text": "Success: LoRA adapter 'policy-sft' added successfully."
+      },
+      "status": 200
+    }
+  },
+  "probes": [
+    {
+      "adapter": "policy-sft",
+      "spread": 4.7196,
+      "top": {
+        "ACTION": -5.138290882110596,
+        "P": -1.1382908821105957,
+        "PING": -2.0132908821105957,
+        "ping": -1.0132908821105957,
+        "pong": -1.7632908821105957
+      }
+    },
+    {
+      "adapter": "policy-r6",
+      "spread": 5.0537,
+      "top": {
+        "ACTION": -5.679234504699707,
+        "P": -0.8042344450950623,
+        "PING": -2.054234504699707,
+        "ping": -1.304234504699707,
+        "pong": -1.929234504699707
+      }
+    }
+  ],
+  "restart_ms": 156370
+}
