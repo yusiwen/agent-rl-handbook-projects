@@ -48,7 +48,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from common.runs import RunHeader, RunWriter, round_record
 from p2_reagent import actions, env, prompt
 from p2_reagent.agent import run_episode
-from p2_reagent.loop import PROJECT, advantage_for, progress_reached, summarise_groups
+from p2_reagent.loop import advantage_for, progress_reached, summarise_groups
+
+#: The run record is attributed to this project, not to the one whose machinery it reuses.
+PROJECT = "p3-verl"
 from p2_reagent.train import turn_weights
 
 
