@@ -1,13 +1,15 @@
 # P2 - process feedback and turn-level credit
 
-**Status: built and run end to end, except for one join.** The table policy proves the credit
+**Status: built and run end to end, and the one join it was missing now exists in Project 3.** The table policy proves the credit
 machinery offline; a LoRA fine-tune on the oracle's own trajectories took the solve rate from 2/43 to
 30/43 (greedy) and 8/129 to 91/129 (sampled) at 100% format compliance; the served loop ran 387
 episodes over HTTP; an 8B judge scored real trajectories and disagreed with the rule often enough to
 be demoted from reward to diagnostic; and a token-level objective whose adapter updates in the same
-process where it generates moved six calibrated tasks from 42/60 to 60/60. **What is missing is the
-join between the last two**: an update on the *served* policy needs weight sync, which is Project 3's
-problem and Chapter 9's subject. Written with Chapter 6.
+process where it generates moved six calibrated tasks from 42/60 to 60/60. **The join between the
+last two is now built in [`../p3-verl`](../p3-verl):** served sampling over HTTP, the gradient in the
+training process, and the result registered as the next round's adapter in 12-13 ms, which took six
+calibrated tasks from 11/30 to 25/30 in one update. This project's own served check stays read-only.
+Written with Chapter 6.
 
 The design document Chapter 6 asks for is [`DESIGN.md`](DESIGN.md): the task as an MDP, the signal
 level chosen for each kind of decision with the reason the level below was not chosen, which of the
@@ -132,10 +134,11 @@ Each one is pinned by a test, because each is the kind of thing that is invisibl
 
 ## What is not here yet
 
-- **An update on the served policy.** The served loop reads a model over HTTP and never updates it;
-  the updating loop (`env/rl_step.py`) trains where it generates, so no weight sync is needed. Both
-  halves exist; the join between them does not, and that join is Project 3's subject (Chapter 9).
-  Everything else in Chapter 6's stage list now runs: SFT (`env/sft.py`), the served loop
+- **An update on this project's served loop.** `run_p2_served.py` reads a model over HTTP and never
+  updates it; the updating loop (`env/rl_step.py`) trains where it generates. The join exists in
+  [`../p3-verl/env/rl_served.py`](../p3-verl/env/rl_served.py) and is measured there; porting it back
+  here is a one-argument change, deferred so the mechanism is documented in one place.
+  Everything in Chapter 6's stage list now runs: SFT (`env/sft.py`), the served loop
   (`served_policy.py` + `checks/run_p2_served.py`), and the judge (`ModelCritic` against a real 8B
   model - which is why it was demoted out of the reward).
 - **Multi-GPU and a real task distribution.** Six calibrated tasks with ten samples each is a
@@ -299,9 +302,10 @@ the conclusion is not "tune the weights" but "this is not a reward".
 ## Where this stage ends
 
 Four stages are built and measured - fine-tune, served loop, calibration, judge - with their numbers
-above and their records in `runs/`. What is **not** built is the update on top of the served policy:
-the loop runs it frozen, which is why its rounds are flat and why `Config.served` drops the checks
-that assume training.
+above and their records in `runs/`. The update on top of the served policy is built in
+[`../p3-verl`](../p3-verl) and measured there (11/30 to 25/30 in one update, 12-13 ms per sync); what
+this stage still does is run the served loop frozen, which is why its own rounds are flat and why
+`Config.served` drops the checks that assume training.
 
 Doing that update means putting the fine-tuned weights back into a training loop - an on-policy or
 off-policy group-relative step against the served checkpoint - which is Project 3's subject and
