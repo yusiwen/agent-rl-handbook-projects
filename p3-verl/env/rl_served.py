@@ -120,15 +120,22 @@ class ServedPolicy:
         return parsed.action if parsed.ok else (parsed.raw or "<unparsed>")
 
 
-def reply_logprobs(model, tokeniser, full_ids, reply_ids):
-    """log p(reply tokens | prompt), with a graph attached."""
+def reply_logprobs(model, full_ids, reply_ids):
+    """log p(reply tokens | prompt), with a graph attached.
+
+    The slice order is the whole point and it was wrong here once: a `log_softmax` over
+    `logits[0, :-1]` materialises `[sequence, 151936]` floats - about 486 MB for an 800-token
+    sequence - and keeps it in the graph. Slicing to the reply window first makes it
+    `[reply_tokens, 151936]`, which is a few MB. On a machine with unified memory, the wrong order
+    times a hundred live graphs is not slow; it is an OOM kill that takes the model server with it.
+    """
     inputs = torch.tensor([list(full_ids)], device="cuda")
-    logits = model(inputs).logits.float()
-    log_probs = torch.log_softmax(logits[0, :-1], dim=-1)
-    start = len(full_ids) - len(reply_ids)
-    targets = torch.tensor(list(reply_ids), device="cuda")
-    positions = torch.arange(start - 1, start - 1 + len(reply_ids), device="cuda")
-    return log_probs[positions, targets]
+    logits = model(inputs).logits.float()[0]
+    start = len(full_ids) - len(reply_ids) - 1
+    window = logits[start : start + len(reply_ids)]
+    chosen = torch.log_softmax(window, dim=-1)
+    targets = torch.tensor(list(reply_ids), device="cuda").unsqueeze(1)
+    return chosen.gather(1, targets).squeeze(1)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -146,6 +153,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--max-new-tokens", type=int, default=64)
+    parser.add_argument(
+        "--micro-batch",
+        type=int,
+        default=8,
+        help="pairs per backward; the whole round at once is what OOM-killed the reference machine",
+    )
+    parser.add_argument(
+        "--memory-limit-gb",
+        type=float,
+        default=70.0,
+        help="abort before the host thrashes; the pool is shared with the inference server",
+    )
     parser.add_argument("--out", default="/work/rl-serve")
     parser.add_argument("--runs-dir", default="/work/runs")
     parser.add_argument("--code-sha", default="git:unknown")
@@ -228,18 +247,34 @@ def main(argv: list[str] | None = None) -> int:
                 weighted_turns += 1
                 pairs.append((weight, tuple(prompt_ids + reply_ids), tuple(reply_ids)))
 
+        # One backward per micro-batch, not one per round. A graph lives from its forward until its
+        # backward, so a single backward over every pair holds every activation at once; with the
+        # server sharing the same memory pool that is the difference between training and an OOM kill.
         losses = []
         for _ in range(args.epochs if pairs else 0):
-            terms = [
-                -weight * reply_logprobs(model, tokeniser, full_ids, reply_ids).mean()
-                for weight, full_ids, reply_ids in pairs
-            ]
-            loss = torch.stack(terms).mean()
-            loss.backward()
+            epoch_loss = 0.0
+            for offset in range(0, len(pairs), args.micro_batch):
+                chunk = pairs[offset : offset + args.micro_batch]
+                terms = [
+                    -weight * reply_logprobs(model, full_ids, reply_ids).mean()
+                    for weight, full_ids, reply_ids in chunk
+                ]
+                # Scale so the accumulated gradient is the mean over all pairs, not over the chunk.
+                loss = torch.stack(terms).mean() * (len(chunk) / len(pairs))
+                loss.backward()
+                epoch_loss += loss.item()
+                # A guard, because the failure mode here is not a slow run: it is the host swapping
+                # until the OOM killer takes the inference server with it.
+                allocated = torch.cuda.memory_allocated() / 2**30
+                if allocated > args.memory_limit_gb:
+                    raise SystemExit(
+                        f"allocated {allocated:.1f} GiB exceeds the limit "
+                        f"{args.memory_limit_gb}; lower --micro-batch before the host thrashes"
+                    )
             torch.nn.utils.clip_grad_norm_(trainable, 1.0)
             optimiser.step()
             optimiser.zero_grad(set_to_none=True)
-            losses.append(loss.item())
+            losses.append(epoch_loss)
 
         next_name = f"policy-r{round_index + 1}"
         adapter_dir = out / f"adapter-r{round_index + 1}"
@@ -263,6 +298,7 @@ def main(argv: list[str] | None = None) -> int:
             f"round {round_index}: served={served_name} solved={solved}/{len(episodes)} [{by_task}] "
             f"loss={(losses[-1] if losses else 0.0):.5f} weighted_turns={weighted_turns} "
             f"calls={policy.calls} sync->{next_name} {sync_ms}ms {loaded.get('text', '')} "
+            f"peak={torch.cuda.max_memory_allocated() / 2**30:.1f}GiB "
             f"total={time.time() - started:.0f}s"
         )
         served_name = next_name
