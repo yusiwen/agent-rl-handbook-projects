@@ -253,8 +253,14 @@ def main(argv: list[str] | None = None) -> int:
         sync_ms = int((time.time() - started_sync) * 1000)
 
         solved = sum(1 for episode in episodes if episode.solved)
+        # Per task, because a total cannot tell a wall from a ceiling: 0/10 and 10/10 both look like
+        # "no spread", and they are opposite diagnoses.
+        by_task = " ".join(
+            f"{task}={sum(1 for episode in group if episode.solved)}/{len(group)}"
+            for task, group in per_task.items()
+        )
         print(
-            f"round {round_index}: served={served_name} solved={solved}/{len(episodes)} "
+            f"round {round_index}: served={served_name} solved={solved}/{len(episodes)} [{by_task}] "
             f"loss={(losses[-1] if losses else 0.0):.5f} weighted_turns={weighted_turns} "
             f"calls={policy.calls} sync->{next_name} {sync_ms}ms {loaded.get('text', '')} "
             f"total={time.time() - started:.0f}s"
