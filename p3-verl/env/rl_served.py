@@ -160,6 +160,15 @@ def main(argv: list[str] | None = None) -> int:
         help="pairs per backward; the whole round at once is what OOM-killed the reference machine",
     )
     parser.add_argument(
+        "--prefix-weight",
+        type=float,
+        default=0.0,
+        help=(
+            "weight on the ordered-prefix term; 0 keeps an outcome-only reward. Use it where the "
+            "outcome is constant inside every group, which is where GRPO cannot start"
+        ),
+    )
+    parser.add_argument(
         "--memory-limit-gb",
         type=float,
         default=40.0,
@@ -226,6 +235,18 @@ def main(argv: list[str] | None = None) -> int:
 
         writer.append_rollouts(round_index, [episode.rollout for episode in episodes])
         writer.append_round(round_record(round_index, [episode.rollout for episode in episodes]))
+
+        # An outcome-only reward is a constant inside a group exactly where the policy fails
+        # systematically: sixty rollouts, zero successes, zero advantage, zero gradient. The ordered
+        # prefix varies even then - a sample that gets the first move right and the second wrong has
+        # 1/5 of the plan behind it - so it is the only term in this environment that can put a
+        # non-zero spread into a group whose outcome is uniform. Off by default: the outcome is what
+        # the task asks for, and a process term changes what the run optimises.
+        if args.prefix_weight:
+            for episode in episodes:
+                episode.rollout.reward_terms["rule_prefix"] = (
+                    args.prefix_weight * progress_reached(episode)
+                )
 
         rewards = {episode.rollout.episode_id: episode.rollout.reward() for episode in episodes}
         advantages = {}
