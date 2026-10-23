@@ -233,9 +233,6 @@ def main(argv: list[str] | None = None) -> int:
             per_task[task] = group
             episodes.extend(group)
 
-        writer.append_rollouts(round_index, [episode.rollout for episode in episodes])
-        writer.append_round(round_record(round_index, [episode.rollout for episode in episodes]))
-
         # An outcome-only reward is a constant inside a group exactly where the policy fails
         # systematically: sixty rollouts, zero successes, zero advantage, zero gradient. The ordered
         # prefix varies even then - a sample that gets the first move right and the second wrong has
@@ -247,6 +244,11 @@ def main(argv: list[str] | None = None) -> int:
                 episode.rollout.reward_terms["rule_prefix"] = (
                     args.prefix_weight * progress_reached(episode)
                 )
+
+        # Written after the last term is final, on purpose: a record whose `reward_terms` disagree
+        # with the reward the update consumed is worse than no record at all.
+        writer.append_rollouts(round_index, [episode.rollout for episode in episodes])
+        writer.append_round(round_record(round_index, [episode.rollout for episode in episodes]))
 
         rewards = {episode.rollout.episode_id: episode.rollout.reward() for episode in episodes}
         advantages = {}
@@ -260,7 +262,6 @@ def main(argv: list[str] | None = None) -> int:
         for episode, captured in zip(episodes, policy.per_episode):
             advantage = advantages[episode.rollout.episode_id]
             weights = turn_weights(episode, advantage, mode="trajectory")
-            episode.rollout.reward_terms["rule_turn"] = progress_reached(episode)
             for (prompt_text, reply_text, _), weight in zip(captured, weights):
                 if weight == 0.0 or not reply_text:
                     continue
