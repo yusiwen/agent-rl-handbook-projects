@@ -181,6 +181,43 @@ a process reward on the ordered prefix, which has variance even when the outcome
 of them is run, the honest statement is that outcome-only GRPO at this budget cannot start on a
 five-step ordered plan, and the ceiling it measures is the reward's, not the model's.
 
+## Turn credit: it starts the wall, and then it needs care
+
+`--prefix-weight` was the first attempt at the five-step wall, and it failed for a measurable reason:
+at temperature 1.7 the ten samples of a task follow the same path, so the prefix is 0.2 on one task,
+0.4 on the second and 0.6 on the third - a per-task constant, a group advantage of exactly zero, and
+therefore no gradient (`runs/p3-rl-served-16`, `reward_mean` 0.4). A reward that cannot vary inside a
+group cannot teach, however well it measures.
+
+`--credit turn` moves the signal inside the episode: each turn is weighted by the change in ordered
+prefix it produced, standardised within the episode. The same three tasks, ten samples, temperature 1.0
+(`runs/p3-rl-served-24`, `code_sha git:bb0b5a8`):
+
+| round | served | solved | note |
+| --- | --- | --- | --- |
+| 0 | `policy-sft` | 0/30 | three plans, none followed in order |
+| 1 | `policy-r1` | 6/30 | `hard-ledger-5s03` 0 -> 6 |
+| 2 | `policy-r2` | **10/30** | `hard-ledger-5s03` 10/10 |
+| 3 | `policy-r3` | 0/30 | collapse |
+| 4, 5 | r4, r5 | 0/30 | nothing left to learn from |
+
+And the check that separates a policy from luck: `policy-r2` evaluated **greedily** scores 10/30 with
+`hard-ledger-5s03` at 10/10 (`runs/p3-rl-served-28`). One of the three five-step plans went from 0 of 10
+greedy to 10 of 10 greedy in two updates, on a task where the outcome-only reward had been a constant
+zero. The mechanism does work.
+
+The collapse is also legible, and it is the padding defect from the other side. Once a plan breaks,
+every later turn has a delta of zero, and standardising turns that into a charge: the turns after the
+first mistake are penalised for not advancing a prefix that can no longer advance. So the policy learns
+to **stop sooner** - round 3's `hard-ledger-5s02` used five turns instead of six and reported 9 instead
+of 8, and the terminal `done` turn was charged for the same reason. Mean-centring is the bug: it
+cannot tell a neutral turn (`ls`, or the closing report) from a harmful one (a move out of order).
+
+The next version, not built here: weight only what the environment can distinguish. A move that grows
+the prefix is paid; a move that breaks it is charged; a read-only turn and the reporting turn are
+neutral, weight zero. That is a smaller and more honest signal than a standardised delta, and this run
+says exactly why it is needed.
+
 ## The server gets a ceiling too
 
 `SERVER_MEM` (default 32 GB) caps the inference container, for the same reason the training container
