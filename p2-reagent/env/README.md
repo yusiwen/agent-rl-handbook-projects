@@ -137,6 +137,29 @@ the format, not the arithmetic.
 The merged checkpoint is served by the same vLLM image with `--gpu-memory-utilization 0.08`, on
 port 8001 beside the baseline on 8000: 3.38 GiB each, both resident at once.
 
+## The memory ceiling, and the day it was missing
+
+Containers here start with `--memory=48g --memory-swap=48g` (`ARLH_TRAIN_MEM` to change it), which
+means: no swap, and a container that exceeds it is killed rather than the host.
+
+That is not defensive tidiness. On 2026-10-22 a 60-rollout training round held ~70 GB of live
+autograd graphs - one per pair, kept until a single backward - and this machine has unified memory, so
+the trainer, the vLLM server and the host were all drawing from the same 121 GB. The kernel OOM killer
+ran; it killed session processes first because they carry `oom_score_adj` 100-200 while a trainer
+carries 0, and the user's ssh session died with them. `earlyoom` was running and did fire, but at
+`-m 2` - two percent of memory left - which is after the kernel has already started.
+
+Two lessons, both now in the code:
+
+- **Cap the container.** The same mistake inside a cgroup kills one process group. Verified: a
+  container with `--memory=1g` allocating 2 GB exits 137 while the host's free memory does not move.
+- **Keep the guard below the cap.** `rl_served.py --memory-limit-gb` defaults to 40 GB, under the
+  container's 48 GB, so a runaway round aborts with a message instead of being killed by the kernel.
+
+Caveat worth knowing: `--ipc=host` means `/dev/shm` belongs to the host and is not charged to the
+container's cgroup. Nothing here uses shared memory across processes; a DataLoader with workers would
+slip past the cap.
+
 ## Step A: does a gradient reach the next round?
 
 `bash run.sh python3 /env/rl_step.py --task files-r06 --samples 5 --rounds 2`, 2026-10-18, starting

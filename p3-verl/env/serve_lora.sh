@@ -34,6 +34,10 @@ BASE_NAME=${BASE_NAME:-qwen3-1.7b-base}
 HF_CACHE=${HF_CACHE:-/home/yusiwen/.cache/huggingface}
 VLLM_CACHE=${VLLM_CACHE:-/home/yusiwen/.cache/vllm}
 VOLUME=${VOLUME:-arlh-p2}
+# The server shares a unified-memory pool with whatever trains next to it, so it gets a ceiling too:
+# 1.7B in bf16 is 3.4 GB, the KV cache reservation at --gpu-memory-utilization 0.10 is about 13 GB,
+# and CUDA context plus graphs add a few more. 32 GB is generous and still leaves the host protected.
+SERVER_MEM=${SERVER_MEM:-32g}
 
 if [ "${1:-}" = "--stop" ]; then
   docker rm -f "$NAME" >/dev/null 2>&1 || true
@@ -43,6 +47,7 @@ fi
 
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 docker run -d --name "$NAME" \
+  --memory="$SERVER_MEM" --memory-swap="$SERVER_MEM" \
   --device nvidia.com/gpu=all --ipc=host -p "${PORT}:8000" \
   -e VLLM_ALLOW_RUNTIME_LORA_UPDATING=1 \
   -v "${HF_CACHE}:/root/.cache/huggingface" \

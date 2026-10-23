@@ -41,6 +41,14 @@ services:
               count: all
               capabilities: [gpu, compute, utility]
 
+    # A ceiling on the container, because the pool is shared with the host and with anything else
+    # running: 1.7B in bf16 is 3.4 GB and the reservation at --gpu-memory-utilization 0.08 is about
+    # 10 GB, so 32 GB leaves room and still contains a runaway. `memswap_limit` equal to `mem_limit`
+    # means "no swap": a container that exceeds this is killed rather than dragging the host into
+    # swap, which is what took the login session down on 2026-10-22.
+    mem_limit: ${ARL_MODEL_MEM_LIMIT:-32g}
+    memswap_limit: ${ARL_MODEL_MEM_LIMIT:-32g}
+
     # vLLM uses shared memory for its worker queues; the default 64 MB is not it.
     ipc: host
 

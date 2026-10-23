@@ -162,8 +162,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--memory-limit-gb",
         type=float,
-        default=70.0,
-        help="abort before the host thrashes; the pool is shared with the inference server",
+        default=40.0,
+        help=(
+            "abort before the container's cgroup does; run.sh caps the container at 48 GB, so a "
+            "guard above that would never fire"
+        ),
     )
     parser.add_argument("--out", default="/work/rl-serve")
     parser.add_argument("--runs-dir", default="/work/runs")

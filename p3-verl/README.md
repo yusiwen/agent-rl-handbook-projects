@@ -134,6 +134,13 @@ Three things this establishes, and one it exposes:
   are a task at 0/5, which is a wall at this budget, not a learning problem. Ten samples per task is
   the next setting, not another round at this one.
 
+## The server gets a ceiling too
+
+`SERVER_MEM` (default 32 GB) caps the inference container, for the same reason the training container
+is capped: the pool is unified, and a server without a limit is not a sandbox but a coinhabitant. 1.7B
+in bf16 is 3.4 GB, the KV reservation at `--gpu-memory-utilization 0.10` is about 13 GB, and CUDA
+context plus graphs add a few more - so 32 GB is generous and still bounded.
+
 ## Order matters
 
 1. `transformers` + `peft` + `trl` first: these have aarch64 wheels, so a failure is your
