@@ -1,0 +1,6 @@
+{"task_id": "hard-ledger-5s01", "family": "ledger", "op": "sequence", "plan": [7, -3, 5, -8, 4], "distractors": ["add 9", "sub 3"], "expected": "5", "world": []}
+{"task_id": "hard-ledger-5s02", "family": "ledger", "op": "sequence", "plan": [-6, 4, 9, -2, 3], "distractors": ["sub 6", "add 2"], "expected": "8", "world": []}
+{"task_id": "hard-ledger-5s03", "family": "ledger", "op": "sequence", "plan": [5, 5, -8, 6, -4], "distractors": ["add 8", "sub 5"], "expected": "4", "world": []}
+{"task_id": "hard-files-5f01", "family": "files", "op": "rename", "world": ["final.txt", "final.csv", "notes.md", "photo.bak", "cache.log"], "source": "final.txt", "target": "archive.txt", "count": {"mode": "prefix", "text": "f"}, "expected": "1"}
+{"task_id": "hard-files-5f02", "family": "files", "op": "delete", "world": ["notes.txt", "index.md", "final.log", "plan.bak", "cache.csv"], "source": "final.log", "count": {"mode": "remaining"}, "expected": "4"}
+{"task_id": "hard-files-5f03", "family": "files", "op": "rename", "world": ["final.log", "final.bak", "notes.txt", "photo.md", "cache.csv"], "source": "final.log", "target": "report.log", "count": {"mode": "prefix", "text": "r"}, "expected": "1"}

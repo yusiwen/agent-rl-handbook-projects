@@ -48,5 +48,6 @@ exec docker run --rm -i \
   -v "$here":/env:ro \
   -v "$repo":/repo:ro \
   -e PYTHONPATH=/repo:/repo/p2-reagent/src \
+  -e ARLH_TASKS_FILE="${ARLH_TASKS_FILE:-}" \
   -w /work \
   "$image" "$@"
