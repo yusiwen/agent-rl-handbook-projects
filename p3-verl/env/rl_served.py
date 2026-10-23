@@ -160,6 +160,16 @@ def main(argv: list[str] | None = None) -> int:
         help="pairs per backward; the whole round at once is what OOM-killed the reference machine",
     )
     parser.add_argument(
+        "--credit",
+        choices=("trajectory", "turn"),
+        default="trajectory",
+        help=(
+            "trajectory: every turn of an episode carries the group advantage. turn: weight each "
+            "turn by how much it advanced the ordered prefix - the only signal left when every "
+            "sample in a group follows the same wrong path"
+        ),
+    )
+    parser.add_argument(
         "--prefix-weight",
         type=float,
         default=0.0,
@@ -261,7 +271,23 @@ def main(argv: list[str] | None = None) -> int:
         weighted_turns = 0
         for episode, captured in zip(episodes, policy.per_episode):
             advantage = advantages[episode.rollout.episode_id]
-            weights = turn_weights(episode, advantage, mode="trajectory")
+            if args.credit == "turn":
+                trace = episode.attempt_progress
+                if len(trace) != len(captured):
+                    raise SystemExit(
+                        f"{episode.rollout.episode_id}: {len(trace)} progress entries for "
+                        f"{len(captured)} turn(s); turn credit needs one per turn"
+                    )
+                # The change in ordered-prefix progress across a turn, so a turn that advances the
+                # plan outweighs one that does not. Standardised inside the episode, which means a
+                # neutral turn (ls, cat) is charged rather than paid - the padding defect Chapter 6
+                # records, handled at the source.
+                deltas = [trace[0]] + [trace[i] - trace[i - 1] for i in range(1, len(trace))]
+                weights = turn_weights(
+                    episode, advantage, mode="turn", turn_scores=deltas
+                )
+            else:
+                weights = turn_weights(episode, advantage, mode="trajectory")
             for (prompt_text, reply_text, _), weight in zip(captured, weights):
                 if weight == 0.0 or not reply_text:
                     continue
