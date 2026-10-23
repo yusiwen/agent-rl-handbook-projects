@@ -144,8 +144,42 @@ Three things this establishes, and one it exposes:
   the last two rounds trained on nothing - the ceiling arriving, as in Project 2, with a diagnostic
   number (`spread_fraction`) instead of a mystery.
 - **The budget is still five samples per task.** 25/30 is not "solved": the five remaining failures
-  are a task at 0/5, which is a wall at this budget, not a learning problem. Ten samples per task is
-  the next setting, not another round at this one.
+  are a task at 0/5. Ten samples answered that question - the task went to 10/10 - and the next rung,
+  five-step plans, is where the loop genuinely cannot start (below).
+
+## Where the ceiling actually is
+
+Two rungs were tried above the calibrated band. The first was not a rung at all: the six tasks the SFT
+policy fails 60 of 60 times at `temperature 1.0` (`runs/p3-rl-served-6`, `code_sha git:2042a8c`).
+Every group is a constant, so the advantage is exactly zero and the update is exactly zero - a wall in
+the algorithm's precondition, not in the task. At `temperature 1.7` the same six produce 4 of 60
+(`-8`), one update takes them to 60 of 60 (`-9`), and the learned adapter solves all sixty greedily as
+well (`-10`, `reward_mean` 1.0): it is a policy, not a lucky sampler. That also explains the earlier
+five-sample plateau from the other side - those groups were all-wrong at five samples too, and an
+all-wrong group contributes no gradient.
+
+The second rung is real. `fixtures/hard.jsonl` adds three five-step ledger plans - five moves plus a
+report, exactly the six-turn budget - and three files tasks over five-file directories
+(`code_sha git:1a4a822`):
+
+| set | greedy (T=0) | T=1.7 |
+| --- | --- | --- |
+| files, five-file directories | **30/30** | 24/30 |
+| ledger, five-step ordered plan | **0/30** | 0/30 |
+
+The ledger rung fails in a specific and instructive way: the reported totals are right (5 and 8 in ten
+of ten samples at T=0; 8 in ten of ten at T=1.7) and `goal_met` is false in every one, because the plan
+is applied out of order. The model sums the five movements and announces the sum; it never executes
+the sequence, and it never fails to add up. **Zero successes in 60 rollouts** means no reward variance
+at either temperature, therefore no advantage, therefore no gradient - the wall the book describes when
+it says a group cannot see a task: not "too hard", but "no sample succeeds, so there is nothing to
+compare".
+
+And it is a data wall, not a capacity wall: the arithmetic is right and the behaviour is wrong. Two
+things could break it, neither tried here - demonstrations at five steps, which is what SFT is for, or
+a process reward on the ordered prefix, which has variance even when the outcome never does. Until one
+of them is run, the honest statement is that outcome-only GRPO at this budget cannot start on a
+five-step ordered plan, and the ceiling it measures is the reward's, not the model's.
 
 ## The server gets a ceiling too
 
