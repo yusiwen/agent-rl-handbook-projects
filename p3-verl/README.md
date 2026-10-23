@@ -112,8 +112,21 @@ the same place:
 | first | 11/30 | **25/30** | 25/30 |
 | second | 6/30 | **25/30** | 25/30 |
 
-Two starts twenty points apart, one identical endpoint. That is the budget talking, not the loop:
-five samples of six tasks, one of which is a wall at 0/5.
+Two starts twenty points apart, one identical endpoint. **That plateau was the budget, not a wall.**
+The same loop at ten samples per task (record `runs/p3-rl-served-5`, `code_sha git:b0bd83a`):
+
+| round | served | solved | files-r05 | r06 | r07 | r09 | ledger-09 | ledger-3s02 | peak | round time |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | `policy-sft` | 18/60 | 3/10 | 4/10 | 6/10 | **0/10** | 4/10 | 1/10 | 8.9 GiB | 71 s |
+| 1 | `policy-r1` | **60/60** | 10/10 | 10/10 | 10/10 | **10/10** | 10/10 | 10/10 | 8.9 GiB | 25 s |
+| 2 | `policy-r2` | 60/60 | 10/10 | 10/10 | 10/10 | 10/10 | 10/10 | 10/10 | 8.9 GiB | 26 s |
+
+The task that was 0 of 10 in round 0 - the one the five-sample budget could never train on - was
+10 of 10 after one update. At five samples its group came back all-wrong, the advantage was exactly
+zero, and it contributed no gradient at all; at ten samples three other tasks produced partial groups
+(3 of 10, 1 of 10), the update generalised, and the wall fell with them. **A task that a group cannot
+see is not a wall; it is an unmeasured task.** The ceiling that remains at 60/60 is the task set, not
+the policy, and telling those apart needs harder tasks, not more rounds.
 
 The server ends the run holding `qwen3-1.7b-base`, `policy-sft`, `policy-r1`, `policy-r2`,
 `policy-r3`, and the per-round line is the lineage: the name printed as `served=` in round N+1 is the
