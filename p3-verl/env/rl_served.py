@@ -272,7 +272,10 @@ def main(argv: list[str] | None = None) -> int:
         for episode, captured in zip(episodes, policy.per_episode):
             advantage = advantages[episode.rollout.episode_id]
             if args.credit == "turn":
-                trace = episode.attempt_progress
+                trace = list(episode.attempt_progress)
+                if len(trace) == len(captured) + 1:
+                    # The trace opens with the reset's zero, which is a state rather than a turn.
+                    trace = trace[1:]
                 if len(trace) != len(captured):
                     raise SystemExit(
                         f"{episode.rollout.episode_id}: {len(trace)} progress entries for "
