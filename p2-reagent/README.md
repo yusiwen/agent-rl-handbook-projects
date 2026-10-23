@@ -7,8 +7,11 @@ episodes over HTTP; an 8B judge scored real trajectories and disagreed with the 
 be demoted from reward to diagnostic; and a token-level objective whose adapter updates in the same
 process where it generates moved six calibrated tasks from 42/60 to 60/60. **The join between the
 last two is now built in [`../p3-verl`](../p3-verl):** served sampling over HTTP, the gradient in the
-training process, and the result registered as the next round's adapter in 12-13 ms, which took six
-calibrated tasks from 11/30 to 25/30 in one update. This project's own served check stays read-only.
+training process, and the result registered as the next round's adapter in 12-13 ms. At ten samples
+per task one update took six calibrated tasks from 18/60 to 60/60; at five samples the same loop
+plateaued at 25/30, which turned out to be the budget's ceiling rather than a task's wall - a task
+whose whole group fails contributes no gradient, so it is never trained on. This project's own served
+check stays read-only.
 Written with Chapter 6.
 
 The design document Chapter 6 asks for is [`DESIGN.md`](DESIGN.md): the task as an MDP, the signal
