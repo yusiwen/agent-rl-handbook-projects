@@ -161,13 +161,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--credit",
-        choices=("trajectory", "turn"),
+        choices=("trajectory", "turn", "prefix"),
         default="trajectory",
         help=(
-            "trajectory: every turn of an episode carries the group advantage. turn: weight each "
-            "turn by how much it advanced the ordered prefix - the only signal left when every "
-            "sample in a group follows the same wrong path"
+            "trajectory: every turn carries the group advantage. turn: standardised prefix delta. "
+            "prefix: three tiers - pay a turn that grows the ordered prefix, charge the one turn "
+            "that breaks it, leave reading and reporting at zero"
         ),
+    )
+    parser.add_argument(
+        "--credit-scale",
+        type=float,
+        default=0.5,
+        help="magnitude of one credit tier; the turn mode's shaping term uses the same scale",
     )
     parser.add_argument(
         "--prefix-weight",
@@ -271,7 +277,32 @@ def main(argv: list[str] | None = None) -> int:
         weighted_turns = 0
         for episode, captured in zip(episodes, policy.per_episode):
             advantage = advantages[episode.rollout.episode_id]
-            if args.credit == "turn":
+            if args.credit == "prefix":
+                trace = list(episode.attempt_progress)
+                if len(trace) == len(captured) + 1:
+                    trace = trace[1:]
+                if len(trace) != len(captured):
+                    raise SystemExit(
+                        f"{episode.rollout.episode_id}: {len(trace)} progress entries for "
+                        f"{len(captured)} turn(s); prefix credit needs one per turn"
+                    )
+                # Three tiers, and the neutrality is the point. A turn that grows the ordered prefix
+                # is paid; the single turn that breaks it is charged; every other turn - a read, the
+                # closing report, and every turn after the plan is already broken and can no longer
+                # advance - is worth exactly zero. Standardising inside the episode (the "turn" mode)
+                # charges those neutral turns, which teaches the policy to shorten the episode: the
+                # measured collapse of the previous run. Here a broken plan costs one turn, not the
+                # rest of the trajectory.
+                tiered = []
+                previous = 0.0
+                for progress in trace:
+                    delta = progress - previous
+                    previous = progress
+                    tiered.append(
+                        args.credit_scale if delta > 0 else (-args.credit_scale if delta < 0 else 0.0)
+                    )
+                weights = tiered
+            elif args.credit == "turn":
                 trace = list(episode.attempt_progress)
                 if len(trace) == len(captured) + 1:
                     # The trace opens with the reset's zero, which is a state rather than a turn.
