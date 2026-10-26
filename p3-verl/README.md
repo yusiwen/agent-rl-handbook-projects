@@ -218,6 +218,35 @@ the prefix is paid; a move that breaks it is charged; a read-only turn and the r
 neutral, weight zero. That is a smaller and more honest signal than a standardised delta, and this run
 says exactly why it is needed.
 
+### The three-tier fix, and where it lands
+
+`--credit prefix` pays a turn that grows the ordered prefix (+0.5), charges the one turn that breaks it
+(-0.5), and leaves every other turn at zero - reads, the closing report, and turns taken after the plan
+is already broken. No standardisation, so a broken plan costs one turn instead of every remaining turn.
+Three runs, same three plans, ten samples each (`code_sha git:7711269`):
+
+| variant | rounds, solved of 30 | greedy |
+| --- | --- | --- |
+| v1 turn credit, lr 1e-4, 3 epochs (`-24`) | 0, 6, 10, 0, 0, 0 | `policy-r2`: 10/30 |
+| v2 three tiers, lr 1e-4, 3 epochs (`-31`) | 0, 5, 14, 12, 10, 3 | `adapter-r2`: **20/30** (`-33`), `adapter-r4`: 10/30 (`-34`) |
+| v2 three tiers, lr 3e-5, 1 epoch (`-37`) | 0, 0, 11, 17, **20, 20** | final adapter: **20/30** (`-38`) |
+
+The last row is the one that answers the question. At a step size small enough not to overshoot, the
+loop climbs 0 -> 11 -> 17 -> 20 and **stays at 20 for two rounds**, and the final adapter solves 20 of
+30 **greedily**: two of the three five-step plans (`hard-ledger-5s01`, `hard-ledger-5s03`) go from 0 of
+10 each, at fine-tune, to 10 of 10 each, deterministically. The instability of the previous section was
+not the credit rule alone - it was the credit rule combined with three passes at 1e-4, which moved the
+adapter far enough in one round to break the plan it had just learned.
+
+The remaining plan, `hard-ledger-5s02`, is a *commutativity* failure and it does not move in any of the
+three runs. Plan: subtract 6, add 4, add 9, subtract 2, add 3. The policy executes subtract 6, add 4,
+add 9, **add 3, subtract 2** - the last two movements exchanged - and reports 8, which is correct,
+because addition commutes. `goal_met` is false (the ledger family requires the plan in order), the
+prefix breaks at turn four, and one turn is charged per episode. That single charged turn has not been
+enough to repair the swap in six rounds: the same mistake, in the same place, every sample. A mistake
+that leaves the final state unchanged is the hardest kind to charge, because the epoch's reward is
+identical for both orders - only the intermediate state differs, and only one turn sees it.
+
 ## The server gets a ceiling too
 
 `SERVER_MEM` (default 32 GB) caps the inference container, for the same reason the training container
