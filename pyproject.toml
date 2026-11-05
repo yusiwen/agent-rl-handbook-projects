@@ -1,0 +1,19 @@
+[project]
+name = "agent-rl-projects"
+version = "0.1.0"
+description = "Companion code for the Agent RL handbook: verifiers, a reagent loop, a served RL loop"
+requires-python = ">=3.14"
+# The gate needs the standard library and PyYAML. Nothing else: `scripts/check_repo.py`
+# rejects third-party imports in the shared layers, and the dataset tool imports its two
+# libraries lazily so that the gate can run with them absent.
+dependencies = ["pyyaml>=6.0"]
+
+[project.optional-dependencies]
+# Only `datasets/pull.py` needs these, and only when it actually pulls. Kept in an extra so
+# `uv sync` stays small and the gate cannot quietly start depending on the network.
+datasets = ["huggingface-hub>=0.30"]
+
+[tool.uv]
+# This repository is not a distributable package; the gate runs the scripts in place. Without
+# this, `uv sync` would try to build and install the project itself into the environment.
+package = false

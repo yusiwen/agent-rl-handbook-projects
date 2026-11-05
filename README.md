@@ -22,9 +22,12 @@ documents comes from a run whose record is named beside it.
 ## What runs today
 
 ```bash
-nix develop --command bash scripts/verify.sh   # or: direnv allow .  then the same command
-nix build --no-link                            # the same gate in a sandbox, no network
+uv sync --frozen                # once; direnv does this for you after `direnv allow`
+uv run --frozen bash scripts/verify.sh
 ```
+
+`uv run` puts `.venv/bin` first on `PATH`, so the `python3` the gate calls is the pinned one, not
+whatever the machine happens to have.
 
 ```
 == common tests ==                Ran 126 tests ... OK
@@ -40,31 +43,33 @@ all checks passed
 ```
 
 436 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
-writes a run record to `runs/` (gitignored); `nix build` sends it to the sandbox's writable
-directory instead, which is what `ARL_RUNS_DIR` is for. If the gate fails, the problem is in
-this repository rather than in your environment - which is the whole reason it exists.
+writes a run record to `runs/` (gitignored); set `ARL_RUNS_DIR` to send it elsewhere, which is
+what a CI job or a sandbox does. If the gate fails, the problem is in this repository rather
+than in your environment - which is the whole reason it exists.
 
 ## The environment is pinned
 
-`flake.nix` + `flake.lock` pin the toolchain and `.envrc` wires it to direnv:
+`pyproject.toml` + `uv.lock` pin the packages, `.python-version` pins the interpreter, and
+`.envrc` wires the three to direnv:
 
-- **The same nixpkgs revision as the handbook** (`7a0f122f5090`), so both repositories
-  resolve to identical store paths on the reference machine instead of downloading a second
-  copy of Python.
-- The shell is deliberately small - `python3`, `git`, `coreutils`, `ripgrep`, `fd`, `jq`. The
-  contract layer's only dependency is the standard library, and a shell that cannot import
-  torch cannot quietly start depending on it.
-- `nix build` runs the same gate as a derivation: it fails when a check fails, it cannot
-  reach the network, and its source tree is read-only. Those are a CI job's constraints, met
-  before there is a CI job. It is a check rather than an artefact - the only output is a
-  timestamp - so `nix build --no-link` is the habit this repo documents: same semantics,
-  without the `./result` symlink appearing in the working tree.
-- `huggingface_hub` and PyYAML come from that same pin, so `python3 datasets/pull.py gsm8k`
-  works in the shell with nothing installed by hand. The tool imports them inside its
-  functions, which is why the gate can run offline with neither of them present. See
+- **One dependency for the gate: PyYAML.** The contract layer's only import is the standard
+  library, and `scripts/check_repo.py --imports` keeps it that way - an environment that
+  cannot import torch cannot quietly start depending on it. `uv sync` therefore installs one
+  package, in a `.venv` that is gitignored.
+- **The interpreter is pinned, not inherited.** `.python-version` says 3.14; `uv run` puts
+  `.venv/bin` first on `PATH`, so the `python3` the gate calls is the same one on both
+  machines instead of whatever `python3 -V` happens to say that day.
+- `huggingface_hub` is an extra rather than a dependency (`uv sync --extra datasets`), because
+  only `datasets/pull.py` needs it and only when it pulls. The tool imports both libraries
+  inside its functions, which is why the gate runs offline with neither present. See
   `datasets/README.md`.
-- `nix develop` and `nix build` only see files git knows about, so `git add` a new file
-  before building it.
+- **There is no sandboxed second gate any more.** `nix build` used to run the same checks in a
+  derivation with no network and a read-only tree. With nix gone, `uv run --frozen bash
+  scripts/verify.sh` is the gate, and `uv.lock` is what makes it reproducible; that is a weaker
+  guarantee than a derivation and it is written down here rather than implied away.
+- `uv sync` reads `pyproject.toml` and `uv.lock`, not the git index, so an untracked file is
+  visible to the gate. Run `git add` before committing anyway - the gate's own repository
+  check reads the index, and a file the index does not know about is one it cannot check.
 
 ## What this repo is for
 
@@ -125,7 +130,7 @@ The gate reads the git index, so run `git add` first if you want a brand-new fil
 ## Layout
 
 ```
-flake.nix        the pinned toolchain; nix build = the same gate as a derivation
+pyproject.toml   the gate's one dependency; uv.lock pins it, .python-version pins the interpreter
 common/          schema, mask, verifier protocol, fusion, run records, contamination, checks (+ 126 tests)
 p1-verifiers/    src/ fixtures/ checks/ configs/ env/ tests/   (harness, live path, Chapter 7's health report)
 p2-reagent/      src/ fixtures/ checks/ tests/   (the credit-assignment loop; the policy is a table)

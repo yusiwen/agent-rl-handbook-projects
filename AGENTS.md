@@ -110,6 +110,7 @@ These are the graders. A project that fails one of them fails it loudly, naming 
   shell provides an unprefixed one from the pinned coreutils, and the reference machine has
   it as standard. A script that has to run outside the dev shell on macOS must not depend
   on it - `datasets/gsm8k.pull.sh` does not.
-- `nix develop` and `nix build` only see files git knows about, so `git add` a new file
-  before building it. This has bitten the handbook repository too; the gate reads the index
-  for the same reason, which makes the two behaviours agree instead of both being surprising.
+- `uv sync` reads `pyproject.toml` and `uv.lock`, not the git index, so an untracked file is
+  visible in the environment - the opposite of the old nix shell. `git add` a new file anyway:
+  `check_repo.py` reads the index, and a file the index does not know about is one the gate
+  cannot check. The two behaviours no longer agree, so the rule is stated on its own terms.

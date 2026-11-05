@@ -23,7 +23,6 @@ models/
 
 # Tooling
 .direnv/
-result
 .DS_Store
 
 # Local environment overrides: may hold a token, so never committed. `.env.example` is the

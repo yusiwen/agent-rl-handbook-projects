@@ -296,7 +296,7 @@ class DependencyTests(unittest.TestCase):
         with self.assertRaises(pull.MissingDependency) as ctx:
             pull.require("definitely_not_a_module_xyz")
         self.assertIn("definitely_not_a_module_xyz", str(ctx.exception))
-        self.assertIn("nix develop", str(ctx.exception))
+        self.assertIn("uv sync --frozen --extra datasets", str(ctx.exception))
 
     def test_the_module_imports_without_the_optional_libraries(self) -> None:
         # This test is the assertion: the module was imported at the top of this file, and
