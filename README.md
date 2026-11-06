@@ -42,7 +42,7 @@ whatever the machine happens to have.
 all checks passed
 ```
 
-436 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
+442 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
 writes a run record to `runs/` (gitignored); set `ARL_RUNS_DIR` to send it elsewhere, which is
 what a CI job or a sandbox does. If the gate fails, the problem is in this repository rather
 than in your environment - which is the whole reason it exists.
