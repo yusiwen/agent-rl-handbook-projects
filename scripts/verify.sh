@@ -47,6 +47,15 @@ run() {
   fi
 }
 
+# Every script must at least parse. The tests import the packages; the `env/` scripts are only
+# ever run inside a container, so a broken one would otherwise reach a commit unseen - which is
+# exactly how a mangled call got into p3-verl/env/rl_served.py and survived a green gate.
+python_roots="common p1-verifiers p2-reagent p3-verl datasets scripts"
+if ! python3 -m compileall -q $python_roots >/dev/null; then
+  echo "   FAILED: a Python file does not parse"
+  status=1
+fi
+
 # Four test suites, four discovery roots. The shared layer is a package under `common/`;
 # `p1-verifiers` and `p2-reagent` have hyphens in their names and cannot be packages; `datasets/`
 # holds a tool rather than a package, so its tests are a root of their own.

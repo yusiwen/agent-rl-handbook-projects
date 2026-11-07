@@ -283,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
         # Written after the last term is final, on purpose: a record whose `reward_terms` disagree
         # with the reward the update consumed is worse than no record at all.
         writer.append_rollouts(round_index, [episode.rollout for episode in episodes])
-        writer.append_round(round_index, [episode.rollout for episode in episodes])
+        writer.append_round(round_record(round_index, [episode.rollout for episode in episodes]))
 
         if args.eval_only:
             # Per task, for the same reason the training loop reports per task: a total hides the
