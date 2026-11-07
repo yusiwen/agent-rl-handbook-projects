@@ -66,6 +66,11 @@ def chat(base_url: str, model: str, messages: list[dict], temperature: float, ma
     return body["choices"][0]["message"]["content"]
 
 
+def served_models(base_url: str) -> list[str]:
+    with urllib.request.urlopen(f"{base_url}/v1/models", timeout=30) as response:
+        return [row["id"] for row in json.loads(response.read())["data"]]
+
+
 def load_adapter(base_url: str, name: str, path: str) -> None:
     # load_inplace makes a rerun of the same experiment work: the server refuses to add a second
     # adapter under a name it already knows, which is correct behaviour and a nuisance when the
@@ -266,6 +271,15 @@ def main(argv: list[str] | None = None) -> int:
             return 1.0 if row["solved"] else 0.0
         valid = sum(1 for turn in row["turns"] if turn.get("tool") and not turn.get("error"))
         return round((1.0 if row["solved"] else 0.0) + 0.1 * min(valid, 3) - 0.3 * row["tool_errors"], 4)
+
+    # Preflight: a worker that gets 404s dies in its thread, the queue stays empty, and the loop
+    # reports "0 rounds" as if it had run. The name has to be served before anything else starts.
+    available = served_models(args.base_url)
+    if args.adapter_name not in available:
+        raise SystemExit(
+            f"{args.adapter_name} is not served at {args.base_url} (available: {available}). "
+            f"Load it first: POST /v1/load_lora_adapter with lora_path={args.adapter}"
+        )
 
     version = Version(args.adapter_name)
     samples: queue.Queue = queue.Queue()
