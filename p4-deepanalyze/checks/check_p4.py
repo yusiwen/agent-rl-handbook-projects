@@ -108,6 +108,8 @@ class LoopTests(unittest.TestCase):
                 self.assertEqual(episode.protocol_errors, 0)
                 self.assertEqual(episode.sandbox_errors, 0)
                 self.assertEqual(len(episode.turns), 2)
+                self.assertEqual(episode.lost_turns, 0, "an oracle prints exactly one value")
+                self.assertEqual(episode.turns[0].warnings, [])
 
     def test_prose_counts_as_a_protocol_error(self):
         task = load(FIXTURES)[0]

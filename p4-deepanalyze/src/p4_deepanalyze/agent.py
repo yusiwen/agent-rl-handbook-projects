@@ -33,6 +33,7 @@ class Turn:
     kind: str  # "code" | "report" | "protocol-error"
     code: str = ""
     error: str = ""
+    warnings: list[str] = field(default_factory=list)
     observation: dict[str, object] | None = None
 
     def to_dict(self) -> dict[str, object]:
@@ -49,6 +50,7 @@ class Episode:
     protocol_errors: int = 0
     sandbox_errors: int = 0
     timeouts: int = 0
+    lost_turns: int = 0  # runs whose output was empty or not a scalar
     model: str = ""
     code_sha: str = ""
     seconds: float = 0.0
@@ -102,19 +104,28 @@ def run_episode(
             break
 
         observation: Observation = sandbox.run(action.text, task.files())
+        warnings = protocol.observation_warnings(
+            observation.exit_code, observation.stdout, observation.stderr, observation.timed_out
+        )
         episode.turns.append(
-            Turn(index=index, reply=reply, kind="code", code=action.text, observation=observation.to_dict())
+            Turn(
+                index=index, reply=reply, kind="code", code=action.text,
+                warnings=warnings, observation=observation.to_dict(),
+            )
         )
         if observation.timed_out:
             episode.timeouts += 1
         elif observation.exit_code != 0:
             episode.sandbox_errors += 1
+        if "no_output" in warnings or "multiline_output" in warnings:
+            episode.lost_turns += 1
         messages.append({"role": "assistant", "content": reply})
         messages.append(
             {
                 "role": "user",
                 "content": protocol.format_observation(
-                    observation.exit_code, observation.stdout, observation.stderr, observation.timed_out
+                    observation.exit_code, observation.stdout, observation.stderr,
+                    observation.timed_out, warnings,
                 ),
             }
         )

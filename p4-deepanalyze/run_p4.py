@@ -52,6 +52,7 @@ def summarise(episodes: list[dict]) -> dict:
         "code_runs": code_runs,
         "sandbox_errors": sandbox_errors,
         "timeouts": timeouts,
+        "lost_turns": sum(e.get("lost_turns", 0) for e in episodes),
         "mean_turns": round(sum(len(e["turns"]) for e in episodes) / total, 2) if total else 0.0,
         "seconds": round(sum(e["seconds"] for e in episodes), 1),
         "per_task": {e["task_id"]: {"solved": e["solved"], "turns": len(e["turns"]), "reason": e["reason"]} for e in episodes},

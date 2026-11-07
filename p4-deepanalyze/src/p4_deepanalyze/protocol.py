@@ -102,7 +102,38 @@ def parse(reply: str) -> Action:
     return Action(kind="report", text=body, analyzed=analyzed)
 
 
-def format_observation(exit_code: int | None, stdout: str, stderr: str, timed_out: bool) -> str:
+def observation_warnings(
+    exit_code: int | None, stdout: str, stderr: str, timed_out: bool
+) -> list[str]:
+    """The two ways a program can succeed and still waste the turn.
+
+    ``no_output`` is the one that cost a run: a correct program that ended in a bare
+    expression printed nothing, exited 0, and the model - shown an empty observation -
+    guessed. ``multiline_output`` is its sibling: ``print(series)`` emits one line per row,
+    so the "answer" the model reads is an arbitrary row.
+
+    Both are recorded as flags *and* said in words to the model, because the model cannot
+    repair what it cannot see, and a reader cannot audit a run whose rows do not say which
+    turns were lost.
+    """
+    if timed_out:
+        return ["timeout"]
+    lines = [line for line in (stdout or "").strip().splitlines() if line.strip()]
+    warnings: list[str] = []
+    if exit_code == 0 and not lines:
+        warnings.append("no_output")
+    if len(lines) > 1:
+        warnings.append("multiline_output")
+    return warnings
+
+
+def format_observation(
+    exit_code: int | None,
+    stdout: str,
+    stderr: str,
+    timed_out: bool,
+    warnings: list[str] | None = None,
+) -> str:
     """What the model is shown after a run.  A timeout is a different sentence from an error."""
     if timed_out:
         return (
@@ -110,12 +141,19 @@ def format_observation(exit_code: int | None, stdout: str, stderr: str, timed_ou
             "The program was stopped: it ran longer than the sandbox timeout.\n"
             "</observation>"
         )
+    warnings = warnings if warnings is not None else observation_warnings(exit_code, stdout, stderr, timed_out)
+    lines = [line for line in (stdout or "").strip().splitlines() if line.strip()]
     parts = [f"<observation exit={exit_code}>"]
-    if stdout.strip():
+    if "no_output" in warnings:
+        parts.append("(no output - the program printed nothing; use print(...) for the value you computed)")
+    elif stdout.strip():
         parts.append("stdout:\n" + stdout.strip())
+    if "multiline_output" in warnings:
+        parts.append(
+            f"note: the program printed {len(lines)} lines, and the question asks for a single "
+            "value. Compute the scalar (for example with .iloc[0] or a sum) and print just that."
+        )
     if stderr.strip():
         parts.append("stderr:\n" + stderr.strip())
-    if not stdout.strip() and not stderr.strip():
-        parts.append("(no output)")
     parts.append("</observation>")
     return "\n".join(parts)

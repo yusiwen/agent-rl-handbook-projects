@@ -75,6 +75,24 @@ class ProtocolTests(unittest.TestCase):
         with self.assertRaises(protocol.ProtocolError):
             protocol.parse("   ")
 
+    def test_silent_success_is_flagged_and_explained(self):
+        warnings = protocol.observation_warnings(0, "", "", False)
+        self.assertEqual(warnings, ["no_output"])
+        text = protocol.format_observation(0, "", "", False, warnings)
+        self.assertIn("printed nothing", text)
+        self.assertIn("print(...)", text)
+
+    def test_multiline_output_is_flagged_with_the_count(self):
+        warnings = protocol.observation_warnings(0, "0   -80\n2   -25\n3   -35\n", "", False)
+        self.assertEqual(warnings, ["multiline_output"])
+        text = protocol.format_observation(0, "a\nb\nc", "", False, warnings)
+        self.assertIn("printed 3 lines", text)
+        self.assertIn("single value", text)
+
+    def test_a_clean_single_value_run_has_no_warnings(self):
+        self.assertEqual(protocol.observation_warnings(0, "1740.0\n", "", False), [])
+        self.assertEqual(protocol.observation_warnings(1, "", "KeyError", False), [])
+
     def test_observation_text_separates_a_timeout(self):
         timed_out = protocol.format_observation(None, "", "", True)
         failed = protocol.format_observation(1, "", "Traceback", False)
@@ -156,6 +174,14 @@ class EpisodeTests(unittest.TestCase):
         client = ScriptedClient(["<code>1/0</code>", "<report>3</report>"])
         episode = run_episode(TASK, client, FakeSandbox([crashed]), max_turns=3)
         self.assertEqual(episode.sandbox_errors, 1)
+
+    def test_a_silent_program_is_recorded_as_a_lost_turn(self):
+        silent = Observation(exit_code=0, stdout="", stderr="", timed_out=False, duration_ms=7)
+        client = ScriptedClient(["<code>max_month</code>", "<report>March</report>"])
+        episode = run_episode(TASK, client, FakeSandbox([silent]), max_turns=3)
+        self.assertEqual(episode.lost_turns, 1)
+        self.assertEqual(episode.turns[0].warnings, ["no_output"])
+        self.assertIn("printed nothing", client.seen[1][-1]["content"])
 
     def test_prose_stops_the_episode_as_a_protocol_error(self):
         client = ScriptedClient(["The answer is 3."])
