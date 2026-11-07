@@ -296,6 +296,7 @@ def run_round(
     round_index: int,
     *,
     rule_critic: RuleCritic | None = None,
+    code_sha: str = "git:none",
 ) -> RoundResult:
     """Sample every task, judge it, fuse, check, and update the policy once."""
     rule_critic = rule_critic or RuleCritic()
@@ -321,6 +322,9 @@ def run_round(
                 sample_index=sample_index,
                 max_turns=config.max_turns,
                 config_hash=config.digest(),
+                # The rows are what a reader re-derives from; a row that says "git:none" under a
+                # header naming the commit is a row that cannot be traced back to its code.
+                code_sha=code_sha,
                 policy_version=version,
             )
             rule_verdict = rule_critic.critique(episode)
@@ -475,7 +479,9 @@ def run_loop(
     for round_index in range(config.rounds):
         if not config.served:
             policy.version = f"policy-v{round_index}"
-        result = run_round(policy, critic, config, round_index)
+        result = run_round(
+            policy, critic, config, round_index, code_sha=writer.header.code_sha
+        )
         results.append(result)
         writer.append_rollouts(round_index, result.rollouts)
         writer.append_round(round_record(round_index, result.rollouts))

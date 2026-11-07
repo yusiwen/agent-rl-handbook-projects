@@ -263,7 +263,19 @@ def main(argv: list[str] | None = None) -> int:
             group = []
             for sample in range(args.samples):
                 policy.begin()
-                group.append(run_episode(policy, task, sample_index=sample, policy_version=served_name))
+                group.append(
+                    run_episode(
+                        policy,
+                        task,
+                        sample_index=sample,
+                        policy_version=served_name,
+                        # Rows are the unit a reader re-derives from, so they carry the revision too;
+                        # leaving the defaults here made every row say "git:none" under a header that
+                        # named the real commit.
+                        code_sha=args.code_sha,
+                        config_hash="sha256:" + config_hash,
+                    )
+                )
                 policy.finish()
             per_task[task] = group
             episodes.extend(group)
