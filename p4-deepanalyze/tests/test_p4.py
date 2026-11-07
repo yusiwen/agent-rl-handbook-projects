@@ -46,6 +46,10 @@ class FakeSandbox:
         return Observation(exit_code=0, stdout="3\n", stderr="", timed_out=False, duration_ms=5)
 
 
+def _clean() -> Observation:
+    return Observation(exit_code=0, stdout="3\n", stderr="", timed_out=False, duration_ms=5)
+
+
 class ProtocolTests(unittest.TestCase):
     def test_code_and_report_are_parsed(self):
         self.assertEqual(protocol.parse("<code>print(1)</code>").kind, "code")
@@ -177,11 +181,31 @@ class EpisodeTests(unittest.TestCase):
 
     def test_a_silent_program_is_recorded_as_a_lost_turn(self):
         silent = Observation(exit_code=0, stdout="", stderr="", timed_out=False, duration_ms=7)
-        client = ScriptedClient(["<code>max_month</code>", "<report>March</report>"])
+        client = ScriptedClient(["<code>max_month</code>", "<report>March</report>", "<report>3</report>"])
         episode = run_episode(TASK, client, FakeSandbox([silent]), max_turns=3)
         self.assertEqual(episode.lost_turns, 1)
+        self.assertEqual(episode.forced_repairs, 1)
         self.assertEqual(episode.turns[0].warnings, ["no_output"])
         self.assertIn("printed nothing", client.seen[1][-1]["content"])
+
+    def test_a_report_after_a_silent_run_is_refused_once(self):
+        silent = Observation(exit_code=0, stdout="", stderr="", timed_out=False, duration_ms=7)
+        client = ScriptedClient(
+            ["<code>max_month</code>", "<report>March</report>", "<code>print(3)</code>", "<report>3</report>"]
+        )
+        episode = run_episode(TASK, client, FakeSandbox([silent, _clean()]), max_turns=4)
+        self.assertEqual(episode.forced_repairs, 1)
+        self.assertEqual(episode.turns[1].kind, "repair-request")
+        self.assertEqual(episode.turns[2].kind, "code")
+        self.assertEqual(len(episode.turns), 4)
+        self.assertTrue(episode.solved)
+
+    def test_the_second_report_is_accepted(self):
+        silent = Observation(exit_code=0, stdout="", stderr="", timed_out=False, duration_ms=7)
+        client = ScriptedClient(["<code>max_month</code>", "<report>March</report>", "<report>3</report>"])
+        episode = run_episode(TASK, client, FakeSandbox([silent]), max_turns=4)
+        self.assertEqual(episode.forced_repairs, 1)
+        self.assertTrue(episode.solved)  # 3 is the task's answer; the harness does not insist twice
 
     def test_prose_stops_the_episode_as_a_protocol_error(self):
         client = ScriptedClient(["The answer is 3."])

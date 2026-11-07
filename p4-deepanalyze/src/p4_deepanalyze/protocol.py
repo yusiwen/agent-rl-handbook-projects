@@ -50,6 +50,14 @@ Rules:
 """
 
 
+#: Shown when a report follows a run whose output held no single value.
+REPAIR_REQUEST = (
+    "You reported an answer, but your last program did not print a single value for the model "
+    "to read (it printed nothing, or it printed many lines). Run one more program that prints "
+    "exactly one value, then report that value."
+)
+
+
 class ProtocolError(ValueError):
     """A reply that cannot be turned into exactly one action."""
 

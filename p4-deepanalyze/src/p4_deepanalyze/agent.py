@@ -51,6 +51,7 @@ class Episode:
     sandbox_errors: int = 0
     timeouts: int = 0
     lost_turns: int = 0  # runs whose output was empty or not a scalar
+    forced_repairs: int = 0  # reports refused because the last run printed no usable value
     model: str = ""
     code_sha: str = ""
     seconds: float = 0.0
@@ -85,6 +86,8 @@ def run_episode(
         {"role": "user", "content": first_message(task)},
     ]
     started = time.monotonic()
+    repairs_left = 1
+    last_warnings: list[str] = []
 
     for index in range(max_turns):
         reply = client.ask(messages)
@@ -97,6 +100,24 @@ def run_episode(
             break
 
         if action.kind == "report":
+            blocked = repairs_left > 0 and any(
+                item in ("no_output", "multiline_output") for item in last_warnings
+            )
+            if blocked:
+                # The model answered from an observation that contained no single value: an
+                # empty stdout, or a table where a number was asked for. Saying so once is not
+                # enough - a 1.7B model reads the note and answers anyway (measured: 4 of 6
+                # again, with both warnings firing). So the harness refuses the first such
+                # report and asks for one program that prints the value.
+                episode.forced_repairs += 1
+                repairs_left -= 1
+                episode.turns.append(
+                    Turn(index=index, reply=reply, kind="repair-request", warnings=list(last_warnings))
+                )
+                messages.append({"role": "assistant", "content": reply})
+                messages.append({"role": "user", "content": protocol.REPAIR_REQUEST})
+                last_warnings = []
+                continue
             episode.turns.append(Turn(index=index, reply=reply, kind="report"))
             episode.report = action.text
             episode.solved = verify.is_correct(action.text, task.expected, task.tolerance)
@@ -119,6 +140,7 @@ def run_episode(
             episode.sandbox_errors += 1
         if "no_output" in warnings or "multiline_output" in warnings:
             episode.lost_turns += 1
+        last_warnings = warnings
         messages.append({"role": "assistant", "content": reply})
         messages.append(
             {
