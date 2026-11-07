@@ -72,18 +72,32 @@ def served_models(base_url: str) -> list[str]:
 
 
 def load_adapter(base_url: str, name: str, path: str) -> None:
-    # load_inplace makes a rerun of the same experiment work: the server refuses to add a second
-    # adapter under a name it already knows, which is correct behaviour and a nuisance when the
-    # previous attempt was interrupted halfway through a version sequence.
-    payload = json.dumps({"lora_name": name, "lora_path": path, "load_inplace": True}).encode()
-    request = urllib.request.Request(
-        f"{base_url}/v1/load_lora_adapter", data=payload, headers={"Content-Type": "application/json"}
-    )
-    try:
+    # Load, and if the server already knows the name, unload then load.  `load_inplace` was the
+    # first attempt: it overwrites the weights of an existing adapter but leaves the registry entry
+    # pointing at the old name, so a version sequence silently stops being addressable - the run
+    # looks healthy, the workers keep asking for a name nobody registered, and /v1/models stops
+    # growing.  Unload first; the cost is one round trip.
+    def post(url: str, body: dict) -> None:
+        request = urllib.request.Request(
+            f"{base_url}{url}", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}
+        )
         with urllib.request.urlopen(request, timeout=120) as response:
             response.read()
+
+    def attempt() -> None:
+        post("/v1/load_lora_adapter", {"lora_name": name, "lora_path": path})
+
+    try:
+        attempt()
     except urllib.error.HTTPError as exc:
-        raise SystemExit(f"adapter load failed for {name}: {exc.code} {exc.read()[:300]!r}") from exc
+        if exc.code != 400:
+            raise SystemExit(f"adapter load failed for {name}: {exc.code} {exc.read()[:300]!r}") from exc
+        try:
+            post("/v1/unload_lora_adapter", {"lora_name": name})
+        except urllib.error.HTTPError as unload_exc:
+            if unload_exc.code != 404:
+                raise SystemExit(f"adapter unload failed for {name}: {unload_exc.code}") from unload_exc
+        attempt()
 
 
 # ----------------------------------------------------------------------------------------------
