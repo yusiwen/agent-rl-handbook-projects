@@ -18,7 +18,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "src"))
 
-from p4_deepanalyze import protocol, verify  # noqa: E402
+from p4_deepanalyze import protocol, rlmath, verify  # noqa: E402
 from p4_deepanalyze.agent import run_episode  # noqa: E402
 from p4_deepanalyze.client import ScriptedClient  # noqa: E402
 from p4_deepanalyze.sandbox import LocalSandbox, Observation  # noqa: E402
@@ -49,6 +49,34 @@ class FakeSandbox:
 
 def _clean() -> Observation:
     return Observation(exit_code=0, stdout="3\n", stderr="", timed_out=False, duration_ms=5)
+
+
+class RLMathTests(unittest.TestCase):
+    def test_the_executor_decides(self):
+        self.assertEqual(rlmath.reward_for(solved=True, ran_ok=True), 1.0)
+        self.assertEqual(rlmath.reward_for(solved=True, ran_ok=False), 1.0)
+        self.assertEqual(rlmath.reward_for(solved=False, ran_ok=True), 0.2)
+        self.assertEqual(rlmath.reward_for(solved=False, ran_ok=False), 0.0)
+
+    def test_a_group_without_spread_teaches_nothing(self):
+        self.assertEqual(rlmath.advantages([1.0, 1.0, 1.0]), [0.0, 0.0, 0.0])
+        self.assertEqual(rlmath.advantages([0.0, 0.0]), [0.0, 0.0])
+
+    def test_advantage_is_centred_on_the_group(self):
+        self.assertEqual(rlmath.advantages([1.0, 0.2, 0.2, 0.0]), [0.65, -0.15, -0.15, -0.35])
+
+    def test_no_standard_deviation_division(self):
+        # [0.2, 0.2, 0.2, 0.0] must stay smaller than [1.0, 0.2, 0.0, 0.0], not become larger.
+        quiet = rlmath.advantages([0.2, 0.2, 0.2, 0.0])
+        loud = rlmath.advantages([1.0, 0.2, 0.0, 0.0])
+        self.assertLess(max(quiet) - min(quiet), max(loud) - min(loud))
+
+    def test_group_report_counts_informative_groups(self):
+        report = rlmath.group_report({"a": [1.0, 1.0], "b": [1.0, 0.0]})
+        self.assertEqual(report["_summary"]["informative_groups"], 1)
+        self.assertEqual(report["_summary"]["uninformative_groups"], 1)
+        self.assertFalse(report["a"]["teaches"])
+        self.assertTrue(report["b"]["teaches"])
 
 
 class ProtocolTests(unittest.TestCase):
