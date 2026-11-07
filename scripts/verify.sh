@@ -50,7 +50,7 @@ run() {
 # Every script must at least parse. The tests import the packages; the `env/` scripts are only
 # ever run inside a container, so a broken one would otherwise reach a commit unseen - which is
 # exactly how a mangled call got into p3-verl/env/rl_served.py and survived a green gate.
-python_roots="common p1-verifiers p2-reagent p3-verl datasets scripts"
+python_roots="common p1-verifiers p2-reagent p3-verl p4-deepanalyze datasets scripts"
 if ! python3 -m compileall -q $python_roots >/dev/null; then
   echo "   FAILED: a Python file does not parse"
   status=1
@@ -64,6 +64,8 @@ run "p1 tests" python3 -m unittest discover -s p1-verifiers/tests -t p1-verifier
 run "p1 check (fixtures)" python3 p1-verifiers/checks/check_p1.py
 run "p2 tests" python3 -m unittest discover -s p2-reagent/tests -t p2-reagent/tests
 run "p2 check (loop)" python3 p2-reagent/checks/check_p2.py
+run "p4 tests" python3 -m unittest discover -s p4-deepanalyze/tests -t p4-deepanalyze/tests
+run "p4 check (loop)" python3 p4-deepanalyze/checks/check_p4.py
 run "p3 eval-claims (arithmetic)" python3 p3-verl/checks/eval_claims.py --check
 run "p3 eval-claims (selftest)" python3 p3-verl/checks/eval_claims.py --selftest
 # The records themselves are gitignored, so this half runs where they exist and is skipped on a
