@@ -67,7 +67,10 @@ def chat(base_url: str, model: str, messages: list[dict], temperature: float, ma
 
 
 def load_adapter(base_url: str, name: str, path: str) -> None:
-    payload = json.dumps({"lora_name": name, "lora_path": path}).encode()
+    # load_inplace makes a rerun of the same experiment work: the server refuses to add a second
+    # adapter under a name it already knows, which is correct behaviour and a nuisance when the
+    # previous attempt was interrupted halfway through a version sequence.
+    payload = json.dumps({"lora_name": name, "lora_path": path, "load_inplace": True}).encode()
     request = urllib.request.Request(
         f"{base_url}/v1/load_lora_adapter", data=payload, headers={"Content-Type": "application/json"}
     )
