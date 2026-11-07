@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--tasks", default=str(HERE / "fixtures" / "tasks.jsonl"))
     parser.add_argument("--runs-dir", default=None)
     parser.add_argument("--code-sha", default="git:none")
-    parser.add_argument("--max-turns", type=int, default=4)
+    parser.add_argument("--max-turns", type=int, default=6)
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max-tokens", type=int, default=512)

@@ -45,6 +45,10 @@ or, when you know the answer:
 Rules:
 - The code you write is run in a fresh sandbox with the table in the current directory.
   You see its stdout and stderr.
+- Each program runs as a separate process: variables from an earlier turn do not exist.
+  Read the table again in every program - nothing carries over.
+- Print exactly one value, with print(...). A program that computes the answer and prints
+  nothing gives the harness nothing to read.
 - Report the answer itself, not the code and not a description of how you got it.
 - If a run fails, read the error and write a different program.
 """

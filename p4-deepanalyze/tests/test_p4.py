@@ -93,6 +93,10 @@ class ProtocolTests(unittest.TestCase):
         self.assertIn("printed 3 lines", text)
         self.assertIn("single value", text)
 
+    def test_the_prompt_says_each_program_is_a_new_process(self):
+        self.assertIn("variables from an earlier turn do not exist", protocol.SYSTEM_PROMPT)
+        self.assertIn("Print exactly one value", protocol.SYSTEM_PROMPT)
+
     def test_a_clean_single_value_run_has_no_warnings(self):
         self.assertEqual(protocol.observation_warnings(0, "1740.0\n", "", False), [])
         self.assertEqual(protocol.observation_warnings(1, "", "KeyError", False), [])
