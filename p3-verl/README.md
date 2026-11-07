@@ -152,9 +152,9 @@ Three things this establishes, and one it exposes:
 Two rungs were tried above the calibrated band. The first was not a rung at all: the six tasks the SFT
 policy fails 60 of 60 times at `temperature 1.0` (`runs/p3-rl-served-6`, `code_sha git:2042a8c`).
 Every group is a constant, so the advantage is exactly zero and the update is exactly zero - a wall in
-the algorithm's precondition, not in the task. At `temperature 1.7` the same six produce 4 of 60
-(`-8`), one update takes them to 60 of 60 (`-9`), and the learned adapter solves all sixty greedily as
-well (`-10`, `reward_mean` 1.0): it is a policy, not a lucky sampler. That also explains the earlier
+the algorithm's precondition, not in the task. At `temperature 1.7` the same six produce 3 of 60
+(`-8`), one update takes them to 60 of 60 (`-9`, whose round 0 sampled 4 of 60), and the learned
+adapter solves all sixty greedily as well (`-10`, `reward_mean` 1.0): it is a policy, not a lucky sampler. That also explains the earlier
 five-sample plateau from the other side - those groups were all-wrong at five samples too, and an
 all-wrong group contributes no gradient.
 
@@ -164,8 +164,16 @@ report, exactly the six-turn budget - and three files tasks over five-file direc
 
 | set | greedy (T=0) | T=1.7 |
 | --- | --- | --- |
-| files, five-file directories | **30/30** | 24/30 |
+| files, five-file directories | **30/30** | 16/30 |
 | ledger, five-step ordered plan | **0/30** | 0/30 |
+
+**A correction, because the number was wrong here first.** This table used to read 24/30 for files at
+T=1.7. That count came from `extras.goal_met`, which says the *world* is in the requested state; a task
+whose file was deleted correctly but that reported 5 where the task asked for 4 has `goal_met` true and is
+not solved. Recounting with the environment's own definition - finished, reported the expected answer, world
+right - gives 16 of 30. The same mistake inflated the band rung by one (`-8`: 3, not 4). Both are now
+generated from the records by `p3-verl/checks/make_eval_claims.py` and checked by
+`p3-verl/checks/eval_claims.py`, whose selftest fails if `goal_met` is ever counted as a solve again.
 
 The ledger rung fails in a specific and instructive way: the reported totals are right (5 and 8 in ten
 of ten samples at T=0; 8 in ten of ten at T=1.7) and `goal_met` is false in every one, because the plan
