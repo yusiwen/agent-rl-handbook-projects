@@ -90,6 +90,28 @@ Two consequences, both recorded before any install:
 What is still unknown, and stays unknown until something runs: whether an NGC torch 2.14.0a0 build
 satisfies verl's expectations (no pin says), and what the memory ledger actually costs on one GPU.
 
+**Measured 2026-11-07 - and the second consequence above was wrong.** Installed in a 21 GB venv over
+the NGC torch (`--system-site-packages`), under three minutes: verl 0.9.1, transformers 5.10.4,
+ray **2.60.0**, numpy **2.1.0**, torch 2.14.0a0+b2c75dd062.nv26.9. Two of those differ from the
+resolution predicted above, which is the difference between a resolver and an install.
+
+`rollout.name=hf` is **not available in 0.9.1**. `_ROLLOUT_REGISTRY` in `verl/workers/rollout/base.py`
+holds exactly three entries - `("vllm","async")`, `("sglang","async"`, `("trtllm","async")` - and
+`hf_rollout.py`, though present in the package, is not reachable from the PPO trainer. So the plan's
+central avoidance ("do not install vLLM") does not survive contact with the tag, and a GRPO run on
+this machine needs a vLLM/SGLang build matched to NGC torch on aarch64; `pip install --dry-run vllm`
+did not finish resolving in seven minutes.
+
+What does run is the supervised path, and it is measured: `torch.distributed.run --standalone
+--nproc_per_node=1 -m verl.trainer.sft_trainer`, Qwen3-1.7B, four rows, two steps, FSDP. Before the
+wrap 0.00 GB allocated (device 78.94/121.63 GB, the inference server resident); after it **6.41 GB
+allocated / 7.78 GB reserved**; peak **32.11 GB allocated / 34.21 GB reserved**; host 58.3 GB; wall
+1m52s for two steps, the first 4.55 s, validation about 100 s. Three launch failures had to be fixed
+first: a missing `uvicorn` (imported, not declared), wandb's API key on the default logger, and the
+multi-turn dataset's `input_ids` mismatch (`data.ignore_input_ids_mismatch=true`).
+
+Chapter 9 of the book is written from these numbers, including what could not be run.
+
 ## The loop, closed
 
 `env/rl_served.py` is the join: each round samples over HTTP from whatever adapter the server is
