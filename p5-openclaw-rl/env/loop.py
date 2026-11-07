@@ -354,7 +354,9 @@ def main(argv: list[str] | None = None) -> int:
         target.mkdir(parents=True, exist_ok=True)
         model.save_pretrained(target / "adapter")
         tokeniser.save_pretrained(target / "adapter")
-        load_adapter(args.base_url, next_name, f"/models/p5-v{next_index}/adapter")
+        # The served path is the saved path: both live under the volume mounted at /models.  Deriving
+        # it from the same variable is the only way the two cannot disagree.
+        load_adapter(args.base_url, next_name, f"{target.as_posix()}/adapter")
         version.bump(next_name)
 
     stop.set()
