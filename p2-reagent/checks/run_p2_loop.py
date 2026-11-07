@@ -91,7 +91,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model", help="judge model name")
     parser.add_argument("--band-low", type=float, default=0.5, help="budget: lower edge of the uncertain band")
     parser.add_argument("--band-high", type=float, default=0.9, help="budget: upper edge")
-    parser.add_argument("--runs-dir", default="runs", help="where run records go (gitignored)")
+    parser.add_argument(
+        "--runs-dir",
+        default=None,
+        help="where run records go; defaults to $ARL_RUNS_DIR, then runs/ (gitignored)",
+    )
     parser.add_argument("--json", help="also write the round summaries here")
     args = parser.parse_args(argv)
 

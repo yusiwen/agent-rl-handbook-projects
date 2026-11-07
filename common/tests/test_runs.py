@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from common.runs import (
     RunHeader,
@@ -107,6 +109,25 @@ class RunWriterTests(unittest.TestCase):
             raw = (Path(tmp) / "test-run" / "round-000.jsonl").read_text().strip().splitlines()
             self.assertEqual(len(raw), 6)
             self.assertEqual(json.loads(raw[0])["episode_id"], "p1-s0")
+
+    def test_runs_dir_environment_variable_decides_where_records_go(self) -> None:
+        """The gate sets ARL_RUNS_DIR so that verifying the tree does not edit it."""
+        header = RunHeader(run_id="env-run", env_version="v", config_hash="h",
+                           code_sha="c", project="p1-verifiers")
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict(os.environ, {"ARL_RUNS_DIR": tmp}):
+                writer = RunWriter(header)
+                self.assertEqual(writer.dir.parent.resolve(), Path(tmp).resolve())
+                self.assertTrue((writer.dir / "header.json").exists())
+
+    def test_an_explicit_root_beats_the_environment(self) -> None:
+        """A caller that names a directory means it, whatever the environment says."""
+        header = RunHeader(run_id="explicit-run", env_version="v", config_hash="h",
+                           code_sha="c", project="p1-verifiers")
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as other:
+            with mock.patch.dict(os.environ, {"ARL_RUNS_DIR": other}):
+                writer = RunWriter(header, root=tmp)
+                self.assertEqual(writer.dir.parent.resolve(), Path(tmp).resolve())
 
     def test_reading_a_run_with_no_rounds_is_empty(self) -> None:
         header = RunHeader(run_id="empty", env_version="v", config_hash="h",

@@ -24,6 +24,16 @@ set -uo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO" || exit 1
 
+# The gate runs a fixture loop, and every run writes a run record.  Send those to a scratch
+# directory instead: records of real runs are evidence, and a verification pass must not add to
+# them.  The handbook's roadmap counts runs/*/header.json, so before this, verifying the code
+# changed the book's roadmap and turned the book's own step 6 red.
+if [ -z "${ARL_RUNS_DIR:-}" ]; then
+  ARL_RUNS_DIR="$(mktemp -d)"
+  export ARL_RUNS_DIR
+  trap 'rm -rf "$ARL_RUNS_DIR"' EXIT
+fi
+
 status=0
 run() {
   local label="$1"

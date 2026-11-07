@@ -43,8 +43,9 @@ all checks passed
 ```
 
 442 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
-writes a run record to `runs/` (gitignored); set `ARL_RUNS_DIR` to send it elsewhere, which is
-what a CI job or a sandbox does. If the gate fails, the problem is in this repository rather
+writes a run record to `runs/` (gitignored). The gate itself sets `ARL_RUNS_DIR` to a scratch
+directory, so verifying the tree never adds a record to it; set the same variable to send your own
+runs elsewhere. If the gate fails, the problem is in this repository rather
 than in your environment - which is the whole reason it exists.
 
 ## The environment is pinned

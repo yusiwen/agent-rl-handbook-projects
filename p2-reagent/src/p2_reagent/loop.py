@@ -445,7 +445,7 @@ def run_loop(
     policy: TabularPolicy | None = None,
     writer: RunWriter | None = None,
     code_sha: str = "git:none",
-    runs_dir: str = "runs",
+    runs_dir: str | None = None,
     out: Callable[[str], None] = print,
 ) -> list[RoundResult]:
     """Run every round, writing one run record for the loop and printing the evidence."""

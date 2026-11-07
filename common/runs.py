@@ -176,15 +176,31 @@ def _free_run_dir(root: Path, run_id: str) -> Path:
     raise FileExistsError(f"no free run directory for {run_id!r} under {root}")
 
 
+def runs_root(explicit: str | os.PathLike[str] | None = None) -> Path:
+    """Where a run record goes: the caller's choice, then ``$ARL_RUNS_DIR``, then ``runs/``.
+
+    The environment variable exists because the gate writes a record every time it runs.  A
+    directory that grows when you merely verify the repository makes every count derived from it
+    stale - the handbook's roadmap totals ``runs/*/header.json``, so running one gate turned step
+    6 of the book's gate red.  A gate should be able to inspect a tree without editing it.
+    """
+
+    if explicit is not None:
+        return Path(explicit)
+    return Path(os.environ.get("ARL_RUNS_DIR") or "runs")
+
+
 class RunWriter:
     """Writes ``<root>/<run_id>/{header.json,rounds.jsonl}``.
 
-    ``root`` defaults to ``runs/``, which ``.gitignore`` keeps out of the repository:
-    the *format* is versioned, the *rows* are not.
+    ``root`` falls back to ``$ARL_RUNS_DIR``, then to ``runs/``, which ``.gitignore`` keeps out of
+    the repository: the *format* is versioned, the *rows* are not.
     """
 
-    def __init__(self, header: RunHeader, root: str | os.PathLike[str] = "runs") -> None:
-        self.dir = _free_run_dir(Path(root), header.run_id)
+    def __init__(
+        self, header: RunHeader, root: str | os.PathLike[str] | None = None
+    ) -> None:
+        self.dir = _free_run_dir(runs_root(root), header.run_id)
         self.header = (
             header if self.dir.name == header.run_id else replace(header, run_id=self.dir.name)
         )
