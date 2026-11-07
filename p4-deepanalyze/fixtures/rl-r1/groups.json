@@ -1,0 +1,55 @@
+{
+  "_summary": {
+    "groups": 6,
+    "informative_groups": 2,
+    "uninformative_groups": 4
+  },
+  "p4-inventory-shortfall": {
+    "max": 1.0,
+    "min": 1.0,
+    "samples": 4,
+    "solved": 4,
+    "spread": 0.0,
+    "teaches": false
+  },
+  "p4-orders-biggest-month": {
+    "max": 1.0,
+    "min": 1.0,
+    "samples": 4,
+    "solved": 4,
+    "spread": 0.0,
+    "teaches": false
+  },
+  "p4-sales-north": {
+    "max": 1.0,
+    "min": 1.0,
+    "samples": 4,
+    "solved": 4,
+    "spread": 0.0,
+    "teaches": false
+  },
+  "p4-sales-top-product": {
+    "max": 1.0,
+    "min": 1.0,
+    "samples": 4,
+    "solved": 4,
+    "spread": 0.0,
+    "teaches": false
+  },
+  "p4-students-pass-rate": {
+    "max": 1.0,
+    "min": 0.0,
+    "samples": 4,
+    "solved": 3,
+    "spread": 1.0,
+    "teaches": true
+  },
+  "p4-temps-mean": {
+    "max": 1.0,
+    "min": 0.0,
+    "samples": 4,
+    "solved": 2,
+    "spread": 1.0,
+    "teaches": true
+  }
+}

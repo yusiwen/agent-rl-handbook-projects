@@ -30,6 +30,9 @@ CLAIMS: tuple[tuple[str, str, str], ...] = (
     ("p4-20261107-213747", "cold start v1 (12 epochs, loss 0.0001): held-out", "coldstart"),
     ("p4-20261107-213756", "cold start v1 on the tasks it was trained on: the format slips", "coldstart"),
     ("p4-20261107-214035", "cold start v2 (4 epochs, loss 0.076): held-out, all six", "coldstart"),
+    ("p4-20261107-223831", "one RL step at lr 1e-5: held-out, unchanged", "rl"),
+    ("p4-20261107-224047", "one RL step at lr 5e-5: held-out, four of six", "rl"),
+    ("p4-20261107-223840", "one RL step at lr 5e-5, positive advantage only: held-out", "rl"),
 )
 
 

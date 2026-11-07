@@ -19,6 +19,7 @@ Docker executor is checked by the run itself (`summary.json` carries the health 
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import unittest
@@ -42,11 +43,37 @@ from p4_deepanalyze.oracles import ORACLE  # noqa: E402
 FIXTURES_SET = (FIXTURES, HERE.parent / "fixtures" / "tasks-heldout.jsonl")
 
 
+def summaries_of(rewards: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rewards:
+        counts[row["task_id"]] = counts.get(row["task_id"], 0) + (1 if row["solved"] else 0)
+    return counts
+
+
 class FixtureTests(unittest.TestCase):
     def test_every_task_family_has_an_oracle(self):
         for path in FIXTURES_SET:
             with self.subTest(fixtures=path.name):
                 self.assertEqual({task.family for task in load(path)}, set(ORACLE))
+
+    def test_the_rl_group_report_agrees_with_its_rewards(self):
+        """The chapter quotes "2 of 6 groups taught anything": check it against the rows."""
+        root = HERE.parent / "fixtures" / "rl-r1"
+        rewards = [json.loads(line) for line in (root / "rewards.jsonl").read_text(encoding="utf-8").splitlines()]
+        groups = json.loads((root / "groups.json").read_text(encoding="utf-8"))
+        summary = groups.pop("_summary")
+        self.assertEqual(summary["groups"], len({row["task_id"] for row in rewards}))
+        self.assertEqual(summaries_of(rewards), {task: group["solved"] for task, group in groups.items()})
+        self.assertEqual(summary["informative_groups"], sum(1 for group in groups.values() if group["teaches"]))
+        full = json.loads((root / "update-p4-rl-full.json").read_text(encoding="utf-8"))
+        positive = json.loads((root / "update-p4-rl-positive.json").read_text(encoding="utf-8"))
+        informative = {task for task, group in groups.items() if group["teaches"]}
+        self.assertEqual(full["used"], sum(1 for row in rewards if row["task_id"] in informative))
+        self.assertEqual(positive["used"], sum(1 for row in rewards if row["reward"] > 0 and row["task_id"] in informative))
+        self.assertEqual(full["samples"], len(rewards))
+        self.assertEqual(full["steps"], full["used"])
+        self.assertFalse(full["positive_only"])
+        self.assertTrue(positive["positive_only"])
 
     def test_both_fixture_files_are_current(self):
         build = HERE.parent / "fixtures" / "build_tasks.py"

@@ -1,0 +1,8 @@
+{
+  "lr": 5e-05,
+  "mean_loss": 0.1202,
+  "positive_only": true,
+  "samples": 24,
+  "steps": 5,
+  "used": 5
+}

@@ -94,9 +94,11 @@ def sample(args) -> int:
                 generated[:, batch["input_ids"].shape[1] :], skip_special_tokens=True
             )
             for index, (messages, reply) in enumerate(zip(prompts, replies)):
+                if finished[index]:
+                    continue
                 reply = reply.strip()
                 try:
-                    action = protocol.parse_actions(reply)[0] if len(protocol.parse_actions(reply)) == 1 else None
+                    action = protocol.parse(reply)
                 except protocol.ProtocolError:
                     action = None
                 history = list(messages) + [{"role": "assistant", "content": reply}]
@@ -143,12 +145,9 @@ def replay(rollout: dict, task, sandbox) -> tuple[bool, bool, list[str]]:
     printed = ""
     for turn in rollout["turns"]:
         try:
-            actions = protocol.parse_actions(turn["reply"])
+            action = protocol.parse(turn["reply"])
         except protocol.ProtocolError:
             continue
-        if len(actions) != 1:
-            continue
-        action = actions[0]
         if action.kind == "code":
             observation = sandbox.run(action.text, task.files())
             if observation.exit_code == 0 and observation.stdout.strip():
@@ -177,17 +176,14 @@ def reward(args) -> int:
 
     groups: dict[str, list[float]] = {}
     out_lines: list[str] = []
-    disagreements = 0
+    answered_without_running = 0
     for key, record in sorted(records.items()):
         task = tasks[record["task_id"]]
         solved, ran_ok, printed = replay(record, task, sandbox)
-        local_solved = any(
-            is_correct(turn["observation"]["stdout"].strip(), task.expected, task.tolerance)
-            for turn in record["turns"]
-            if turn.get("observation") and turn["observation"].get("exit_code") == 0
-        ) and record["report"] is not None and is_correct(record["report"], task.expected, task.tolerance)
-        if local_solved != solved:
-            disagreements += 1
+        if solved and not ran_ok:
+            # The report was right and no program produced a value: a guess that happened to land.
+            # Worth counting separately - it is the same failure the harness refuses in eval.
+            answered_without_running += 1
         value = rlmath.reward_for(solved=solved, ran_ok=ran_ok)
         groups.setdefault(record["task_id"], []).append(value)
         out_lines.append(json.dumps({
@@ -195,7 +191,6 @@ def reward(args) -> int:
             "sample": record["sample"],
             "solved": solved,
             "ran_ok": ran_ok,
-            "local_solved": local_solved,
             "reward": value,
             "printed": printed,
         }, sort_keys=True))
@@ -206,7 +201,7 @@ def reward(args) -> int:
     summary = report["_summary"]
     print(f"groups: {summary['groups']}, informative: {summary['informative_groups']}, "
           f"uninformative: {summary['uninformative_groups']}")
-    print(f"executor disagreements (local vs container): {disagreements}")
+    print(f"solved without a runnable program (a lucky guess): {answered_without_running}")
     for task_id, row in report.items():
         if task_id == "_summary":
             continue
@@ -234,12 +229,20 @@ def update(args) -> int:
         for row, advantage in zip(rows, rlmath.advantages(values)):
             row["advantage"] = advantage
 
+    if args.positive_only:
+        # Whole-reply REINFORCE punishes every token of a nearly correct program when the answer
+        # is wrong, which teaches the model to avoid the API it used. Keeping only the winners is
+        # a blunt experiment, and it is the cheapest way to find out whether that is the mechanism.
+        for row in rewards:
+            row["advantage"] = max(row["advantage"], 0.0)
     used = [row for row in rewards if row["advantage"] != 0.0]
     print(f"samples: {len(rewards)}, with a non-zero advantage: {len(used)}")
     if not used:
         print("nothing to learn: every group scored the same. This is a measurement, not a failure.")
-        (run_dir / "update.json").write_text(
-            json.dumps({"samples": len(rewards), "used": 0, "advantage": "all zero", "steps": 0}, indent=2) + "\n",
+        tag = Path(args.out).name or "update"
+        (run_dir / f"update-{tag}.json").write_text(
+            json.dumps({"samples": len(rewards), "used": 0, "advantage": "all zero", "steps": 0,
+                        "lr": args.lr, "positive_only": bool(args.positive_only)}, indent=2) + "\n",
             encoding="utf-8",
         )
         return 0
@@ -285,8 +288,10 @@ def update(args) -> int:
     model.save_pretrained(out / "adapter")
     tokeniser.save_pretrained(out / "adapter")
     summary = {"samples": len(rewards), "used": len(used), "steps": steps,
-               "mean_loss": round(total_loss / max(steps, 1), 4), "lr": args.lr}
-    (run_dir / "update.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+               "mean_loss": round(total_loss / max(steps, 1), 4), "lr": args.lr,
+               "positive_only": bool(args.positive_only)}
+    tag = out.name or "update"
+    (run_dir / f"update-{tag}.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(summary))
     print(f"adapter: {out / 'adapter'}")
     return 0
@@ -306,6 +311,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--timeout", type=float, default=20.0)
     parser.add_argument("--image", default="arlh-p4-sandbox:1")
     parser.add_argument("--lr", type=float, default=5e-5)
+    parser.add_argument("--positive-only", action="store_true")
     parser.add_argument("--out", default="/work/p4-rl")
     args = parser.parse_args(argv)
 

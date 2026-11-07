@@ -377,6 +377,132 @@
       "solved": 6,
       "tasks": 6,
       "timeouts": 0
+    },
+    {
+      "code_runs": 6,
+      "code_sha": "git:d7ce576",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 0,
+      "label": "one RL step at lr 1e-5: held-out, unchanged",
+      "lost_turns": 0,
+      "model": "p4-rl-lr1e5",
+      "per_task": {
+        "p4h-inventory-shortfall": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-orders-biggest-month": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-students-pass-rate": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-temps-mean": {
+          "reason": "match",
+          "solved": true
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-223831",
+      "sandbox_errors": 0,
+      "section": "rl",
+      "solved": 6,
+      "tasks": 6,
+      "timeouts": 0
+    },
+    {
+      "code_runs": 16,
+      "code_sha": "git:d7ce576",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 0,
+      "label": "one RL step at lr 5e-5: held-out, four of six",
+      "lost_turns": 0,
+      "model": "p4-rl-full",
+      "per_task": {
+        "p4h-inventory-shortfall": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-orders-biggest-month": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-students-pass-rate": {
+          "reason": "no report within 6 turns",
+          "solved": false
+        },
+        "p4h-temps-mean": {
+          "reason": "no report within 6 turns",
+          "solved": false
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-224047",
+      "sandbox_errors": 12,
+      "section": "rl",
+      "solved": 4,
+      "tasks": 6,
+      "timeouts": 0
+    },
+    {
+      "code_runs": 11,
+      "code_sha": "git:d7ce576",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 0,
+      "label": "one RL step at lr 5e-5, positive advantage only: held-out",
+      "lost_turns": 0,
+      "model": "p4-rl-pos",
+      "per_task": {
+        "p4h-inventory-shortfall": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-orders-biggest-month": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-students-pass-rate": {
+          "reason": "no report within 6 turns",
+          "solved": false
+        },
+        "p4h-temps-mean": {
+          "reason": "match",
+          "solved": true
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-223840",
+      "sandbox_errors": 6,
+      "section": "rl",
+      "solved": 5,
+      "tasks": 6,
+      "timeouts": 0
     }
   ]
 }

@@ -24,6 +24,34 @@ The fine-tune fixes the behaviour the demonstrations taught - the base model's r
 `stock - reorder_level` disappears on rows it never saw - and training to loss 0.0001 costs the
 marker format (v1 reproduced the oracle verbatim, without `<code>`). Stopping at 0.076 keeps both.
 
+## The reinforcement step
+
+`env/rl.py` runs in three phases, because the reward needs an executor the trainer does not have:
+`sample` (GPU) -> `reward` (host, Docker) -> `update` (GPU). Twenty-four rollouts from the
+cold-started policy, temperature 0.8:
+
+| group | solved | spread |
+| --- | --- | --- |
+| `sales-north`, `sales-top-product`, `orders-biggest-month`, `inventory-shortfall` | 4/4 | 0.0 |
+| `students-pass-rate` | 3/4 | 1.0 |
+| `temps-mean` | 2/4 | 1.0 |
+
+Four of six groups had no spread, so eight samples carried the whole update - and the update made
+the policy worse at the size that changed anything:
+
+| update | held-out | code runs | sandbox errors |
+| --- | --- | --- | --- |
+| cold start, no RL | 6/6 | 6 | 0 |
+| lr 1e-5, 8 steps | 6/6 | 6 | 0 |
+| lr 5e-5, 8 steps | **4/6** | 16 | 12 |
+| lr 5e-5, positive advantage only | 5/6 | 11 | 6 |
+
+The damage is legible: six consecutive `AttributeError: 'DictReader' object has no attribute ...`
+from a policy that had been writing that program correctly. The evidence is committed under
+`fixtures/rl-r1/` (`rewards.jsonl`, `groups.json`, both update records) and the gate checks the
+group report against the rows. What this stage needs is a task set the policy does not already
+solve, and many more rollouts per group - not a different learning rate.
+
 Same policy (`qwen3-1.7b-base`, temperature 0), same six fixtures, same prompt, `code_sha
 git:62fc34e`. Only the executor changed. The 1/6 is the more instructive number: every program
 asked for a library that was not installed, so the environment - not the model - decided the score,
