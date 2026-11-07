@@ -241,9 +241,13 @@ def main(argv: list[str] | None = None) -> int:
             dataset=",".join(args.tasks),
             dataset_digest="sha256:" + hashlib.sha256(",".join(args.tasks).encode()).hexdigest()[:16],
             notes=(
-                f"samples={args.samples}; rounds={args.rounds}; epochs={args.epochs}; lr={args.lr}; "
-                f"served={args.serve_policy}; sync=load_lora_adapter"
-                + ("; eval-only (no update)" if args.eval_only else "")
+                f"samples={args.samples}; rounds={args.rounds}; "
+                + (
+                    "eval-only: no epochs, no lr, no update; "
+                    if args.eval_only
+                    else f"epochs={args.epochs}; lr={args.lr}; "
+                )
+                + f"served={args.serve_policy}; sync=load_lora_adapter"
             ),
         ),
         root=args.runs_dir,
