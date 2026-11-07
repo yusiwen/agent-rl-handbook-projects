@@ -363,7 +363,10 @@ def main(argv: list[str] | None = None) -> int:
 
         # weight sync: save, load under a new name, and let the workers pick it up
         next_index = credit.version_index(current) + 1
-        next_name = f"p5-v{next_index}"
+        # The name must follow the run's own prefix, or two experiments share a version namespace
+        # and the server quietly serves one experiment's weights under the other's name.
+        prefix = current.rsplit("v", 1)[0] or "p5-"
+        next_name = f"{prefix}v{next_index}"
         target = Path(f"{args.model_path_prefix}-v{next_index}")
         target.mkdir(parents=True, exist_ok=True)
         model.save_pretrained(target / "adapter")
