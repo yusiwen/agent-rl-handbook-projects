@@ -247,6 +247,50 @@ enough to repair the swap in six rounds: the same mistake, in the same place, ev
 that leaves the final state unchanged is the hardest kind to charge, because the epoch's reward is
 identical for both orders - only the intermediate state differs, and only one turn sees it.
 
+## Demonstration versus reward, on the same six plans
+
+The three-tier result above closes the loop, and it leaves the obvious objection open: if a demonstration
+of five ordered moves teaches the same thing, why build a process reward at all. The experiment is cheap
+enough to run rather than argue. Three five-step ledger plans the policy has seen (`hard-ledger-5s01..03`),
+three more generated in the same family and never seen by anything (`fixtures/holdout.jsonl`), ten greedy
+samples each, sixty rollouts per policy, `--eval-only` so the number describes the adapter the server holds
+rather than a copy of it (`runs/p3-rl-served-39..42`, `code_sha git:ea05ca9`).
+
+The supervised arm saw the oracle's own eighteen turns - three plans, six turns each - and nothing else.
+Two checkpoints, because the first one memorises and the question is whether that is what does the work:
+eight epochs took the loss from 4.80 to 0.0000 in thirty seconds, two epochs stopped at 0.0032 in eight.
+
+| policy | trained plans (30) | held-out plans (30) | total (60) |
+| --- | --- | --- | --- |
+| base, no fine-tune | 0 | 0 | 0 |
+| supervised, 2 epochs | 30 | 10 | 40 |
+| supervised, 8 epochs | **30** | 20 | **50** |
+| RL, three-tier credit (`-37`, six rounds) | 20 | **30** | **50** |
+
+Both learned arms reach fifty, and the fifty is composed differently. The supervised policy is perfect on
+the plans it was shown and loses one of the three it was not; the RL policy is perfect on the plans it was
+not shown - all thirty - and still loses `hard-ledger-5s02`, the commutativity failure the previous section
+could not charge. So demonstrations buy the sequence they demonstrate, and the reward buys a procedure that
+survives a change of numbers. Cutting the supervised run to two epochs says the same thing from the other
+side: 40 of 60, with the held-out share falling from twenty to ten, so what transfers is not the fine-tuning
+budget but the fitting of the procedure itself.
+
+The failures differ in kind, and that is the part worth keeping. The 8-epoch supervised policy on
+`hold-ledger-5h02` executes subtract 8, add 5, add 6, then **subtract 2** - a legal move, out of order,
+skipping add 3 - then add 3, then subtract 2 again, and runs out of turns without reporting:
+`signals=[ok, ok, ok, ok, ok, ok]`, `reported=None`. Every turn is legal and every signal says so; only the
+ordered prefix knows the plan is broken. The 2-epoch policy fails a different way on `hold-ledger-5h01`: it
+asks for `sub 3`, which is not on the menu, receives `error`, adds 3, then asks for `sub 3` again. The RL
+policy's only failure is the opposite shape - it does every move, in the wrong order for two of them, and
+reports the right number.
+
+That is the honest trade. A demonstration is cheaper to run (thirty seconds, no credit design) and more
+expensive to obtain (it needs an oracle, which exists here only because the task family is synthetic). A
+process reward costs a rule and six rounds, and it buys two things the demonstration does not: transfer to
+unseen plans, and a signal that says *which turn* went wrong. What neither method does is repair the
+commutativity error, because both orders earn the same outcome and the same final balance - that one still
+needs a state-level check or a longer charge than one turn.
+
 ## The server gets a ceiling too
 
 `SERVER_MEM` (default 32 GB) caps the inference container, for the same reason the training container
