@@ -124,7 +124,8 @@ def normalise(value: str) -> str:
         return text
 
 
-TASKS: tuple[Task, ...] = (
+#: The six tasks the demonstrations cover.
+DEMO_TASKS: tuple[Task, ...] = (
     Task(
         id="north-revenue",
         question="What was the North region's revenue in Q3? Answer with the number of currency units.",
@@ -168,6 +169,36 @@ TASKS: tuple[Task, ...] = (
         oracle_expression="12000 * 4.50 * 0.95",
     ),
 )
+
+
+#: Three harder tasks that no demonstration covers: the answer needs two or three documents and a
+#: calculation.  They exist because a loop trained on tasks a cold start already solves has no
+#: gradient, and the honest way to say that is to train on a set that includes some it does not.
+EXTRA_TASKS: tuple[Task, ...] = (
+    Task(
+        id="north-minus-east",
+        question="By how much did North's Q3 revenue exceed East's? Answer with the number.",
+        answer="55250",
+        oracle_docs=("q3-north", "q3-east"),
+        oracle_expression="412000 - 356750",
+    ),
+    Task(
+        id="total-revenue",
+        question="What was the total Q3 revenue across all three regions? Answer with the number.",
+        answer="1067250",
+        oracle_docs=("q3-north", "q3-south", "q3-east"),
+        oracle_expression="412000 + 298500 + 356750",
+    ),
+    Task(
+        id="bulk-discount",
+        question="What do 9000 widgets cost after the large-order discount? Answer with two decimals.",
+        answer="38475.00",
+        oracle_docs=("prices",),
+        oracle_expression="9000 * 4.50 * 0.95",
+    ),
+)
+
+TASKS: tuple[Task, ...] = DEMO_TASKS + EXTRA_TASKS
 
 
 def oracle_episode(task: Task) -> World:

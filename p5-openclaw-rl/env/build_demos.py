@@ -29,7 +29,7 @@ REPO = HERE.parents[1]
 sys.path.insert(0, str(HERE.parent / "src"))
 
 from p5_openclaw import protocol  # noqa: E402
-from p5_openclaw.world import TASKS, World, oracle_episode  # noqa: E402
+from p5_openclaw.world import DEMO_TASKS, World, oracle_episode  # noqa: E402
 
 OUT = HERE.parent / "fixtures" / "demonstrations.jsonl"
 
@@ -62,7 +62,7 @@ def trace(task) -> list[dict]:
 
 def build() -> list[dict]:
     rows: list[dict] = []
-    for task in TASKS:
+    for task in DEMO_TASKS:
         world = oracle_episode(task)
         if world.submitted is None:
             raise RuntimeError(f"{task.id}: the oracle did not submit")
@@ -89,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text, encoding="utf-8")
-    print(f"wrote {OUT.name}: {len(rows)} supervised turns over {len(TASKS)} tasks")
+    print(f"wrote {OUT.name}: {len(rows)} supervised turns over {len(DEMO_TASKS)} tasks")
     return 0
 
 

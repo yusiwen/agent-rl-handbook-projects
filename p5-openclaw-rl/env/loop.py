@@ -159,6 +159,13 @@ def rollout_worker(index: int, args, version: Version, samples: queue.Queue, sto
         samples.put(record)
 
 
+def _by_task(batch: list[dict]) -> dict[str, list[dict]]:
+    groups: dict[str, list[dict]] = {}
+    for sample in batch:
+        groups.setdefault(sample["task_id"], []).append(sample)
+    return groups
+
+
 def train_step(model, tokeniser, optimiser, batch: list[dict], reward_of) -> tuple[float, int]:
     """One policy-gradient step over a batch, with the group mean as the baseline."""
     import torch
@@ -215,7 +222,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--rounds", type=int, default=12)
     parser.add_argument("--batch", type=int, default=6)
     parser.add_argument("--workers", type=int, default=3)
-    parser.add_argument("--samples-per-task", type=int, default=2)
+    parser.add_argument("--samples-per-task", type=int, default=2,
+                        help="2 or more: a group of one sample has no baseline and teaches nothing")
     parser.add_argument("--temperature", type=float, default=0.8)
     parser.add_argument("--lr", type=float, default=3e-5)
     parser.add_argument("--stale-bound", type=int, default=1)
@@ -300,8 +308,10 @@ def main(argv: list[str] | None = None) -> int:
 
         loss, used = train_step(model, tokeniser, optimiser, keep, reward_of)
         trained += used
+        singleton = sum(1 for rows in _by_task(keep).values() if len(rows) < 2)
         record = {
             "round": round_index,
+            "singleton_groups": singleton,
             "trained_on": len(keep),
             "used": used,
             "dropped": len(batch) - len(keep),
@@ -315,6 +325,7 @@ def main(argv: list[str] | None = None) -> int:
         update_log.write(json.dumps(record, sort_keys=True) + "\n")
         print(
             f"round {round_index:2d}  batch {len(keep):2d}  used {used:2d}  dropped {record['dropped']}  "
+            f"singletons {singleton}  "
             f"stale mean {record['mean_staleness']:.2f} max {record['max_staleness']}  loss {loss:.4f}  "
             f"t {record['rounds_seconds']:.1f}s"
         )

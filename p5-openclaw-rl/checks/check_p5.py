@@ -19,7 +19,7 @@ REPO = HERE.parents[1]
 sys.path.insert(0, str(HERE.parent / "src"))
 
 from p5_openclaw import credit, protocol  # noqa: E402
-from p5_openclaw.world import TASKS, World, oracle_episode, solved  # noqa: E402
+from p5_openclaw.world import DEMO_TASKS, EXTRA_TASKS, TASKS, World, oracle_episode, solved  # noqa: E402
 
 DEMOS = HERE.parent / "fixtures" / "demonstrations.jsonl"
 
@@ -44,6 +44,14 @@ class WorldTests(unittest.TestCase):
         self.assertFalse(solved(world))
         world.step("submit", {"answer": TASKS[0].answer})
         self.assertTrue(solved(world))
+
+    def test_the_demonstrations_cover_six_tasks_and_leave_three(self):
+        """The headroom is the point: a loop trained only on demonstrated tasks has no gradient."""
+        demonstrated = {json.loads(line)["task_id"] for line in DEMOS.read_text(encoding="utf-8").splitlines()}
+        self.assertEqual(demonstrated, {task.id for task in DEMO_TASKS})
+        self.assertEqual(len(EXTRA_TASKS), 3)
+        self.assertEqual(len(TASKS), 9)
+        self.assertFalse(demonstrated & {task.id for task in EXTRA_TASKS})
 
     def test_the_oracle_uses_at_most_the_turn_budget(self):
         for task in TASKS:
