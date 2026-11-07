@@ -26,6 +26,10 @@ CLAIMS: tuple[tuple[str, str, str], ...] = (
     ("p4-20261107-204715", "warnings only: both flags fired, the model answered anyway", "repair"),
     ("p4-20261107-204827", "forced repair, four turns: the month task repaired, the other ran out", "repair"),
     ("p4-20261107-204926", "prompt states no state carries over, six turns: the month task first time", "repair"),
+    ("p4-20261107-213911", "base policy on the held-out tasks: the comparison", "coldstart"),
+    ("p4-20261107-213747", "cold start v1 (12 epochs, loss 0.0001): held-out", "coldstart"),
+    ("p4-20261107-213756", "cold start v1 on the tasks it was trained on: the format slips", "coldstart"),
+    ("p4-20261107-214035", "cold start v2 (4 epochs, loss 0.076): held-out, all six", "coldstart"),
 )
 
 

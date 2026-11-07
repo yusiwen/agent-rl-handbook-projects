@@ -209,6 +209,174 @@
       "solved": 5,
       "tasks": 6,
       "timeouts": 0
+    },
+    {
+      "code_runs": 7,
+      "code_sha": "git:bbd8023",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 1,
+      "label": "base policy on the held-out tasks: the comparison",
+      "lost_turns": 1,
+      "model": "qwen3-1.7b-base",
+      "per_task": {
+        "p4h-inventory-shortfall": {
+          "reason": "reported -50, expected 50",
+          "solved": false
+        },
+        "p4h-orders-biggest-month": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-students-pass-rate": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-temps-mean": {
+          "reason": "match",
+          "solved": true
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-213911",
+      "sandbox_errors": 0,
+      "section": "coldstart",
+      "solved": 5,
+      "tasks": 6,
+      "timeouts": 0
+    },
+    {
+      "code_runs": 5,
+      "code_sha": "git:bbd8023",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 0,
+      "label": "cold start v1 (12 epochs, loss 0.0001): held-out",
+      "lost_turns": 0,
+      "model": "p4-coldstart",
+      "per_task": {
+        "p4h-inventory-shortfall": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-orders-biggest-month": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-students-pass-rate": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-temps-mean": {
+          "reason": "protocol error: no marker",
+          "solved": false
+        }
+      },
+      "protocol_error_tasks": 1,
+      "run": "p4-20261107-213747",
+      "sandbox_errors": 0,
+      "section": "coldstart",
+      "solved": 5,
+      "tasks": 6,
+      "timeouts": 0
+    },
+    {
+      "code_runs": 4,
+      "code_sha": "git:bbd8023",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 0,
+      "label": "cold start v1 on the tasks it was trained on: the format slips",
+      "lost_turns": 0,
+      "model": "p4-coldstart",
+      "per_task": {
+        "p4-inventory-shortfall": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-orders-biggest-month": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-students-pass-rate": {
+          "reason": "protocol error: no marker",
+          "solved": false
+        },
+        "p4-temps-mean": {
+          "reason": "protocol error: no marker",
+          "solved": false
+        }
+      },
+      "protocol_error_tasks": 2,
+      "run": "p4-20261107-213756",
+      "sandbox_errors": 0,
+      "section": "coldstart",
+      "solved": 4,
+      "tasks": 6,
+      "timeouts": 0
+    },
+    {
+      "code_runs": 6,
+      "code_sha": "git:bbd8023",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 0,
+      "label": "cold start v2 (4 epochs, loss 0.076): held-out, all six",
+      "lost_turns": 0,
+      "model": "p4-coldstart-v2",
+      "per_task": {
+        "p4h-inventory-shortfall": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-orders-biggest-month": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-students-pass-rate": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4h-temps-mean": {
+          "reason": "match",
+          "solved": true
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-214035",
+      "sandbox_errors": 0,
+      "section": "coldstart",
+      "solved": 6,
+      "tasks": 6,
+      "timeouts": 0
     }
   ]
 }

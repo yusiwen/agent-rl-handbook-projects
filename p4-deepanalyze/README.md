@@ -7,6 +7,22 @@ written from two runs of it.
 | --- | --- | --- | --- | --- |
 | `p4-20261107-190738` | `python:3.12-slim` | 1/6 | **6** (all `No module named 'pandas'`) | 6 |
 | `p4-20261107-190831` | `arlh-p4-sandbox:1` (pandas 2.2.3) | **4/6** | 0 | 6 |
+| `p4-20261107-204926` | plus forced repair and the "new process" prompt | **5/6** | 0 | 7 |
+
+## The cold start
+
+Twelve supervised turns built by running the oracles; held-out evaluation on the same six schemas
+over different rows (`fixtures/tasks-heldout.jsonl`). Adapter: `env/sft.py`, LoRA r=16.
+
+| policy | training | held-out | compliance | code runs |
+| --- | --- | --- | --- | --- |
+| `qwen3-1.7b-base` | - | 5/6 | 100% | 7 |
+| `p4-coldstart` | 12 epochs, lr 2e-4, loss 0.0001 | 5/6 | **83%** | 5 |
+| `p4-coldstart-v2` | 4 epochs, lr 1e-4, loss 0.076 | **6/6** | 100% | 6 |
+
+The fine-tune fixes the behaviour the demonstrations taught - the base model's reversed
+`stock - reorder_level` disappears on rows it never saw - and training to loss 0.0001 costs the
+marker format (v1 reproduced the oracle verbatim, without `<code>`). Stopping at 0.076 keeps both.
 
 Same policy (`qwen3-1.7b-base`, temperature 0), same six fixtures, same prompt, `code_sha
 git:62fc34e`. Only the executor changed. The 1/6 is the more instructive number: every program
