@@ -254,16 +254,18 @@ of five ordered moves teaches the same thing, why build a process reward at all.
 enough to run rather than argue. Three five-step ledger plans the policy has seen (`hard-ledger-5s01..03`),
 three more generated in the same family and never seen by anything (`fixtures/holdout.jsonl`), ten greedy
 samples each, sixty rollouts per policy, `--eval-only` so the number describes the adapter the server holds
-rather than a copy of it (`runs/p3-rl-served-39..42`, `code_sha git:ea05ca9`).
+rather than a copy of it (`runs/p3-rl-served-39..43`, `code_sha git:ee592e8`).
 
 The supervised arm saw the oracle's own eighteen turns - three plans, six turns each - and nothing else.
 Two checkpoints, because the first one memorises and the question is whether that is what does the work:
-eight epochs took the loss from 4.80 to 0.0000 in thirty seconds, two epochs stopped at 0.0032 in eight.
+eight epochs took the loss from 4.80 to 0.0000 in thirty seconds, four epochs reached it in fourteen, two
+epochs stopped at 0.0032 in eight.
 
 | policy | trained plans (30) | held-out plans (30) | total (60) |
 | --- | --- | --- | --- |
 | base, no fine-tune | 0 | 0 | 0 |
 | supervised, 2 epochs | 30 | 10 | 40 |
+| supervised, 4 epochs | 20 | 20 | 40 |
 | supervised, 8 epochs | **30** | 20 | **50** |
 | RL, three-tier credit (`-37`, six rounds) | 20 | **30** | **50** |
 
@@ -271,9 +273,18 @@ Both learned arms reach fifty, and the fifty is composed differently. The superv
 the plans it was shown and loses one of the three it was not; the RL policy is perfect on the plans it was
 not shown - all thirty - and still loses `hard-ledger-5s02`, the commutativity failure the previous section
 could not charge. So demonstrations buy the sequence they demonstrate, and the reward buys a procedure that
-survives a change of numbers. Cutting the supervised run to two epochs says the same thing from the other
-side: 40 of 60, with the held-out share falling from twenty to ten, so what transfers is not the fine-tuning
-budget but the fitting of the procedure itself.
+survives a change of numbers.
+
+The two shorter supervised runs are the control, and the middle one is the interesting one. Held-out scores
+rise monotonically with fitting - ten, twenty, twenty at two, four and eight epochs - while the trained set
+does not: it is 30 at two epochs, **20 at four**, and 30 at eight. The four-epoch checkpoint loses
+`hard-ledger-5s01`, a plan it was trained on, by writing the tool's reply into its own action line:
+`add 4 -> ok: balance: 5`, which the environment rejects as not-on-the-menu, after which the episode has one
+turn left and reports anyway. That is the prompt-in-the-reply leak the masked loss exists to prevent,
+showing up in a checkpoint that is neither under- nor over-fitted - so "more epochs is better" is the wrong
+reading of the table, and a single supervised checkpoint is not a monotone point on a curve. It is also the
+kind of failure that a reward sees and a demonstration does not: the demonstration taught the action, and
+this checkpoint reproduced the text around it.
 
 The failures differ in kind, and that is the part worth keeping. The 8-epoch supervised policy on
 `hold-ledger-5h02` executes subtract 8, add 5, add 6, then **subtract 2** - a legal move, out of order,
