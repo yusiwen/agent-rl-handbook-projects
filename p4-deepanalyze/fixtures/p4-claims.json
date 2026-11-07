@@ -4,7 +4,9 @@
       "code_runs": 6,
       "code_sha": "git:62fc34e",
       "executor": "docker:python:3.12-slim",
-      "label": "slim image: the programs could not import pandas",
+      "forced_repairs": 0,
+      "label": "slim image: all six programs died on 'No module named pandas'",
+      "lost_turns": 0,
       "model": "qwen3-1.7b-base",
       "per_task": {
         "p4-inventory-shortfall": {
@@ -44,7 +46,9 @@
       "code_runs": 6,
       "code_sha": "git:62fc34e",
       "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 0,
       "label": "pandas image: the same policy, the same tasks",
+      "lost_turns": 0,
       "model": "qwen3-1.7b-base",
       "per_task": {
         "p4-inventory-shortfall": {
@@ -77,6 +81,132 @@
       "sandbox_errors": 0,
       "section": "runner",
       "solved": 4,
+      "tasks": 6,
+      "timeouts": 0
+    },
+    {
+      "code_runs": 6,
+      "code_sha": "git:da7ecc1",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 0,
+      "label": "warnings only: both flags fired, the model answered anyway",
+      "lost_turns": 2,
+      "model": "qwen3-1.7b-base",
+      "per_task": {
+        "p4-inventory-shortfall": {
+          "reason": "reported -80, expected 80",
+          "solved": false
+        },
+        "p4-orders-biggest-month": {
+          "reason": "text differs from 'May'",
+          "solved": false
+        },
+        "p4-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-students-pass-rate": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-temps-mean": {
+          "reason": "match",
+          "solved": true
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-204715",
+      "sandbox_errors": 0,
+      "section": "repair",
+      "solved": 4,
+      "tasks": 6,
+      "timeouts": 0
+    },
+    {
+      "code_runs": 9,
+      "code_sha": "git:da1e974",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 2,
+      "label": "forced repair, four turns: the month task repaired, the other ran out",
+      "lost_turns": 2,
+      "model": "qwen3-1.7b-base",
+      "per_task": {
+        "p4-inventory-shortfall": {
+          "reason": "no report within 4 turns",
+          "solved": false
+        },
+        "p4-orders-biggest-month": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-students-pass-rate": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-temps-mean": {
+          "reason": "match",
+          "solved": true
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-204827",
+      "sandbox_errors": 1,
+      "section": "repair",
+      "solved": 5,
+      "tasks": 6,
+      "timeouts": 0
+    },
+    {
+      "code_runs": 7,
+      "code_sha": "git:951a165",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "forced_repairs": 1,
+      "label": "prompt states no state carries over, six turns: the month task first time",
+      "lost_turns": 1,
+      "model": "qwen3-1.7b-base",
+      "per_task": {
+        "p4-inventory-shortfall": {
+          "reason": "reported -80, expected 80",
+          "solved": false
+        },
+        "p4-orders-biggest-month": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-students-pass-rate": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-temps-mean": {
+          "reason": "match",
+          "solved": true
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-204926",
+      "sandbox_errors": 0,
+      "section": "repair",
+      "solved": 5,
       "tasks": 6,
       "timeouts": 0
     }

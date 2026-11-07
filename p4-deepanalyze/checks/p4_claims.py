@@ -21,8 +21,11 @@ MANIFEST = HERE.parent / "fixtures" / "p4-claims.json"
 
 #: (run id, label, the section of Chapter 10 that cites it)
 CLAIMS: tuple[tuple[str, str, str], ...] = (
-    ("p4-20261107-190738", "slim image: the programs could not import pandas", "runner"),
+    ("p4-20261107-190738", "slim image: all six programs died on 'No module named pandas'", "runner"),
     ("p4-20261107-190831", "pandas image: the same policy, the same tasks", "runner"),
+    ("p4-20261107-204715", "warnings only: both flags fired, the model answered anyway", "repair"),
+    ("p4-20261107-204827", "forced repair, four turns: the month task repaired, the other ran out", "repair"),
+    ("p4-20261107-204926", "prompt states no state carries over, six turns: the month task first time", "repair"),
 )
 
 
@@ -46,6 +49,8 @@ def recompute(run_dir: Path) -> dict:
         "timeouts": sum(e["timeouts"] for e in episodes),
         "protocol_error_tasks": sum(1 for e in episodes if e["protocol_errors"]),
         "code_runs": sum(1 for e in episodes for t in e["turns"] if t["kind"] == "code"),
+        "lost_turns": sum(e.get("lost_turns", 0) for e in episodes),
+        "forced_repairs": sum(e.get("forced_repairs", 0) for e in episodes),
         "per_task": {e["task_id"]: {"solved": e["solved"], "reason": e["reason"]} for e in episodes},
     }
 
@@ -86,7 +91,7 @@ def compare(payload: dict, runs_root: Path) -> list[str]:
             problems.append(f"{claim['run']}: no record at {run_dir}")
             continue
         fresh = recompute(run_dir)
-        for key in ("code_sha", "tasks", "solved", "sandbox_errors", "timeouts", "protocol_error_tasks", "code_runs", "per_task"):
+        for key in ("code_sha", "tasks", "solved", "sandbox_errors", "timeouts", "protocol_error_tasks", "code_runs", "lost_turns", "forced_repairs", "per_task"):
             if fresh[key] != claim.get(key):
                 problems.append(f"{claim['run']}: {key} is {fresh[key]!r} in the record, {claim.get(key)!r} in the claim")
     return problems
