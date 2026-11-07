@@ -1,0 +1,84 @@
+{
+  "claims": [
+    {
+      "code_runs": 6,
+      "code_sha": "git:62fc34e",
+      "executor": "docker:python:3.12-slim",
+      "label": "slim image: the programs could not import pandas",
+      "model": "qwen3-1.7b-base",
+      "per_task": {
+        "p4-inventory-shortfall": {
+          "reason": "reported 12, expected 80",
+          "solved": false
+        },
+        "p4-orders-biggest-month": {
+          "reason": "text differs from 'May'",
+          "solved": false
+        },
+        "p4-sales-north": {
+          "reason": "reported 645, expected 1740",
+          "solved": false
+        },
+        "p4-sales-top-product": {
+          "reason": "text differs from 'widget'",
+          "solved": false
+        },
+        "p4-students-pass-rate": {
+          "reason": "reported 0.333333, expected 0.6667",
+          "solved": false
+        },
+        "p4-temps-mean": {
+          "reason": "match",
+          "solved": true
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-190738",
+      "sandbox_errors": 6,
+      "section": "runner",
+      "solved": 1,
+      "tasks": 6,
+      "timeouts": 0
+    },
+    {
+      "code_runs": 6,
+      "code_sha": "git:62fc34e",
+      "executor": "docker:arlh-p4-sandbox:1",
+      "label": "pandas image: the same policy, the same tasks",
+      "model": "qwen3-1.7b-base",
+      "per_task": {
+        "p4-inventory-shortfall": {
+          "reason": "reported -80, expected 80",
+          "solved": false
+        },
+        "p4-orders-biggest-month": {
+          "reason": "text differs from 'May'",
+          "solved": false
+        },
+        "p4-sales-north": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-sales-top-product": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-students-pass-rate": {
+          "reason": "match",
+          "solved": true
+        },
+        "p4-temps-mean": {
+          "reason": "match",
+          "solved": true
+        }
+      },
+      "protocol_error_tasks": 0,
+      "run": "p4-20261107-190831",
+      "sandbox_errors": 0,
+      "section": "runner",
+      "solved": 4,
+      "tasks": 6,
+      "timeouts": 0
+    }
+  ]
+}

@@ -30,19 +30,22 @@ uv run --frozen bash scripts/verify.sh
 whatever the machine happens to have.
 
 ```
-== common tests ==                Ran 126 tests ... OK
+== common tests ==                Ran 128 tests ... OK
 == p1 tests ==                    Ran 190 tests ... OK
 == p1 check (fixtures) ==         coverage 21/21 tasks; 42 rollouts; 21/42 passed
                                   contamination 0/21 tasks vs gsm8k/test (1319 items, sha256:524c11ab4ee19ae2)
-== p2 tests ==                    Ran 81 tests ... OK
+== p2 tests ==                    Ran 87 tests ... OK
 == p2 check (loop) ==             [PASS] every task solvable, the loop closes, no entropy cliff
+== p4 tests ==                    Ran 24 tests ... OK
+== p4 check (loop) ==             six fixtures reproduced by their oracles, through the sandbox
+== p4 claims (arithmetic) ==      2 claims, arithmetic and records agree
 == datasets tests ==              Ran 39 tests ... OK
 == repository checks (selftest) == [PASS] the checks still reject what they must reject
 == repository checks ==           [PASS] characters  [PASS] payloads  [PASS] secrets  [PASS] imports
 all checks passed
 ```
 
-442 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
+468 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
 writes a run record to `runs/` (gitignored). The gate itself sets `ARL_RUNS_DIR` to a scratch
 directory, so verifying the tree never adds a record to it; set the same variable to send your own
 runs elsewhere. If the gate fails, the problem is in this repository rather
@@ -82,7 +85,7 @@ projects do not become six dialects:
 | P1 verifiers | Ch 5 | ✅ | A verifier suite and its coverage report | `p1-verifiers/configs/spark-0.6b.yaml` |
 | P2 reagent | Ch 6 | ✅ | A process-feedback loop with turn-level credit | `p2-reagent/configs/...` |
 | P3 verl runtime | Ch 9 | ⚠️ | One GRPO run under a framework runtime | `p3-verl/configs/...` |
-| P4 deepanalyze | Ch 10 | ⚠️ | A data-analysis agent, end to end | `p4-deepanalyze/configs/...` |
+| P4 deepanalyze | Ch 10 | ⚠️ | A data-analysis agent, end to end (measured: 4 of 6 with the right executor) | `p4-deepanalyze/sandbox/Dockerfile` |
 | P5 openclaw-rl | Ch 10 | ⚠️ | An asynchronous multi-turn training loop | `p5-openclaw-rl/configs/...` |
 | P6 memento-skills | Ch 12 | ✅ | A skill library that improves without training | `p6-memento-skills/configs/...` |
 
