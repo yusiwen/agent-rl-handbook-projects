@@ -21,6 +21,7 @@ from pathlib import Path
 @dataclass(frozen=True)
 class Task:
     id: str
+    family: str
     question: str
     table: str  # the CSV itself, one header row and at least one data row
     expected: str
@@ -50,6 +51,7 @@ def load(path: str | Path) -> list[Task]:
         raw = json.loads(line)
         task = Task(
             id=str(raw["id"]),
+            family=str(raw.get("family", raw["id"])),
             question=str(raw["question"]),
             table=str(raw["table"]),
             expected=str(raw["expected"]),

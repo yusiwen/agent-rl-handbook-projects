@@ -26,6 +26,7 @@ from p4_deepanalyze.tasks import Task, load  # noqa: E402
 
 TASK = Task(
     id="t-one",
+    family="sum",
     question="What is the sum of the values?",
     table="k,v\na,1\nb,2",
     expected="3",

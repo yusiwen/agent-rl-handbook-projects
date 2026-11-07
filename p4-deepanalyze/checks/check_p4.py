@@ -19,6 +19,7 @@ Docker executor is checked by the run itself (`summary.json` carries the health 
 
 from __future__ import annotations
 
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -36,64 +37,33 @@ from p4_deepanalyze.verify import is_correct  # noqa: E402
 
 FIXTURES = HERE.parent / "fixtures" / "tasks.jsonl"
 
-#: One program per task, written against the CSV rather than against the stored answer.
-ORACLE: dict[str, str] = {
-    "p4-sales-north": """\
-import csv
-with open('table.csv') as handle:
-    rows = list(csv.DictReader(handle))
-print(sum(float(r['units']) * float(r['unit_price']) for r in rows if r['region'] == 'North'))
-""",
-    "p4-sales-top-product": """\
-import csv
-from collections import Counter
-counts = Counter()
-with open('table.csv') as handle:
-    for row in csv.DictReader(handle):
-        counts[row['product']] += float(row['units'])
-print(max(counts.items(), key=lambda kv: kv[1])[0])
-""",
-    "p4-temps-mean": """\
-import csv
-with open('table.csv') as handle:
-    temps = [float(r['temp_c']) for r in csv.DictReader(handle)]
-print(round(sum(temps) / len(temps), 1))
-""",
-    "p4-students-pass-rate": """\
-import csv
-with open('table.csv') as handle:
-    scores = [float(r['score']) for r in csv.DictReader(handle)]
-print(round(sum(1 for s in scores if s >= 60) / len(scores), 4))
-""",
-    "p4-orders-biggest-month": """\
-import csv
-with open('table.csv') as handle:
-    rows = list(csv.DictReader(handle))
-print(max(rows, key=lambda r: float(r['amount']))['month'])
-""",
-    "p4-inventory-shortfall": """\
-import csv
-with open('table.csv') as handle:
-    rows = list(csv.DictReader(handle))
-print(int(max(float(r['reorder_level']) - float(r['stock']) for r in rows)))
-""",
-}
+from p4_deepanalyze.oracles import ORACLE  # noqa: E402
+
+FIXTURES_SET = (FIXTURES, HERE.parent / "fixtures" / "tasks-heldout.jsonl")
 
 
 class FixtureTests(unittest.TestCase):
-    def test_every_task_has_an_oracle(self):
-        self.assertEqual({task.id for task in load(FIXTURES)}, set(ORACLE))
+    def test_every_task_family_has_an_oracle(self):
+        for path in FIXTURES_SET:
+            with self.subTest(fixtures=path.name):
+                self.assertEqual({task.family for task in load(path)}, set(ORACLE))
+
+    def test_both_fixture_files_are_current(self):
+        build = HERE.parent / "fixtures" / "build_tasks.py"
+        done = subprocess.run([sys.executable, str(build), "--check"], capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
     def test_every_expected_answer_is_reproduced_by_its_oracle(self):
         sandbox = LocalSandbox(timeout_s=10)
-        for task in load(FIXTURES):
-            with self.subTest(task=task.id):
-                observation = sandbox.run(ORACLE[task.id], task.files())
-                self.assertEqual(observation.exit_code, 0, observation.stderr)
-                self.assertTrue(
-                    is_correct(observation.stdout.strip(), task.expected, task.tolerance),
-                    f"{task.id}: oracle printed {observation.stdout.strip()!r}, fixture says {task.expected!r}",
-                )
+        for path in FIXTURES_SET:
+            for task in load(path):
+                with self.subTest(task=task.id):
+                    observation = sandbox.run(ORACLE[task.family], task.files())
+                    self.assertEqual(observation.exit_code, 0, observation.stderr)
+                    self.assertTrue(
+                        is_correct(observation.stdout.strip(), task.expected, task.tolerance),
+                        f"{task.id}: oracle printed {observation.stdout.strip()!r}, fixture says {task.expected!r}",
+                    )
 
 
 class LoopTests(unittest.TestCase):
@@ -101,8 +71,8 @@ class LoopTests(unittest.TestCase):
         sandbox = LocalSandbox(timeout_s=10)
         for task in load(FIXTURES):
             with self.subTest(task=task.id):
-                answer = sandbox.run(ORACLE[task.id], task.files()).stdout.strip()
-                client = ScriptedClient([f"<code>{ORACLE[task.id]}</code>", f"<report>{answer}</report>"])
+                answer = sandbox.run(ORACLE[task.family], task.files()).stdout.strip()
+                client = ScriptedClient([f"<code>{ORACLE[task.family]}</code>", f"<report>{answer}</report>"])
                 episode = run_episode(task, client, sandbox, max_turns=3)
                 self.assertTrue(episode.solved, episode.reason)
                 self.assertEqual(episode.protocol_errors, 0)
