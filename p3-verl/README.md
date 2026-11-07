@@ -95,6 +95,22 @@ the NGC torch (`--system-site-packages`), under three minutes: verl 0.9.1, trans
 ray **2.60.0**, numpy **2.1.0**, torch 2.14.0a0+b2c75dd062.nv26.9. Two of those differ from the
 resolution predicted above, which is the difference between a resolver and an install.
 
+Second attempt, 2026-11-07: PyPI ships no aarch64 `vllm` wheel (every release has two files, none arm),
+so the official image is the only route. `vllm/vllm-openai:v0.11.2` (arm64) is the generation matching
+verl 0.9.1 - torch 2.9.0+cu129, vllm 0.11.2, transformers 4.57.1, ray 2.51.1 - and verl installs over
+it with both imports succeeding, after one more undeclared dependency (`transferqueue`). It still cannot
+run here, and the first training log line says why:
+
+```
+Found GPU0 NVIDIA GB10 which is of cuda capability 12.1.
+Minimum and Maximum cuda capability supported by this version of PyTorch is (8.0) - (12.0)
+```
+
+The image's arch list ends at `sm_120`; the Spark is `sm_121`. The vLLM generation that addresses this
+GPU is the one already serving here (v0.31.0, torch 2.13/2.14 line), and that is not the API verl 0.9.1
+was written against. No pair exists on this machine that both runs and matches: this is a version/hardware
+fact, not a config mistake. GRPO stays unrun.
+
 `rollout.name=hf` is **not available in 0.9.1**. `_ROLLOUT_REGISTRY` in `verl/workers/rollout/base.py`
 holds exactly three entries - `("vllm","async")`, `("sglang","async"`, `("trtllm","async")` - and
 `hf_rollout.py`, though present in the package, is not reachable from the PPO trainer. So the plan's
