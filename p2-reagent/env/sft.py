@@ -111,6 +111,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--rank", type=int, default=16)
     parser.add_argument("--lr", type=float, default=2e-4)
     parser.add_argument("--out", default="/work/sft")
+    parser.add_argument(
+        "--only",
+        nargs="+",
+        default=None,
+        help=(
+            "train on these task ids only; a demonstration baseline has to see the same tasks as "
+            "the policy it is compared with, or the comparison measures the task set"
+        ),
+    )
     args = parser.parse_args(argv)
 
     out = Path(args.out)
@@ -119,11 +128,17 @@ def main(argv: list[str] | None = None) -> int:
 
     # ---------------------------------------------------------------- the demonstrations
     records = demonstrations()
+    if args.only:
+        wanted = set(args.only)
+        records = [record for record in records if record["task_id"] in wanted]
+        if not records:
+            raise SystemExit(f"--only matched no task: {sorted(wanted)}")
     demo_text = "\n".join(json.dumps(record, sort_keys=True) for record in records) + "\n"
     (out / "demonstrations.jsonl").write_text(demo_text, encoding="utf-8")
     demo_digest = "sha256:" + hashlib.sha256(demo_text.encode("utf-8")).hexdigest()[:16]
     turns = sum(len(record["turns"]) for record in records)
     print(f"demonstrations: {len(records)} tasks, {turns} turns, {demo_digest}")
+    print("  tasks: " + ", ".join(record["task_id"] for record in records))
 
     # ---------------------------------------------------------------- the model
     tokeniser = AutoTokenizer.from_pretrained(args.model)

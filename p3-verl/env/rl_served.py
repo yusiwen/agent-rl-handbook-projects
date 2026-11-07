@@ -193,18 +193,36 @@ def main(argv: list[str] | None = None) -> int:
             "guard above that would never fire"
         ),
     )
+    parser.add_argument(
+        "--eval-only",
+        action="store_true",
+        help=(
+            "sample the served adapter and score it; load no local model and apply no update, so "
+            "the numbers describe the policy the server holds rather than one this process built"
+        ),
+    )
     parser.add_argument("--out", default="/work/rl-serve")
     parser.add_argument("--runs-dir", default="/work/runs")
     parser.add_argument("--code-sha", default="git:unknown")
     args = parser.parse_args(argv)
 
     tokeniser = AutoTokenizer.from_pretrained(args.model)
-    base = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.bfloat16, device_map={"": 0})
-    model = PeftModel.from_pretrained(base, args.start, is_trainable=True)
-    model.config.use_cache = False
-    trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
-    optimiser = torch.optim.AdamW(trainable, lr=args.lr, weight_decay=0.0)
-    print(f"trainer loaded {args.start}: {sum(p.numel() for p in trainable):,} trainable parameters")
+    if args.eval_only:
+        # No local weights: the only policy that matters here is the one the server holds, and
+        # loading a copy to sample from would mean the number describes the copy.
+        base = model = optimiser = None
+        trainable: list = []
+        args.rounds = 1
+        print(f"eval only: sampling {args.serve_policy} at temperature {args.temperature}")
+    else:
+        base = AutoModelForCausalLM.from_pretrained(
+            args.model, dtype=torch.bfloat16, device_map={"": 0}
+        )
+        model = PeftModel.from_pretrained(base, args.start, is_trainable=True)
+        model.config.use_cache = False
+        trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
+        optimiser = torch.optim.AdamW(trainable, lr=args.lr, weight_decay=0.0)
+        print(f"trainer loaded {args.start}: {sum(p.numel() for p in trainable):,} trainable parameters")
     print(f"tokenizer: {tokeniser.name_or_path}")
 
     out = Path(args.out)
@@ -225,6 +243,7 @@ def main(argv: list[str] | None = None) -> int:
             notes=(
                 f"samples={args.samples}; rounds={args.rounds}; epochs={args.epochs}; lr={args.lr}; "
                 f"served={args.serve_policy}; sync=load_lora_adapter"
+                + ("; eval-only (no update)" if args.eval_only else "")
             ),
         ),
         root=args.runs_dir,
@@ -264,7 +283,21 @@ def main(argv: list[str] | None = None) -> int:
         # Written after the last term is final, on purpose: a record whose `reward_terms` disagree
         # with the reward the update consumed is worse than no record at all.
         writer.append_rollouts(round_index, [episode.rollout for episode in episodes])
-        writer.append_round(round_record(round_index, [episode.rollout for episode in episodes]))
+        writer.append_round(round_index, [episode.rollout for episode in episodes])
+
+        if args.eval_only:
+            # Per task, for the same reason the training loop reports per task: a total hides the
+            # difference between a task the policy solves and one it has never been right about.
+            solved = sum(1 for episode in episodes if episode.solved)
+            by_task = " ".join(
+                f"{task}={sum(1 for episode in group if episode.solved)}/{len(group)}"
+                for task, group in per_task.items()
+            )
+            print(
+                f"eval: policy={served_name} solved={solved}/{len(episodes)} [{by_task}] "
+                f"calls={policy.calls} total={time.time() - started:.0f}s"
+            )
+            break
 
         rewards = {episode.rollout.episode_id: episode.rollout.reward() for episode in episodes}
         advantages = {}
