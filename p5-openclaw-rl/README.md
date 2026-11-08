@@ -1,6 +1,8 @@
 # P5 - asynchronous multi-turn training
 
-**Status: not started.** Written with Chapter 10.
+**Status: measured.** All three stages ran on the Spark, the asynchronous loop exists in two forms
+(sync and async), and every number below is recomputed by `checks/p5_claims.py` from the records in
+`fixtures/runs/`.
 Book chapter: Chapter 10 (multi-turn, tool-calling RL), project 5 in the book's appendix.
 Compute tier: ⚠️ - a 0.6B policy through all three stages; the asynchronous loop is the
 exercise, not the model size.
@@ -33,12 +35,39 @@ asynchronous form:
 
 ## Environment
 
-ALFWorld and TextWorld first (CPU, fast reset, repeatable - see
-`../datasets/manifest.yaml`). A container-based task set is more realistic and much harder
-to reset; Chapter 8 is where that trade is discussed, and this project is where it is paid.
+The task set is generated here rather than downloaded: nine tasks over five documents with four real
+tools (`search`, `open`, `calc`, `submit`), a microsecond reset, and an oracle that solves every task
+so a zero reward means the policy failed rather than the fixture being impossible. The earlier plan
+was ALFWorld and TextWorld; it was dropped because the measurement is about the loop, and a world
+whose reset costs milliseconds makes staleness a property of the filesystem.
+
+## What is measured
+
+| stage | what ran | result |
+|---|---|---|
+| 1, cold start | 20 oracle traces, 30 steps, LoRA r16 | loss 2.74 to 0.0008 in 47.8 s, peak 22.8 GB; greedy **7 of 9** |
+| 2, outcome reward | four loops, 72 samples each, sync and async | non-zero advantage in **0, 2 and 3** samples; evaluation unchanged at 7 of 9 |
+| 3, process reward | same loop, step-level credit | **21** samples carried an advantage, and the policy got worse: 3 of 9 solved, 28 tool errors, 5 episodes out of turns |
+
+The reason stage 2 found almost nothing is in the per-task counts and is the chapter's headline: seven
+tasks were solved in all eight sampled attempts, and the two failures were deterministic. A task
+solved every time and a task failed every time contribute the same amount to an update - nothing.
+
+The systems half of the project is measured separately, and it is the part that does not depend on the
+reward: **36.1** samples per minute synchronously with one worker, **35.9** asynchronously with one
+worker, **108.2** with three. Asynchrony alone bought nothing here, because the served model was the
+bottleneck and not the trainer; the threefold gain came from running three workers, which asynchrony
+permits rather than provides. Staleness stayed at 0.04, 0.06 and 0.18 (mean) with a maximum of one
+version, so the staleness bound never discarded a sample - a fact about this world being fast, not
+about the bound being right.
 
 ## What is not here yet
 
-- The three stage configs and the asynchronous runner.
-- A PRM: stage 3 needs a reward model that scores partial traces, which is P2's artefact
-  reused rather than a new one.
+- **A learned PRM.** Stage 3's process reward is a rule (+0.1 per valid call, -0.3 per error), not
+  P2's model. The rule is enough to show the failure mode - it teaches tool-call farming - and not
+  enough to show what a learned reward model would do.
+- **More than one machine.** The rollout workers, the trainer and the served policy share one GPU;
+  the staleness numbers above are honest for that arrangement and say nothing about a cluster where
+  the trainer is the bottleneck.
+- **A world whose failures are convention-shaped.** The two deterministic failures are arithmetic and
+  protocol, which is why a procedure had nothing to teach in Project 6 either.

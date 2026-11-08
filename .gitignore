@@ -8,6 +8,10 @@ venv/
 # Local runs and data (the row format is tracked, the rows are not)
 runs/
 local/
+# ... except the run *records* a claims check recomputes from. Without these the checker is green on
+# the machine that produced them and red on a fresh clone, which is the worst of both.
+!p5-openclaw-rl/fixtures/runs/
+!p5-openclaw-rl/fixtures/runs/**
 *.log
 
 # Dataset payloads: never committed. See datasets/README.md.

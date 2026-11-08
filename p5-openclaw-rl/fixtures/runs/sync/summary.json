@@ -1,0 +1,16 @@
+{
+  "dropped": 0,
+  "final_adapter": "p5-v4",
+  "max_staleness": 1,
+  "mean_staleness": 0.04,
+  "mode": "sync",
+  "reward": "outcome",
+  "rounds": 4,
+  "samples": 72,
+  "samples_per_minute": 36.1,
+  "seconds": 119.6,
+  "stale_bound": 1,
+  "trained_on": 72,
+  "used": 0,
+  "workers": 1
+}

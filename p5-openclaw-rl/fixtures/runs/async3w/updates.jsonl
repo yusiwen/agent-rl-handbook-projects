@@ -1,0 +1,4 @@
+{"dropped": 0, "loss": 0.8694, "max_staleness": 0, "mean_staleness": 0, "round": 0, "rounds_seconds": 11.9, "singleton_groups": 2, "solved_in_batch": 15, "trained_on": 18, "used": 3}
+{"dropped": 0, "loss": 0.0, "max_staleness": 1, "mean_staleness": 0.39, "round": 1, "rounds_seconds": 20.4, "singleton_groups": 2, "solved_in_batch": 14, "trained_on": 18, "used": 0}
+{"dropped": 0, "loss": 0.0, "max_staleness": 1, "mean_staleness": 0.17, "round": 2, "rounds_seconds": 30.0, "singleton_groups": 2, "solved_in_batch": 14, "trained_on": 18, "used": 0}
+{"dropped": 0, "loss": 0.0, "max_staleness": 1, "mean_staleness": 0.17, "round": 3, "rounds_seconds": 39.7, "singleton_groups": 2, "solved_in_batch": 14, "trained_on": 18, "used": 0}

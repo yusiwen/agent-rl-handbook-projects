@@ -80,14 +80,14 @@ than in your environment - which is the whole reason it exists.
 The book asks you to build six things. This repo holds the *shapes* they share, so that six
 projects do not become six dialects:
 
-| Project | Book chapter | Compute | What you build | Config |
+| Project | Book chapter | Compute | What you build | Start here |
 |---|---|---|---|---|
 | P1 verifiers | Ch 5 | ✅ | A verifier suite and its coverage report | `p1-verifiers/configs/spark-0.6b.yaml` |
-| P2 reagent | Ch 6 | ✅ | A process-feedback loop with turn-level credit | `p2-reagent/configs/...` |
-| P3 verl runtime | Ch 9 | ⚠️ | One GRPO run under a framework runtime | `p3-verl/configs/...` |
-| P4 deepanalyze | Ch 10 | ⚠️ | A data-analysis agent, end to end (measured: 4 of 6 with the right executor) | `p4-deepanalyze/sandbox/Dockerfile` |
-| P5 openclaw-rl | Ch 10 | ⚠️ | An asynchronous multi-turn training loop | `p5-openclaw-rl/configs/...` |
-| P6 memento-skills | Ch 12 | ✅ | A skill library that improves without training | `p6-memento-skills/configs/...` |
+| P2 reagent | Ch 6 | ✅ | A process-feedback loop with turn-level credit | `p2-reagent/env/run.sh` |
+| P3 verl runtime | Ch 9 | ⚠️ | One GRPO run under a framework runtime (blocked: no wheel for this GPU) | `p3-verl/env/serve_lora.sh` |
+| P4 deepanalyze | Ch 10 | ⚠️ | A data-analysis agent, end to end (measured: 5 of 6 with the right executor, 6 of 6 after the cold start) | `p4-deepanalyze/sandbox/Dockerfile` |
+| P5 openclaw-rl | Ch 10 | ⚠️ | An asynchronous multi-turn training loop (measured: 108.2 samples a minute at three workers) | `p5-openclaw-rl/env/loop.py` |
+| P6 memento-skills | Ch 12 | ✅ | A skill library with an admission gate (measured: retrieval 0.800 at 100 documents, outcome negative) | `p6-memento-skills/env/measure_outcome.py` |
 
 A ✅ config must run on the reference machine (a DGX Spark: 128 GB unified memory). A ⚠️ config
 must run *shrunk*; files named `rented-*.yaml` are for a rented GPU and are marked

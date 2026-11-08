@@ -1,8 +1,9 @@
 # P6 - a skill library that improves without touching the weights
 
-**Status: in progress.** The task set, the gate and the retrieval measurement exist and are
-checked; the outcome half (does the retrieved skill change what the model does) needs the served
-policy and is not measured yet. Written with Chapter 12.
+**Status: measured, including the half that did not cooperate.** The task set, the admission gate,
+the retrieval measurement and the four-condition outcome run all exist and are checked. The outcome
+is negative - no injection beat the question alone - and the README reports it rather than the
+half that flatters the design. Written with Chapter 12.
 Book chapter: Chapter 12 (skills and self-improvement), project 6 in the book's appendix.
 Compute tier: ✅ - a small local model plus a retrieval index; no training at all.
 
