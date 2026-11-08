@@ -1,8 +1,9 @@
 # P3 - the training runtime, one run deep
 
-**Status: the loop is closed - served sampling, in-process update, HTTP sync - measured; the
-framework run is not started.** Written
-with Chapter 9.
+**Status: both loops are measured - the repository's own served loop (served sampling, in-process
+update, HTTP sync) and, since 2026-11-08, the framework's: verl 0.9.1 runs GRPO for two completed
+steps on vLLM 0.24.0 here.** Written with Chapter 9. The earlier "framework run is not started" was
+correct when it was written and then became a wrong no-go; see the correction below.
 Book chapter: Chapter 9 (industrial training runtime), project 3 in the book's appendix.
 Compute tier: ⚠️ - single-GPU, small-model runs only. Multi-node and Megatron paths are
 reading material, not exercises (see the book's compute appendix).
