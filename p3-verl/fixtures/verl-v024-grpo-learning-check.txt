@@ -1,0 +1,54 @@
+# verl 0.9.1 + vLLM 0.24.0 on the Spark (GB10, sm_121), 2026-11-08 - GRPO that moves the policy
+
+## what was run
+# Qwen/Qwen3-1.7B, GRPO (no critic), n=6 rollouts per prompt, 8 training steps, lr 1e-6,
+# train batch 16 of 24 calibrated prompts, sdpa attention, enable_thinking=false in the chat
+# template, response cap 384 tokens, checkpoint saved at step 8.
+# The :8003 server was stopped for the run; the container capped at --memory=118g.
+
+## the calibration that chose the training set (served base model, 8 samples per prompt)
+# set 1:  369/384 solved - saturated, one item in band
+# set 2:  388/448 solved - 13 items with any variance at all
+# set 3:  407/448 solved - 14 items with variance
+# training set: the 24 items from sets 2+3 whose measured rate fell strictly inside (0, 1)
+
+## the training curve
+step  reward_mean  reward_max  adv_max  loss      entropy  resp_len  clip    step_s  cpu_gb
+   1       0.0000        1.00    2.041   -0.0603   0.0752      55.8  0.010   48.74    74.8
+   2      -0.0417        1.00    2.041    0.0081   0.0625      58.4  0.031   36.45    93.2
+   3       0.1458        1.00    2.041   -0.0078   0.0653      58.2  0.021   36.69    93.0
+   4       0.4375        1.00    2.041    0.0011   0.0704      53.4  0.010   32.17    92.9
+   5       0.4375        1.00    1.291    0.0052   0.0696      58.8  0.010   32.63    93.0
+   6       0.6875        1.00    1.291   -0.0127   0.0693      77.7  0.010   33.08    92.8
+   7       0.7083        1.00    0.913    0.0235   0.0659      90.4  0.010   35.88    92.8
+   8       0.8750        1.00    0.913    0.0037   0.0605      86.3  0.010   53.49    92.8
+
+## held-out before and after (24 prompts never trained on, 8 samples each at temperature 1.0)
+base       128/192 = 0.667   Wilson 95% [0.597, 0.730]
+after 8    165/192 = 0.859   Wilson 95% [0.803, 0.902]
+difference +19.3 points; the intervals do not overlap
+
+## items that moved (base -> after, solved share of 8)
+e-m2-02     0.750 -> 0.875
+e-m2-04     0.125 -> 0.625
+e-m2-05     0.375 -> 1.000
+e-m32-07    0.000 -> 1.000
+e-m32-08    0.125 -> 1.000
+e-m32-09    0.000 -> 1.000
+e-m32-11    0.250 -> 0.750
+e-dv-14     1.000 -> 0.625
+e-dv-15     0.500 -> 0.875
+e-pc-18     0.750 -> 0.875
+e-pc-20     0.875 -> 1.000
+e-pc-22     0.750 -> 0.500
+
+## caveats that belong with these numbers
+# 1. Eight steps on 24 prompts, eight epochs: the policy sees each prompt about five times.  The
+#    held-out number is what makes this a measurement rather than a memory test, but the held-out
+#    items are the same four families with different numbers - generalization to new *instances*,
+#    not to new task types.
+# 2. The first two steps' rewards are negative on some prompts (-1 penalty for a reply without an
+#    answer line).  Part of the early climb is format learning, which the response-length column
+#    shows shrinking into a normal range.
+# 3. The container was OOM-killed after step 8 in both attempts (118g cap, no traceback because the
+#    main process was SIGKILLed); the checkpoint at step 8 is what the held-out number comes from.

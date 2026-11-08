@@ -144,6 +144,34 @@ the number of steps you ask for, or the second step has no data to draw from. Th
 a DataLoader worker is killed during teardown, after both steps have logged and after
 `Total training steps: 2` is printed.
 
+### Does it learn? Eight steps, a held-out set, and a 19-point move
+
+Two steps answer "does the loop close". They say nothing about learning, and the obvious way to answer
+that question badly is to train on a task set the model already solves - the P5 lesson, where seven of
+nine tasks were solved in every sampled attempt and the reward carried no gradient at all.
+
+So the task set was calibrated first. Three generated sets of graded arithmetic were sampled eight
+times each against the served base model: 369/384, then 388/448, then 407/448 solved - saturated at
+every tier, with only 24 prompts across all three sets landing strictly between always-solved and
+never-solved. Those 24 became the training set. A fresh draw of 24 prompts from the same four families
+became the held-out set, measured with the same protocol before training: **128/192 = 0.667**
+(Wilson 95% [0.597, 0.730]).
+
+Eight GRPO steps (n=6 rollouts per prompt, lr 1e-6, batch 16 of the 24, response cap 384) moved the
+training reward from 0.00 to **0.875**, and the held-out number from 0.667 to **165/192 = 0.859**
+(Wilson [0.803, 0.902]) - a **+19.3 point** move with non-overlapping intervals. Nine held-out items
+moved, three of them from 0 of 8 to 8 of 8; one moved the wrong way (`e-dv-14`: 8/8 to 5/8), which is
+what one seed looks like rather than a trend. The advantage ceiling fell from 2.04 to 0.91 across the
+eight steps as the policy saturated the training prompts - the shrinking-gradient signature the chapter
+describes, measured rather than asserted.
+
+What this is not: it is not a claim about new task *types*, because the held-out items are the same
+four families with different numbers; and eight epochs over 24 prompts means the policy sees each
+prompt about five times, which is why the held-out number carries the argument. The container is
+OOM-killed after step 8 in both attempts (118 GB cap, no traceback - the main process is SIGKILLed), so
+the run stops where the memory budget stops, and the checkpoint at step 8 is what the held-out number
+comes from. Record: `fixtures/verl-v024-grpo-learning-check.txt`.
+
 `rollout.name=hf` is **not available in 0.9.1**. `_ROLLOUT_REGISTRY` in `verl/workers/rollout/base.py`
 holds exactly three entries - `("vllm","async")`, `("sglang","async"`, `("trtllm","async")` - and
 `hf_rollout.py`, though present in the package, is not reachable from the PPO trainer. So the plan's
