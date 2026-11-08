@@ -1,0 +1,73 @@
+{
+  "per_family": 6,
+  "queries": 60,
+  "query_includes": "the task text and the failure symptom the previous attempt reported",
+  "scales": {
+    "fifty": {
+      "hybrid": {
+        "documents": 50,
+        "hits": 24,
+        "recall_at_1": 0.4
+      },
+      "idf": {
+        "documents": 50,
+        "hits": 48,
+        "recall_at_1": 0.8
+      },
+      "keyword": {
+        "documents": 50,
+        "hits": 36,
+        "recall_at_1": 0.6
+      },
+      "vector": {
+        "documents": 50,
+        "hits": 22,
+        "recall_at_1": 0.367
+      }
+    },
+    "hundred": {
+      "hybrid": {
+        "documents": 100,
+        "hits": 24,
+        "recall_at_1": 0.4
+      },
+      "idf": {
+        "documents": 100,
+        "hits": 48,
+        "recall_at_1": 0.8
+      },
+      "keyword": {
+        "documents": 100,
+        "hits": 36,
+        "recall_at_1": 0.6
+      },
+      "vector": {
+        "documents": 100,
+        "hits": 22,
+        "recall_at_1": 0.367
+      }
+    },
+    "ten": {
+      "hybrid": {
+        "documents": 10,
+        "hits": 60,
+        "recall_at_1": 1.0
+      },
+      "idf": {
+        "documents": 10,
+        "hits": 60,
+        "recall_at_1": 1.0
+      },
+      "keyword": {
+        "documents": 10,
+        "hits": 54,
+        "recall_at_1": 0.9
+      },
+      "vector": {
+        "documents": 10,
+        "hits": 42,
+        "recall_at_1": 0.7
+      }
+    }
+  }
+}
