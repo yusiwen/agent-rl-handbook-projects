@@ -1,0 +1,1066 @@
+[
+  {
+    "id": "mul2x2h-00",
+    "family": "mul2x2h",
+    "prompt": "What is 72 times 64? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "4608",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "4608",
+      "4608",
+      "4608",
+      "4608",
+      "4608",
+      "4608",
+      "4608",
+      "4608"
+    ]
+  },
+  {
+    "id": "mul2x2h-01",
+    "family": "mul2x2h",
+    "prompt": "What is 92 times 79? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "7268",
+    "samples": 8,
+    "solved": 0,
+    "rate": 0.0,
+    "answers": [
+      "7228",
+      "7228",
+      "7228",
+      "7188",
+      "7188",
+      "7228",
+      "7228",
+      "7228"
+    ]
+  },
+  {
+    "id": "mul2x2h-02",
+    "family": "mul2x2h",
+    "prompt": "What is 69 times 88? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "6072",
+    "samples": 8,
+    "solved": 6,
+    "rate": 0.75,
+    "answers": [
+      "6092",
+      "6072",
+      "6064",
+      "6072",
+      "6072",
+      "6072",
+      "6072",
+      "6072"
+    ]
+  },
+  {
+    "id": "mul2x2h-03",
+    "family": "mul2x2h",
+    "prompt": "What is 84 times 72? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "6048",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "6048",
+      "6048",
+      "6048",
+      "6048",
+      "6048",
+      "6048",
+      "6048",
+      "6048"
+    ]
+  },
+  {
+    "id": "mul2x2h-04",
+    "family": "mul2x2h",
+    "prompt": "What is 61 times 90? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "5490",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "5490",
+      "5490",
+      "5490",
+      "5490",
+      "5490",
+      "5490",
+      "5490",
+      "5490"
+    ]
+  },
+  {
+    "id": "mul2x2h-05",
+    "family": "mul2x2h",
+    "prompt": "What is 67 times 74? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "4958",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "4958",
+      "4958",
+      "4958",
+      "4958",
+      "4958",
+      "4958",
+      "4958",
+      "4958"
+    ]
+  },
+  {
+    "id": "mul2x2h-06",
+    "family": "mul2x2h",
+    "prompt": "What is 92 times 74? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "6808",
+    "samples": 8,
+    "solved": 7,
+    "rate": 0.875,
+    "answers": [
+      "6808",
+      "6808",
+      "6768",
+      "6808",
+      "6808",
+      "6808",
+      "6808",
+      "6808"
+    ]
+  },
+  {
+    "id": "mul2x2h-07",
+    "family": "mul2x2h",
+    "prompt": "What is 84 times 71? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "5964",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "5964",
+      "5964",
+      "5964",
+      "5964",
+      "5964",
+      "5964",
+      "5964",
+      "5964"
+    ]
+  },
+  {
+    "id": "mul3x2-08",
+    "family": "mul3x2",
+    "prompt": "What is 438 times 95? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "41610",
+    "samples": 8,
+    "solved": 6,
+    "rate": 0.75,
+    "answers": [
+      "41610",
+      "41410",
+      "41510",
+      "41610",
+      "41610",
+      "41610",
+      "41610",
+      "41610"
+    ]
+  },
+  {
+    "id": "mul3x2-09",
+    "family": "mul3x2",
+    "prompt": "What is 974 times 50? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "48700",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "48700",
+      "48700",
+      "48700",
+      "48700",
+      "48700",
+      "48700",
+      "48700",
+      "48700"
+    ]
+  },
+  {
+    "id": "mul3x2-10",
+    "family": "mul3x2",
+    "prompt": "What is 934 times 32? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "29888",
+    "samples": 8,
+    "solved": 7,
+    "rate": 0.875,
+    "answers": [
+      "29888",
+      "29888",
+      "29888",
+      "29888",
+      "29888",
+      "29888",
+      "29888",
+      "29900"
+    ]
+  },
+  {
+    "id": "mul3x2-11",
+    "family": "mul3x2",
+    "prompt": "What is 491 times 66? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "32406",
+    "samples": 8,
+    "solved": 6,
+    "rate": 0.75,
+    "answers": [
+      "32406",
+      "32406",
+      "32406",
+      "32406",
+      "32406",
+      "32346",
+      "32406",
+      "32346"
+    ]
+  },
+  {
+    "id": "mul3x2-12",
+    "family": "mul3x2",
+    "prompt": "What is 521 times 39? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "20319",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "20319",
+      "20319",
+      "20319",
+      "20319",
+      "20319",
+      "20319",
+      "20319",
+      "20319"
+    ]
+  },
+  {
+    "id": "mul3x2-13",
+    "family": "mul3x2",
+    "prompt": "What is 704 times 91? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "64064",
+    "samples": 8,
+    "solved": 0,
+    "rate": 0.0,
+    "answers": [
+      "64264",
+      "64244",
+      "64264",
+      "64144",
+      "64184",
+      "64264",
+      "64264",
+      "64144"
+    ]
+  },
+  {
+    "id": "mul3x2-14",
+    "family": "mul3x2",
+    "prompt": "What is 541 times 23? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "12443",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "12443",
+      "12443",
+      "12443",
+      "12443",
+      "12443",
+      "12443",
+      "12443",
+      "12443"
+    ]
+  },
+  {
+    "id": "mul3x2-15",
+    "family": "mul3x2",
+    "prompt": "What is 304 times 35? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "10640",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "10640",
+      "10640",
+      "10640",
+      "10640",
+      "10640",
+      "10640",
+      "10640",
+      "10640"
+    ]
+  },
+  {
+    "id": "mul4x1-16",
+    "family": "mul4x1",
+    "prompt": "What is 5269 times 4? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "21076",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "21076",
+      "21076",
+      "21076",
+      "21076",
+      "21076",
+      "21076",
+      "21076",
+      "21076"
+    ]
+  },
+  {
+    "id": "mul4x1-17",
+    "family": "mul4x1",
+    "prompt": "What is 8560 times 4? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "34240",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "34240",
+      "34240",
+      "34240",
+      "34240",
+      "34240",
+      "34240",
+      "34240",
+      "34240"
+    ]
+  },
+  {
+    "id": "mul4x1-18",
+    "family": "mul4x1",
+    "prompt": "What is 5984 times 5? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "29920",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "29920",
+      "29920",
+      "29920",
+      "29920",
+      "29920",
+      "29920",
+      "29920",
+      "29920"
+    ]
+  },
+  {
+    "id": "mul4x1-19",
+    "family": "mul4x1",
+    "prompt": "What is 6962 times 8? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "55696",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "55696",
+      "55696",
+      "55696",
+      "55696",
+      "55696",
+      "55696",
+      "55696",
+      "55696"
+    ]
+  },
+  {
+    "id": "mul4x1-20",
+    "family": "mul4x1",
+    "prompt": "What is 8952 times 9? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "80568",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "80568",
+      "80568",
+      "80568",
+      "80568",
+      "80568",
+      "80568",
+      "80568",
+      "80568"
+    ]
+  },
+  {
+    "id": "mul4x1-21",
+    "family": "mul4x1",
+    "prompt": "What is 4041 times 6? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "24246",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "24246",
+      "24246",
+      "24246",
+      "24246",
+      "24246",
+      "24246",
+      "24246",
+      "24246"
+    ]
+  },
+  {
+    "id": "mul4x1-22",
+    "family": "mul4x1",
+    "prompt": "What is 3414 times 7? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "23898",
+    "samples": 8,
+    "solved": 2,
+    "rate": 0.25,
+    "answers": [
+      "23900",
+      "23900",
+      "23898",
+      "23900",
+      "23900",
+      "23900",
+      "23898",
+      "23900"
+    ]
+  },
+  {
+    "id": "mul4x1-23",
+    "family": "mul4x1",
+    "prompt": "What is 4200 times 5? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "21000",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "21000",
+      "21000",
+      "21000",
+      "21000",
+      "21000",
+      "21000",
+      "21000",
+      "21000"
+    ]
+  },
+  {
+    "id": "pct_hard-24",
+    "family": "pct_hard",
+    "prompt": "What is 12 percent of 852? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "102",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "102",
+      "102",
+      "102",
+      "102",
+      "102",
+      "102",
+      "102",
+      "102"
+    ]
+  },
+  {
+    "id": "pct_hard-25",
+    "family": "pct_hard",
+    "prompt": "What is 18 percent of 198? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "35",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "35",
+      "35",
+      "35",
+      "35",
+      "35",
+      "35",
+      "35",
+      "35"
+    ]
+  },
+  {
+    "id": "pct_hard-26",
+    "family": "pct_hard",
+    "prompt": "What is 18 percent of 767? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "138",
+    "samples": 8,
+    "solved": 6,
+    "rate": 0.75,
+    "answers": [
+      "13",
+      "138",
+      "06",
+      "138",
+      "138",
+      "138",
+      "138",
+      "138"
+    ]
+  },
+  {
+    "id": "pct_hard-27",
+    "family": "pct_hard",
+    "prompt": "What is 36 percent of 200? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "72",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "72",
+      "72",
+      "72",
+      "72",
+      "72",
+      "72",
+      "72",
+      "72"
+    ]
+  },
+  {
+    "id": "pct_hard-28",
+    "family": "pct_hard",
+    "prompt": "What is 18 percent of 403? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "72",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "72",
+      "72",
+      "72",
+      "72",
+      "72",
+      "72",
+      "72",
+      "72"
+    ]
+  },
+  {
+    "id": "pct_hard-29",
+    "family": "pct_hard",
+    "prompt": "What is 18 percent of 450? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "81",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "81",
+      "81",
+      "81",
+      "81",
+      "81",
+      "81",
+      "81",
+      "81"
+    ]
+  },
+  {
+    "id": "pct_hard-30",
+    "family": "pct_hard",
+    "prompt": "What is 36 percent of 811? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "291",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "291",
+      "291",
+      "291",
+      "291",
+      "291",
+      "291",
+      "291",
+      "291"
+    ]
+  },
+  {
+    "id": "pct_hard-31",
+    "family": "pct_hard",
+    "prompt": "What is 36 percent of 890? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "320",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "320",
+      "320",
+      "320",
+      "320",
+      "320",
+      "320",
+      "320",
+      "320"
+    ]
+  },
+  {
+    "id": "div_hard-32",
+    "family": "div_hard",
+    "prompt": "What is 14616 divided by 18? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "812",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "812",
+      "812",
+      "812",
+      "812",
+      "812",
+      "812",
+      "812",
+      "812"
+    ]
+  },
+  {
+    "id": "div_hard-33",
+    "family": "div_hard",
+    "prompt": "What is 1898 divided by 13? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "146",
+    "samples": 8,
+    "solved": 0,
+    "rate": 0.0,
+    "answers": [
+      "0",
+      "07692307692308",
+      "9923",
+      "00",
+      "00",
+      "00",
+      "0",
+      "00"
+    ]
+  },
+  {
+    "id": "div_hard-34",
+    "family": "div_hard",
+    "prompt": "What is 8255 divided by 13? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "635",
+    "samples": 8,
+    "solved": 4,
+    "rate": 0.5,
+    "answers": [
+      "635",
+      "635",
+      "635",
+      "923",
+      "923076923",
+      "923076923",
+      "923",
+      "635"
+    ]
+  },
+  {
+    "id": "div_hard-35",
+    "family": "div_hard",
+    "prompt": "What is 1808 divided by 8? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "226",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "226",
+      "226",
+      "226",
+      "226",
+      "226",
+      "226",
+      "226",
+      "226"
+    ]
+  },
+  {
+    "id": "div_hard-36",
+    "family": "div_hard",
+    "prompt": "What is 1080 divided by 9? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "120",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "120",
+      "120",
+      "120",
+      "120",
+      "120",
+      "120",
+      "120",
+      "120"
+    ]
+  },
+  {
+    "id": "div_hard-37",
+    "family": "div_hard",
+    "prompt": "What is 3154 divided by 19? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "166",
+    "samples": 8,
+    "solved": 7,
+    "rate": 0.875,
+    "answers": [
+      "166",
+      "166",
+      "166",
+      "166",
+      "166",
+      "166",
+      "0",
+      "166"
+    ]
+  },
+  {
+    "id": "div_hard-38",
+    "family": "div_hard",
+    "prompt": "What is 1728 divided by 9? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "192",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "192",
+      "192",
+      "192",
+      "192",
+      "192",
+      "192",
+      "192",
+      "192"
+    ]
+  },
+  {
+    "id": "div_hard-39",
+    "family": "div_hard",
+    "prompt": "What is 1190 divided by 7? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "170",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "170",
+      "170",
+      "170",
+      "170",
+      "170",
+      "170",
+      "170",
+      "170"
+    ]
+  },
+  {
+    "id": "sub3_big-40",
+    "family": "sub3_big",
+    "prompt": "What is 7801 plus 3326 minus 189? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "10938",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "10938",
+      "10938",
+      "10938",
+      "10938",
+      "10938",
+      "10938",
+      "10938",
+      "10938"
+    ]
+  },
+  {
+    "id": "sub3_big-41",
+    "family": "sub3_big",
+    "prompt": "What is 8283 plus 3007 minus 838? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "10452",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "10452",
+      "10452",
+      "10452",
+      "10452",
+      "10452",
+      "10452",
+      "10452",
+      "10452"
+    ]
+  },
+  {
+    "id": "sub3_big-42",
+    "family": "sub3_big",
+    "prompt": "What is 4385 plus 1305 minus 424? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "5266",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "5266",
+      "5266",
+      "5266",
+      "5266",
+      "5266",
+      "5266",
+      "5266",
+      "5266"
+    ]
+  },
+  {
+    "id": "sub3_big-43",
+    "family": "sub3_big",
+    "prompt": "What is 9094 plus 7998 minus 488? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "16604",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "16604",
+      "16604",
+      "16604",
+      "16604",
+      "16604",
+      "16604",
+      "16604",
+      "16604"
+    ]
+  },
+  {
+    "id": "sub3_big-44",
+    "family": "sub3_big",
+    "prompt": "What is 8182 plus 4714 minus 901? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "11995",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "11995",
+      "11995",
+      "11995",
+      "11995",
+      "11995",
+      "11995",
+      "11995",
+      "11995"
+    ]
+  },
+  {
+    "id": "sub3_big-45",
+    "family": "sub3_big",
+    "prompt": "What is 5325 plus 5577 minus 633? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "10269",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "10269",
+      "10269",
+      "10269",
+      "10269",
+      "10269",
+      "10269",
+      "10269",
+      "10269"
+    ]
+  },
+  {
+    "id": "sub3_big-46",
+    "family": "sub3_big",
+    "prompt": "What is 4586 plus 6066 minus 568? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "10084",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "10084",
+      "10084",
+      "10084",
+      "10084",
+      "10084",
+      "10084",
+      "10084",
+      "10084"
+    ]
+  },
+  {
+    "id": "sub3_big-47",
+    "family": "sub3_big",
+    "prompt": "What is 3857 plus 6657 minus 158? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "10356",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "10356",
+      "10356",
+      "10356",
+      "10356",
+      "10356",
+      "10356",
+      "10356",
+      "10356"
+    ]
+  },
+  {
+    "id": "twostep_big-48",
+    "family": "twostep_big",
+    "prompt": "What is (154 plus 669) times 35? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "28805",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "28805",
+      "28805",
+      "28805",
+      "28805",
+      "28805",
+      "28805",
+      "28805",
+      "28805"
+    ]
+  },
+  {
+    "id": "twostep_big-49",
+    "family": "twostep_big",
+    "prompt": "What is (415 plus 410) times 35? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "28875",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "28875",
+      "28875",
+      "28875",
+      "28875",
+      "28875",
+      "28875",
+      "28875",
+      "28875"
+    ]
+  },
+  {
+    "id": "twostep_big-50",
+    "family": "twostep_big",
+    "prompt": "What is (328 plus 783) times 35? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "38885",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "38885",
+      "38885",
+      "38885",
+      "38885",
+      "38885",
+      "38885",
+      "38885",
+      "38885"
+    ]
+  },
+  {
+    "id": "twostep_big-51",
+    "family": "twostep_big",
+    "prompt": "What is (588 plus 864) times 38? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "55176",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "55176",
+      "55176",
+      "55176",
+      "55176",
+      "55176",
+      "55176",
+      "55176",
+      "55176"
+    ]
+  },
+  {
+    "id": "twostep_big-52",
+    "family": "twostep_big",
+    "prompt": "What is (205 plus 364) times 34? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "19346",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "19346",
+      "19346",
+      "19346",
+      "19346",
+      "19346",
+      "19346",
+      "19346",
+      "19346"
+    ]
+  },
+  {
+    "id": "twostep_big-53",
+    "family": "twostep_big",
+    "prompt": "What is (555 plus 550) times 25? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "27625",
+    "samples": 8,
+    "solved": 8,
+    "rate": 1.0,
+    "answers": [
+      "27625",
+      "27625",
+      "27625",
+      "27625",
+      "27625",
+      "27625",
+      "27625",
+      "27625"
+    ]
+  },
+  {
+    "id": "twostep_big-54",
+    "family": "twostep_big",
+    "prompt": "What is (628 plus 175) times 37? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "29711",
+    "samples": 8,
+    "solved": 0,
+    "rate": 0.0,
+    "answers": [
+      "29691",
+      "29691",
+      "29691",
+      "29691",
+      "29691",
+      "29691",
+      "29691",
+      "29691"
+    ]
+  },
+  {
+    "id": "twostep_big-55",
+    "family": "twostep_big",
+    "prompt": "What is (605 plus 422) times 26? Think briefly, then end your reply with a final line of the form Answer: <number>.",
+    "answer": "26702",
+    "samples": 8,
+    "solved": 1,
+    "rate": 0.125,
+    "answers": [
+      "26692",
+      "26692",
+      "26692",
+      "26682",
+      "26692",
+      "26702",
+      "26692",
+      "26692"
+    ]
+  }
+]

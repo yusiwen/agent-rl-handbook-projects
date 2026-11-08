@@ -1,0 +1,24 @@
+{"id": "e-m2-00", "family": "m2", "prompt": "What is 85 times 99? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "8415"}
+{"id": "e-m2-01", "family": "m2", "prompt": "What is 79 times 82? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "6478"}
+{"id": "e-m2-02", "family": "m2", "prompt": "What is 76 times 85? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "6460"}
+{"id": "e-m2-03", "family": "m2", "prompt": "What is 81 times 96? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "7776"}
+{"id": "e-m2-04", "family": "m2", "prompt": "What is 91 times 99? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "9009"}
+{"id": "e-m2-05", "family": "m2", "prompt": "What is 89 times 74? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "6586"}
+{"id": "e-m32-06", "family": "m32", "prompt": "What is 495 times 40? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "19800"}
+{"id": "e-m32-07", "family": "m32", "prompt": "What is 353 times 91? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "32123"}
+{"id": "e-m32-08", "family": "m32", "prompt": "What is 799 times 63? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "50337"}
+{"id": "e-m32-09", "family": "m32", "prompt": "What is 454 times 67? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "30418"}
+{"id": "e-m32-10", "family": "m32", "prompt": "What is 681 times 45? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "30645"}
+{"id": "e-m32-11", "family": "m32", "prompt": "What is 937 times 65? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "60905"}
+{"id": "e-dv-12", "family": "dv", "prompt": "What is 7600 divided by 19? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "400"}
+{"id": "e-dv-13", "family": "dv", "prompt": "What is 10188 divided by 12? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "849"}
+{"id": "e-dv-14", "family": "dv", "prompt": "What is 3948 divided by 14? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "282"}
+{"id": "e-dv-15", "family": "dv", "prompt": "What is 7502 divided by 11? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "682"}
+{"id": "e-dv-16", "family": "dv", "prompt": "What is 4624 divided by 16? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "289"}
+{"id": "e-dv-17", "family": "dv", "prompt": "What is 6852 divided by 12? Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "571"}
+{"id": "e-pc-18", "family": "pc", "prompt": "What is 37 percent of 615? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "227"}
+{"id": "e-pc-19", "family": "pc", "prompt": "What is 19 percent of 423? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "80"}
+{"id": "e-pc-20", "family": "pc", "prompt": "What is 23 percent of 491? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "112"}
+{"id": "e-pc-21", "family": "pc", "prompt": "What is 37 percent of 659? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "243"}
+{"id": "e-pc-22", "family": "pc", "prompt": "What is 37 percent of 656? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "242"}
+{"id": "e-pc-23", "family": "pc", "prompt": "What is 37 percent of 315? Round down if the result is not a whole number. Think briefly, then end your reply with a final line of the form Answer: <number>.", "answer": "116"}

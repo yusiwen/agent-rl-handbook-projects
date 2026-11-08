@@ -52,3 +52,9 @@ e-pc-22     0.750 -> 0.500
 #    shows shrinking into a normal range.
 # 3. The container was OOM-killed after step 8 in both attempts (118g cap, no traceback because the
 #    main process was SIGKILLed); the checkpoint at step 8 is what the held-out number comes from.
+
+## the inputs, so the numbers can be recomputed rather than trusted
+# grpo-learning/make_tasks2.py, make_tasks3.py  - the generated sets (seeds inside)
+# grpo-learning/calib2.json, calib3.json        - the calibration that picked the 24 training prompts
+# grpo-learning/train.jsonl, eval.jsonl         - the two sets as the run consumed them
+# grpo-learning/run_grpo.sh                     - the exact container command, including the five knobs
