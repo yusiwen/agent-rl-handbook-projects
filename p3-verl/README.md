@@ -106,10 +106,42 @@ Found GPU0 NVIDIA GB10 which is of cuda capability 12.1.
 Minimum and Maximum cuda capability supported by this version of PyTorch is (8.0) - (12.0)
 ```
 
-The image's arch list ends at `sm_120`; the Spark is `sm_121`. The vLLM generation that addresses this
-GPU is the one already serving here (v0.31.0, torch 2.13/2.14 line), and that is not the API verl 0.9.1
-was written against. No pair exists on this machine that both runs and matches: this is a version/hardware
-fact, not a config mistake. GRPO stays unrun.
+**Corrected 2026-11-08 - all three sentences above were wrong, and GRPO runs here.**
+
+* **0.11.2 was not "the generation matching verl 0.9.1".** verl 0.9.1's own `[vllm]` extra declares
+  `vllm==0.24.0` (`torch==2.11.0`, `transformers==5.9.0`). The image picked was three release lines
+  below the one the package asks for.
+* **"The arch list ends at `sm_120`" explains nothing.** Every stack that works on this machine ends
+  there - NGC `torch 2.14.0a0+cu134`, the serving container's `2.13.0+cu130`, and the corrected
+  image's `2.11.0+cu130`. CUDA runs `sm_120` cubins on `sm_121` hardware within the same major
+  version. What refused was **torch 2.9's device guard**, which raises when a device's capability
+  exceeds the build's maximum; the message names the build, not the GPU.
+* **"No pair exists" was never tested.** It was inferred from the two above.
+
+With `vllm/vllm-openai:v0.24.0` (arm64, CUDA 13.0.2 base, `torch 2.11.0+cu130`, `vllm 0.24.0`), verl
+0.9.1 runs `verl.trainer.main_ppo` to two completed steps - `fixtures/verl-v024-grpo-2steps.txt`::
+
+    step 1  rewards -0.125 (max 1.0, min -1.0)  advantages +-0.707  loss -0.0006  grad_norm 2.30
+            gen 6.37s  update_actor 12.20s  update_weights 2.34s  step 28.89s  141.6 tok/s
+    step 2  rewards -0.375                      advantages +-0.707  loss  0.0120  grad_norm 1.33
+            gen 6.37s  update_actor  8.45s  update_weights 2.57s  step 19.81s  215.5 tok/s
+
+The rewards move between the steps because step 1's update changed the policy, which is what makes it
+a loop rather than one forward pass. Four things are needed beyond the image, and each cost a cycle:
+
+| what | why |
+| --- | --- |
+| `pip install transferqueue` (0.1.12) | verl imports it and does not declare it |
+| `HF_DATASETS_CACHE=/work/hf-datasets` | `HF_HOME` is mounted read-only, and `datasets` wants a cache |
+| `+actor_rollout_ref.model.override_config.attn_implementation=sdpa` | the FSDP path defaults to FlashAttention 2, which has no aarch64 wheel |
+| `data_source="math"` in the dataset | the reward loop keys on `data_source`; `custom_reward_function` is not consulted by it in 0.9.1 |
+
+Run conditions on the Spark: the rollout workers and the trainer share one GPU, and step 2 holds **93.1 GB**
+of CPU-side memory on a 121 GB machine, so the `:8003` server has to be stopped while it runs. With the
+`:8003` server up, the dataloader is killed at the following step. `trainer.total_epochs` must also exceed
+the number of steps you ask for, or the second step has no data to draw from. The run still exits non-zero:
+a DataLoader worker is killed during teardown, after both steps have logged and after
+`Total training steps: 2` is printed.
 
 `rollout.name=hf` is **not available in 0.9.1**. `_ROLLOUT_REGISTRY` in `verl/workers/rollout/base.py`
 holds exactly three entries - `("vllm","async")`, `("sglang","async"`, `("trtllm","async")` - and

@@ -1,0 +1,25 @@
+# verl 0.9.1 + vLLM 0.24.0 on the Spark (GB10, sm_121), 2026-11-08
+# image: vllm/vllm-openai:v0.24.0 (arm64, CUDA 13.0.2 base)
+# venv: /work/env over the image's python (--system-site-packages), torch 2.11.0+cu130, transformers 5.10.4
+# extras installed by hand: transferqueue 0.1.12 (verl imports it and does not declare it)
+# task: 8 arithmetic prompts, n=2 rollouts each, 2 training steps, Qwen/Qwen3-1.7B, GRPO (no critic)
+
+## the stack probe (same container, before training)
+torch 2.11.0+cu130  cuda 13.0
+arch ['sm_80', 'sm_90', 'sm_100', 'sm_110', 'sm_120']
+device NVIDIA GB10  cap (12, 1)
+matmul+backward ok  grad True  36.39948654174805
+vllm 0.24.0
+
+## step 1, complete (all of: rollout, old_log_prob, advantages, actor update, weight sync)
+[36m(TaskRunnerV1 pid=1844)[0m step:1 - global_seqlen/min:4018.0 - global_seqlen/max:4018.0 - global_seqlen/minmax_diff:0.0 - global_seqlen/balanced_min:4018.0 - global_seqlen/balanced_max:4018.0 - global_seqlen/mean:4018.0 - actor/entropy:0.11502903699874878 - training/rollout_probs_diff_valid:1.0 - training/rollout_probs_diff_max:0.25485000014305115 - training/rollout_probs_diff_mean:0.0050138141959905624 - training/rollout_probs_diff_std:0.0161643847823143 - training/rollout_actor_probs_pearson_corr:0.9957085847854614 - rollout_corr/training_ppl:1.129826545715332 - rollout_corr/training_log_ppl:0.12142112851142883 - rollout_corr/kl:0.0022444503847509623 - rollout_corr/k3_kl:0.0009861967992037535 - rollout_corr/rollout_ppl:1.1271216869354248 - rollout_corr/rollout_log_ppl:0.11906027048826218 - rollout_corr/log_ppl_diff:0.002360860351473093 - rollout_corr/log_ppl_abs_diff:0.0031902925111353397 - rollout_corr/log_ppl_diff_max:0.007400944828987122 - rollout_corr/log_ppl_diff_min:-0.0025801435112953186 - rollout_corr/ppl_ratio:1.0023679733276367 - rollout_corr/chi2_token:-0.0005880594253540039 - rollout_corr/chi2_seq:-0.15952932834625244 - actor/pg_clipfrac:0.0 - actor/ppo_kl:0.0 - actor/pg_clipfrac_lower:0.0 - actor/pg_loss:0.044219743460416794 - actor/loss:0.04421974718570709 - actor/grad_norm:3.108328104019165 - actor/lr:1e-06 - actor/perf/max_memory_allocated_gb:32.064077377319336 - actor/perf/max_memory_reserved_gb:35.923828125 - actor/perf/cpu_memory_used_gb:90.33132934570312 - perf/mfu/actor:0.0 - training/global_step:1 - training/epoch:0 - critic/score/mean:-0.25 - critic/score/max:1.0 - critic/score/min:-1.0 - critic/rewards/mean:-0.25 - critic/rewards/max:1.0 - critic/rewards/min:-1.0 - critic/advantages/mean:-0.0442197322845459 - critic/advantages/max:0.7071062922477722 - critic/advantages/min:-0.7071062922477722 - critic/returns/mean:-0.0442197322845459 - critic/returns/max:0.7071062922477722 - critic/returns/min:-0.7071062922477722 - response_length/mean:215.875 - response_length/max:256.0 - response_length/min:145.0 - response_length/clip_ratio:0.25 - response_length_non_aborted/mean:215.875 - response_length_non_aborted/max:256.0 - response_length_non_aborted/min:145.0 - response_length_non_aborted/clip_ratio:0.25 - response/aborted_ratio:0.0 - prompt_length/mean:35.25 - prompt_length/max:36.0 - prompt_length/min:34.0 - prompt_length/clip_ratio:0.375 - num_turns/min:np.int32(2) - num_turns/max:np.int32(2) - num_turns/mean:np.float64(2.0) - timing_s/gen:6.367736942000192 - timing_s/old_log_prob:3.485917187997984 - timing_s/adv:0.01652071100033936 - timing_s/update_actor:12.25092978199973 - timing_s/update_weights:4.237287021998782 - timing_s/step:31.152771914999903 - timing_per_token_ms/update_actor:3.0490118919859954 - timing_per_token_ms/gen:1.843583364794497 - timing_per_token_ms/adv:0.004111675211632494 - perf/total_num_tokens:4018 - perf/time_per_step:31.152771914999903 - perf/throughput:128.97728686754044 - training/num_turns/mean:np.float64(2.0) - training/num_turns/max:np.int64(2) - training/num_turns/min:np.int64(2) - training/off_policy/trajectory_spans/mean:np.float64(1.0) - training/off_policy/trajectory_spans/max:np.int64(1) - training/off_policy/trajectory_spans/min:np.int64(1) - training/off_policy/trajectory_staleness/mean:np.float64(0.0) - training/off_policy/trajectory_staleness/max:np.int64(0) - training/off_policy/trajectory_staleness/min:np.int64(0) - training/off_policy/trajectory_staleness_worst/mean:np.float64(0.0) - training/off_policy/trajectory_staleness_worst/max:np.int64(0) - training/off_policy/trajectory_staleness_worst/min:np.int64(0)
+
+## what stopped the second step
+[36m(TaskRunnerV1 pid=1844)[0m RuntimeError: DataLoader worker (pid 3561) is killed by signal: Killed.
+
+## reading
+# The step line is the evidence that the pairing works: gen 6.37 s, update_actor 12.25 s,
+# update_weights 4.24 s, actor loss 0.0442, grad_norm 3.108, advantages min/max -0.707/+0.707,
+# rewards mean -0.25 with max 1.0 and min -1.0 - i.e. the group had spread and the update did work.
+# The kill is the container's memory ceiling (--memory=100g) meeting cpu_memory_used_gb 90.3,
+# not a kernel or a capability failure.  The host had 102 GB available with the 8003 server running.

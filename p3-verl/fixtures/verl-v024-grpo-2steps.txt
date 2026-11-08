@@ -1,0 +1,20 @@
+# verl 0.9.1 + vLLM 0.24.0 on the Spark (GB10, sm_121), 2026-11-08 - two steps, completed
+# image vllm/vllm-openai:v0.24.0 (arm64, CUDA 13.0.2 base); venv /work/env over its python
+# torch 2.11.0+cu130 (arch list ends at sm_120) - the GB10 runs it; vllm 0.24.0; transformers 5.10.4
+# model Qwen/Qwen3-1.7B, 8 prompts x n=2, GRPO (no critic), sdpa attention, transferqueue 0.1.12 by hand
+# run with the :8003 server stopped (docker stop p3-sync); --shm-size=32g --memory=110g
+# data.dataloader_num_workers=2; trainer.total_epochs=4 so that two steps have data to draw on
+
+## the two steps, key fields only (step 1 in full: verl-v024-grpo-smoke.txt)
+step 1:  training/global_step=1  critic/rewards/mean=-0.125  critic/rewards/max=1.0  critic/rewards/min=-1.0  critic/advantages/max=0.7071062922477722  actor/loss=-0.0006012767553329468  actor/grad_norm=2.301886796951294  actor/entropy=0.11374513804912567  timing_s/gen=6.373947179003153  timing_s/old_log_prob=3.137664810001297  timing_s/update_actor=12.200720193999587  timing_s/update_weights=2.3359705849979946  timing_s/step=28.888565776000178  perf/throughput=141.64773813034085  actor/perf/max_memory_allocated_gb=32.064077377319336  actor/perf/cpu_memory_used_gb=74.92559814453125  response_length/mean=220.5  response_length/clip_ratio=0.4375
+step 2:  training/global_step=2  critic/rewards/mean=-0.375  critic/rewards/max=1.0  critic/rewards/min=-1.0  critic/advantages/max=0.7071062922477722  actor/loss=0.012023668736219406  actor/grad_norm=1.3259104490280151  actor/entropy=0.12311265617609024  timing_s/gen=6.36817949000033  timing_s/old_log_prob=2.3352797420011484  timing_s/update_actor=8.454485509999358  timing_s/update_weights=2.5705049870011862  timing_s/step=19.81316107100065  perf/throughput=215.46284233505185  actor/perf/max_memory_allocated_gb=32.064091205596924  actor/perf/cpu_memory_used_gb=93.14596557617188  response_length/mean=231.5625  response_length/clip_ratio=0.5
+
+## teardown (after the second step, not during training)
+#'Total training steps: 2' is printed, both steps log, and then a DataLoader worker is killed
+# while the process shuts down: is killed by signal: Killed. 
+
+## reading
+# Two steps, two actor updates, two weight syncs.  The rewards differ between the steps (-0.125 then
+# -0.375) because step 1's update changed the policy - this is a loop, not one forward pass.
+# The container needs the :8003 server stopped while it runs: 93.1 GB CPU-side at step 2 on a
+# 121 GB machine, and an 18 GB server on top of that leaves no headroom.
