@@ -72,6 +72,7 @@ run "p5 tests" python3 -m unittest discover -s p5-openclaw-rl/tests -t p5-opencl
 run "p5 check (world, protocol, accounting)" python3 p5-openclaw-rl/checks/check_p5.py
 run "p6 tests" python3 -m unittest discover -s p6-memento-skills/tests -t p6-memento-skills/tests
 run "p6 check (task set, gate, retrieval record)" python3 p6-memento-skills/checks/check_p6.py
+run "p6 claims (outcome records)" python3 p6-memento-skills/checks/p6_claims.py
 run "p5 claims (records)" python3 p5-openclaw-rl/checks/p5_claims.py
 run "p3 eval-claims (arithmetic)" python3 p3-verl/checks/eval_claims.py --check
 run "p3 eval-claims (selftest)" python3 p3-verl/checks/eval_claims.py --selftest

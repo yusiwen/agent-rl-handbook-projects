@@ -1,0 +1,4081 @@
+{
+  "model": "qwen3-1.7b-base",
+  "base_url": "http://127.0.0.1:8003",
+  "instances_per_family": 10,
+  "conditions": {
+    "bare": {
+      "solved": 34,
+      "instances": 100,
+      "errors": 40,
+      "per_family": {
+        "sum-by-group": 3,
+        "dedupe-keep-last": 10,
+        "normalise-dates": 0,
+        "round-currency": 3,
+        "top-k-by": 5,
+        "pivot-counts": 0,
+        "fill-forward": 0,
+        "unit-convert": 1,
+        "split-remainder": 10,
+        "schema-check": 2
+      }
+    },
+    "oracle-skill": {
+      "solved": 25,
+      "instances": 100,
+      "errors": 33,
+      "per_family": {
+        "sum-by-group": 3,
+        "dedupe-keep-last": 7,
+        "normalise-dates": 0,
+        "round-currency": 2,
+        "top-k-by": 5,
+        "pivot-counts": 4,
+        "fill-forward": 0,
+        "unit-convert": 0,
+        "split-remainder": 2,
+        "schema-check": 2
+      }
+    },
+    "keyword": {
+      "solved": 27,
+      "instances": 100,
+      "errors": 28,
+      "per_family": {
+        "sum-by-group": 3,
+        "dedupe-keep-last": 7,
+        "normalise-dates": 0,
+        "round-currency": 1,
+        "top-k-by": 5,
+        "pivot-counts": 5,
+        "fill-forward": 0,
+        "unit-convert": 0,
+        "split-remainder": 4,
+        "schema-check": 2
+      }
+    },
+    "idf": {
+      "solved": 29,
+      "instances": 100,
+      "errors": 28,
+      "per_family": {
+        "sum-by-group": 3,
+        "dedupe-keep-last": 5,
+        "normalise-dates": 0,
+        "round-currency": 3,
+        "top-k-by": 6,
+        "pivot-counts": 4,
+        "fill-forward": 0,
+        "unit-convert": 3,
+        "split-remainder": 3,
+        "schema-check": 2
+      }
+    }
+  },
+  "routing": {
+    "keyword": 0.9,
+    "idf": 1.0
+  },
+  "rows": [
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 0,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "central=1038; north=749; south=538; west=607",
+      "expected": "central=1038; north=749; south=538; west=607"
+    },
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 1,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "north=12; central=581; south=692; west=580",
+      "expected": "central=581; north=12; south=692; west=580"
+    },
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 2,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "central=266; north=529; south=1167; west=642",
+      "expected": "central=266; north=529; south=1167; west=642"
+    },
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 3,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "south=414; central=1075; north=1118; west=60",
+      "expected": "central=1075; north=1118; south=414; west=60"
+    },
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 4,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "south=763; east=158; north=422; west=225",
+      "expected": "east=158; north=422; south=763; west=225"
+    },
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 5,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "south=289; north=406; central=415; east=300",
+      "expected": "central=415; east=300; north=406; south=289"
+    },
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 6,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "region=506; region=417; region=477; region=529",
+      "expected": "central=506; east=417; south=477; west=529"
+    },
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 7,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "east=515; north=957; south=554; west=719",
+      "expected": "east=515; north=957; south=554; west=719"
+    },
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 8,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "east=965; central=365; north=793; west=213",
+      "expected": "central=365; east=965; north=793; west=213"
+    },
+    {
+      "condition": "bare",
+      "family": "sum-by-group",
+      "seed": 9,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "east=81; central=445; north=1031; south=509",
+      "expected": "central=445; east=81; north=1031; south=509"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 0,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-129 8; id-107 3; id-119 3; id-106 1; id-121 1; id-124 7; id-120 1",
+      "expected": "id-129 8; id-107 3; id-119 3; id-106 1; id-121 1; id-124 7; id-120 1"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 1,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-113 6; id-128 5; id-133 7; id-105 2; id-112 6; id-136 5; id-114 4; id-137 5; id-101 3; id-102 8",
+      "expected": "id-113 6; id-128 5; id-133 7; id-105 2; id-112 6; id-136 5; id-114 4; id-137 5; id-101 3; id-102 8"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 2,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-117 6; id-125 7; id-110 6; id-103 7; id-135 1; id-119 1; id-128 2; id-126 2; id-108 6; id-102 6; id-114 6",
+      "expected": "id-117 6; id-125 7; id-110 6; id-103 7; id-135 1; id-119 1; id-128 2; id-126 2; id-108 6; id-102 6; id-114 6"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 3,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-102 8; id-118 2; id-100 6; id-110 4; id-101 7; id-139 8; id-133 7; id-132 3; id-123 8; id-127 4; id-122 7",
+      "expected": "id-102 8; id-118 2; id-100 6; id-110 4; id-101 7; id-139 8; id-133 7; id-132 3; id-123 8; id-127 4; id-122 7"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 4,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-134 1; id-128 4; id-124 1; id-117 2; id-131 8; id-121 6; id-133 4; id-112 7; id-103 4",
+      "expected": "id-134 1; id-128 4; id-124 1; id-117 2; id-131 8; id-121 6; id-133 4; id-112 7; id-103 4"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 5,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-123 6; id-112 8; id-111 3; id-133 4; id-108 3; id-104 4; id-135 7; id-132 2",
+      "expected": "id-123 6; id-112 8; id-111 3; id-133 4; id-108 3; id-104 4; id-135 7; id-132 2"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 6,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-125 8; id-137 6; id-115 3; id-112 2; id-134 3; id-103 3; id-123 3; id-126 5; id-133 1",
+      "expected": "id-125 8; id-137 6; id-115 3; id-112 2; id-134 3; id-103 3; id-123 3; id-126 5; id-133 1"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 7,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-115 6; id-110 4; id-104 4; id-127 2; id-134 5; id-128 6; id-107 8",
+      "expected": "id-115 6; id-110 4; id-104 4; id-127 2; id-134 5; id-128 6; id-107 8"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 8,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-135 6; id-134 6; id-127 2; id-111 1; id-115 5; id-112 5; id-102 3",
+      "expected": "id-135 6; id-134 6; id-127 2; id-111 1; id-115 5; id-112 5; id-102 3"
+    },
+    {
+      "condition": "bare",
+      "family": "dedupe-keep-last",
+      "seed": 9,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "id-120 5; id-116 8; id-105 6; id-111 2; id-139 2; id-136 6; id-107 5",
+      "expected": "id-120 5; id-116 8; id-105 6; id-111 2; id-139 2; id-136 6; id-107 5"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 0,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-04-06; 2021-05-06; 2021-09-22; 2022-04-28; 2022-05-20; 2022-09-24; 2024-06-12; 2024-07-15; 2024-12-06"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 1,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-12-01; 2021-12-26; 2022-09-14; 2022-10-13; 2022-11-10; 2023-02-06; 2024-01-06; 2024-11-19"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 2,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "2021-01-13;2021-01-18;2021-09-19;2022-01-06;2022-",
+      "expected": "2021-01-13; 2021-01-18; 2021-09-19; 2022-01-06; 2022-03-26; 2023-01-26; 2023-05-17; 2023-12-02; 2024-08-19"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 3,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "2021-06-10;2021-07-02;2023-10-11;2023-12-25;2024-08-08;2024-09-10;2024-11-14",
+      "expected": "2021-02-07; 2021-10-06; 2023-10-11; 2023-12-25; 2024-08-08; 2024-09-10; 2024-11-14"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 4,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-06-04; 2021-08-25; 2022-01-20; 2022-01-24; 2022-11-04; 2023-05-20; 2023-10-28; 2024-06-20; 2024-10-13"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 5,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-09-12; 2022-09-24; 2022-12-02; 2023-05-09; 2023-05-20; 2023-11-26; 2024-06-03; 2024-08-03"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 6,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "2021-03-24;2021-09-11;2022-02-18;2023-04-18;2023-07-05;2023-07-14;2023-10-11",
+      "expected": "2021-03-24; 2021-11-09; 2022-02-18; 2023-04-18; 2023-07-05; 2023-07-14; 2023-10-11"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 7,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "2021-04-24;2021-10-17;2022-02-21;2022-02-24;2022-06-07;2022-11-18;2023-03-23;2023-09-28;2024-11-12",
+      "expected": "2021-04-24; 2021-10-17; 2022-02-21; 2022-02-24; 2022-06-07; 2022-11-18; 2023-03-23; 2023-09-28; 2024-11-12"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 8,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-03-11; 2021-06-22; 2022-01-09; 2022-02-27; 2022-03-20; 2022-09-02; 2022-11-10; 2023-11-22; 2024-01-10"
+    },
+    {
+      "condition": "bare",
+      "family": "normalise-dates",
+      "seed": 9,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "2021-07-06;2021-10-14;2021-10-23;2022-10-15;2023-05-27;2023-06-28;2023-11-06;2024-04-27;2024-07-18",
+      "expected": "2021-07-06; 2021-10-14; 2021-10-23; 2022-10-15; 2023-05-27; 2023-06-28; 2023-11-06; 2024-04-27; 2024-07-18"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 0,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "449.89",
+      "expected": "449.89"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 1,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "265.53"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 2,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "377.83",
+      "expected": "377.83"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 3,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "403.12"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 4,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "394.46"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 5,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "272.48"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 6,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "177.34"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 7,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "381.51"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 8,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "344.35",
+      "expected": "344.35"
+    },
+    {
+      "condition": "bare",
+      "family": "round-currency",
+      "seed": 9,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "557.20"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 0,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "gus:5; fay:5; eli:5; jo:4; hal:4; dee:2; ivy:2",
+      "expected": "eli:5; fay:5; gus:5"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 1,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "fay:5; ada:5; dee:4",
+      "expected": "ada:5; fay:5; dee:4"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 2,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "ada:5; fay:5; bo:5",
+      "expected": "ada:5; bo:5; fay:5"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 3,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "cy:4; eli:3",
+      "expected": "cy:4; bo:3"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 4,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "bo:5; dee:3; eli:3",
+      "expected": "bo:5; dee:3; eli:3"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 5,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "eli:5; gus:4",
+      "expected": "eli:5; gus:4"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 6,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "ivy:5; lu:4; bo:3",
+      "expected": "ivy:5; lu:4; bo:3"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 7,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "bo:5; dee:5",
+      "expected": "bo:5; dee:5"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 8,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "eli:5; jo:5; hal:4",
+      "expected": "eli:5; jo:5; hal:4"
+    },
+    {
+      "condition": "bare",
+      "family": "top-k-by",
+      "seed": 9,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "jo:5; fay:4; cy:4",
+      "expected": "jo:5; cy:4; fay:4"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 0,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=0; c-y=5"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 1,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "(a, x)=2; (a, y)=1; (b, x)=0; (b, y)=0; (c, x)=2; (c, y)=2",
+      "expected": "a-x=2; a-y=1; b-x=0; b-y=0; c-x=2; c-y=2"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 2,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=0; a-y=3; b-x=2; b-y=1; c-x=2; c-y=2"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 3,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=1; a-y=2; b-x=3; b-y=2; c-x=0; c-y=0"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 4,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=1; a-y=2; b-x=1; b-y=1; c-x=0; c-y=3"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 5,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=4; a-y=3; b-x=0; b-y=0; c-x=3; c-y=1"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 6,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=2; a-y=1; b-x=2; b-y=0; c-x=3; c-y=1"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 7,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=2; a-y=2; b-x=2; b-y=2; c-x=0; c-y=1"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 8,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=1; c-y=3"
+    },
+    {
+      "condition": "bare",
+      "family": "pivot-counts",
+      "seed": 9,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=3; a-y=3; b-x=2; b-y=1; c-x=0; c-y=1"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 0,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; -; 74; 74; 67; 67; 67; 10"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 1,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 56; 41; 41; 41; 70; 70; 81; 42; 42"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 2,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 67; 66; 33; 92; 76; 67; 38; 38"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 3,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "54; 54; 54; 83; 17; 17; 59; 44; 21; 11; 11"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 4,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 87; 85; 48; 89; 89; 82; 82"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 5,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 10; 81; 66; 66; 66; 89; 89; 18; 18"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 6,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "65; 94; 50; 50; 37; 94; 94; 63; 41; 40; 40"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 7,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 58; 75; 75; 29; 29; 92; 92"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 8,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "82; 91; 31; 50; 69; 28; 28; 28; 73"
+    },
+    {
+      "condition": "bare",
+      "family": "fill-forward",
+      "seed": 9,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 18; 18; 18; 18; 46; 46; 19; 19"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 0,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=9.078; leg-2=8.152; leg-3=19.822; leg-4=4.797"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 1,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=10.321; leg-2=4.194; leg-3=15.441; leg-4=11.638; leg-5=15.435"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 2,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=4.983; leg-2=22.605; leg-3=2.840; leg-4=21.624; leg-5=22.363"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 3,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "leg-1=13.403; leg-2=17.697; leg-3=3.660",
+      "expected": "leg-1=13.403; leg-2=17.697; leg-3=3.660"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 4,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=14.049; leg-2=20.605; leg-3=15.882"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 5,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=24.283; leg-2=8.606; leg-3=11.843"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 6,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=2.007; leg-2=15.671; leg-3=2.535; leg-4=15.304; leg-5=17.349"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 7,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=11.539; leg-2=5.710; leg-3=13.117; leg-4=14.857; leg-5=9.103"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 8,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=19.138; leg-2=14.633; leg-3=8.084; leg-4=13.931; leg-5=1.988"
+    },
+    {
+      "condition": "bare",
+      "family": "unit-convert",
+      "seed": 9,
+      "retrieved": null,
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=24.084; leg-2=9.227; leg-3=16.112; leg-4=16.280; leg-5=23.121"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 0,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "1041; 1041; 1043",
+      "expected": "1041; 1041; 1043"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 1,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "2680; 2680; 2680",
+      "expected": "2680; 2680; 2680"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 2,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "1517; 1517; 1517; 1518",
+      "expected": "1517; 1517; 1517; 1518"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 3,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "653; 653; 653; 653; 653; 654",
+      "expected": "653; 653; 653; 653; 653; 654"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 4,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "1836; 1836; 1836; 1839",
+      "expected": "1836; 1836; 1836; 1839"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 5,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "832; 832; 832; 835",
+      "expected": "832; 832; 832; 835"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 6,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "464; 464; 464; 465",
+      "expected": "464; 464; 464; 465"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 7,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "2101; 2101; 2101; 2103",
+      "expected": "2101; 2101; 2101; 2103"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 8,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "2677; 2677; 2677",
+      "expected": "2677; 2677; 2677"
+    },
+    {
+      "condition": "bare",
+      "family": "split-remainder",
+      "seed": 9,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "1899; 1899; 1899; 1902",
+      "expected": "1899; 1899; 1899; 1902"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 0,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 1,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 2,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "index:rule",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 3,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "ok",
+      "expected": "ok"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 4,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "index:rule",
+      "expected": "1:quantity"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 5,
+      "retrieved": null,
+      "solved": true,
+      "error": "",
+      "answer": "ok",
+      "expected": "ok"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 6,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "index:3",
+      "expected": "3:quantity"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 7,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "index:rule",
+      "expected": "1:quantity"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 8,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "index:rule",
+      "expected": "7:quantity"
+    },
+    {
+      "condition": "bare",
+      "family": "schema-check",
+      "seed": 9,
+      "retrieved": null,
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "2:name"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 0,
+      "retrieved": "sum-by-group",
+      "solved": true,
+      "error": "",
+      "answer": "central=1038; north=749; south=538; west=607",
+      "expected": "central=1038; north=749; south=538; west=607"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 1,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "north=12; south=692; central=581; west=580",
+      "expected": "central=581; north=12; south=692; west=580"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 2,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "central=266; north=529; south=1145; west=642",
+      "expected": "central=266; north=529; south=1167; west=642"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 3,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "south=414; central=1075; north=1118; west=60",
+      "expected": "central=1075; north=1118; south=414; west=60"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 4,
+      "retrieved": "sum-by-group",
+      "solved": true,
+      "error": "",
+      "answer": "east=158; north=422; south=763; west=225",
+      "expected": "east=158; north=422; south=763; west=225"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 5,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "south=289; north=406; central=415; east=300",
+      "expected": "central=415; east=300; north=406; south=289"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 6,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "west=529; south=477; central=506; east=417",
+      "expected": "central=506; east=417; south=477; west=529"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 7,
+      "retrieved": "sum-by-group",
+      "solved": true,
+      "error": "",
+      "answer": "east=515; north=957; south=554; west=719",
+      "expected": "east=515; north=957; south=554; west=719"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 8,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "east=965; central=365; north=793; west=213",
+      "expected": "central=365; east=965; north=793; west=213"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "sum-by-group",
+      "seed": 9,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "east=81; south=509; north=1031; central=445",
+      "expected": "central=445; east=81; north=1031; south=509"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 0,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-129 8; id-107 3; id-119 3; id-106 1; id-121 1; id-124 7; id-120 1",
+      "expected": "id-129 8; id-107 3; id-119 3; id-106 1; id-121 1; id-124 7; id-120 1"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 1,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "",
+      "answer": "id-113 6; id-128 5; id-133 7; id-105 2; id-112 7; id-136 5; id-114 4; id-137 1; id-101 3; id-102 8",
+      "expected": "id-113 6; id-128 5; id-133 7; id-105 2; id-112 6; id-136 5; id-114 4; id-137 5; id-101 3; id-102 8"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 2,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "",
+      "answer": "id-117 6; id-125 7; id-110 6; id-103 7; id-135 1; id-119 1; id-128 4; id-126 2; id-108 6; id-102 6; id-114 6",
+      "expected": "id-117 6; id-125 7; id-110 6; id-103 7; id-135 1; id-119 1; id-128 2; id-126 2; id-108 6; id-102 6; id-114 6"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 3,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-102 8; id-118 2; id-100 6; id-110 4; id-101 7; id-139 8; id-133 7; id-132 3; id-123 8; id-127 4; id-122 7",
+      "expected": "id-102 8; id-118 2; id-100 6; id-110 4; id-101 7; id-139 8; id-133 7; id-132 3; id-123 8; id-127 4; id-122 7"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 4,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-134 1; id-128 4; id-124 1; id-117 2; id-131 8; id-121 6; id-133 4; id-112 7; id-103 4",
+      "expected": "id-134 1; id-128 4; id-124 1; id-117 2; id-131 8; id-121 6; id-133 4; id-112 7; id-103 4"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 5,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "id-123 6; id-112 8; id-111 3; id-133 4; id-108 3; id-104 4; id-135 7; id-132 2"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 6,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-125 8; id-137 6; id-115 3; id-112 2; id-134 3; id-103 3; id-123 3; id-126 5; id-133 1",
+      "expected": "id-125 8; id-137 6; id-115 3; id-112 2; id-134 3; id-103 3; id-123 3; id-126 5; id-133 1"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 7,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-115 6; id-110 4; id-104 4; id-127 2; id-134 5; id-128 6; id-107 8",
+      "expected": "id-115 6; id-110 4; id-104 4; id-127 2; id-134 5; id-128 6; id-107 8"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 8,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-135 6; id-134 6; id-127 2; id-111 1; id-115 5; id-112 5; id-102 3",
+      "expected": "id-135 6; id-134 6; id-127 2; id-111 1; id-115 5; id-112 5; id-102 3"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "dedupe-keep-last",
+      "seed": 9,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-120 5; id-116 8; id-105 6; id-111 2; id-139 2; id-136 6; id-107 5",
+      "expected": "id-120 5; id-116 8; id-105 6; id-111 2; id-139 2; id-136 6; id-107 5"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 0,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-04-06; 2021-05-06; 2021-09-22; 2022-04-28; 2022-05-20; 2022-09-24; 2024-06-12; 2024-07-15; 2024-12-06"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 1,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "",
+      "answer": "2021-12-01;2021-12-26;2022-09-14;2022-10-13;2022-11-10;2023-02-06;2024-01-06;2024-11-19",
+      "expected": "2021-12-01; 2021-12-26; 2022-09-14; 2022-10-13; 2022-11-10; 2023-02-06; 2024-01-06; 2024-11-19"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 2,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-01-13; 2021-01-18; 2021-09-19; 2022-01-06; 2022-03-26; 2023-01-26; 2023-05-17; 2023-12-02; 2024-08-19"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 3,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-02-07; 2021-10-06; 2023-10-11; 2023-12-25; 2024-08-08; 2024-09-10; 2024-11-14"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 4,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-06-04; 2021-08-25; 2022-01-20; 2022-01-24; 2022-11-04; 2023-05-20; 2023-10-28; 2024-06-20; 2024-10-13"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 5,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-09-12; 2022-09-24; 2022-12-02; 2023-05-09; 2023-05-20; 2023-11-26; 2024-06-03; 2024-08-03"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 6,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "",
+      "answer": "2021-03-24;2021-09-11;2022-02-18;2023-04-18;2023-07-05;2023-07-14;2023-10-11",
+      "expected": "2021-03-24; 2021-11-09; 2022-02-18; 2023-04-18; 2023-07-05; 2023-07-14; 2023-10-11"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 7,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "",
+      "answer": "2021-04-24;2021-10-17;2022-02-21;2022-02-24;2022-06-07;2022-11-18;2023-03-23;2023-09-28;2024-11-12",
+      "expected": "2021-04-24; 2021-10-17; 2022-02-21; 2022-02-24; 2022-06-07; 2022-11-18; 2023-03-23; 2023-09-28; 2024-11-12"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 8,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "",
+      "answer": "2021-03-11;2022-01-09;2022-02-27;2022-03-2",
+      "expected": "2021-03-11; 2021-06-22; 2022-01-09; 2022-02-27; 2022-03-20; 2022-09-02; 2022-11-10; 2023-11-22; 2024-01-10"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "normalise-dates",
+      "seed": 9,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "",
+      "answer": "2021-07-06;2021-10-14;2021-10-23;2022-10-15;2023-05-27;2023-06-28;2023-11-06;2024-04-27;2024-07-18",
+      "expected": "2021-07-06; 2021-10-14; 2021-10-23; 2022-10-15; 2023-05-27; 2023-06-28; 2023-11-06; 2024-04-27; 2024-07-18"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 0,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "449.89"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 1,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "265.53"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 2,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "377.83"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 3,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "403.12"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 4,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "394.46"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 5,
+      "retrieved": "round-currency",
+      "solved": true,
+      "error": "",
+      "answer": "272.48",
+      "expected": "272.48"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 6,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "177.34"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 7,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "381.51"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 8,
+      "retrieved": "round-currency",
+      "solved": true,
+      "error": "",
+      "answer": "344.35",
+      "expected": "344.35"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "round-currency",
+      "seed": 9,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "557.20"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 0,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "gus:5; fay:5; eli:5",
+      "expected": "eli:5; fay:5; gus:5"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 1,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "fay:5; ada:5; dee:4",
+      "expected": "ada:5; fay:5; dee:4"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 2,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "fay:5; ada:5; bo:5",
+      "expected": "ada:5; bo:5; fay:5"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 3,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "cy 4; eli 3",
+      "expected": "cy:4; bo:3"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 4,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "bo:5; dee:3; eli:3",
+      "expected": "bo:5; dee:3; eli:3"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 5,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "eli:5; gus:4",
+      "expected": "eli:5; gus:4"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 6,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "ivy:5; lu:4; bo:3",
+      "expected": "ivy:5; lu:4; bo:3"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 7,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "bo:5; dee:5",
+      "expected": "bo:5; dee:5"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 8,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "eli:5; jo:5; hal:4",
+      "expected": "eli:5; jo:5; hal:4"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "top-k-by",
+      "seed": 9,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "jo:5; fay:4; cy:4",
+      "expected": "jo:5; cy:4; fay:4"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 0,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=0; c-y=5"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 1,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=2; a-y=1; b-x=0; b-y=0; c-x=2; c-y=2",
+      "expected": "a-x=2; a-y=1; b-x=0; b-y=0; c-x=2; c-y=2"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 2,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=0; a-y=3; b-x=2; b-y=1; c-x=2; c-y=2",
+      "expected": "a-x=0; a-y=3; b-x=2; b-y=1; c-x=2; c-y=2"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 3,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a x=1; a y=2; b x=3; b y=2; c x=0; c y=0",
+      "expected": "a-x=1; a-y=2; b-x=3; b-y=2; c-x=0; c-y=0"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 4,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a-x=1; a-y=3; b-x=1; b-y=1; c-x=0; c-y=3",
+      "expected": "a-x=1; a-y=2; b-x=1; b-y=1; c-x=0; c-y=3"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 5,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=4; a-y=3; b-x=0; b-y=0; c-x=3; c-y=1"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 6,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=2; a-y=1; b-x=2; b-y=0; c-x=3; c-y=1",
+      "expected": "a-x=2; a-y=1; b-x=2; b-y=0; c-x=3; c-y=1"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 7,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=2; a-y=2; b-x=2; b-y=2; c-x=0; c-y=1"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 8,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a-x=0; a-y=1; b-x=1; b-y=1; c-x=1; c-y=3",
+      "expected": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=1; c-y=3"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "pivot-counts",
+      "seed": 9,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=3; a-y=3; b-x=2; b-y=1; c-x=0; c-y=1",
+      "expected": "a-x=3; a-y=3; b-x=2; b-y=1; c-x=0; c-y=1"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 0,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; -; 74; 74; 67; 67; 67; 10"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 1,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 56; 41; 41; 41; 70; 70; 81; 42; 42"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 2,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 67; 66; 33; 92; 76; 67; 38; 38"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 3,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "54; 54; 54; 83; 17; 17; 59; 44; 21; 11; 11"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 4,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 87; 85; 48; 89; 89; 82; 82"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 5,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 10; 81; 66; 66; 66; 89; 89; 18; 18"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 6,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "65; 94; 50; 50; 37; 94; 94; 63; 41; 40; 40"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 7,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 58; 75; 75; 29; 29; 92; 92"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 8,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "82; 91; 31; 50; 69; 28; 28; 28; 73"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "fill-forward",
+      "seed": 9,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 18; 18; 18; 18; 46; 46; 19; 19"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 0,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=9.078; leg-2=8.152; leg-3=19.822; leg-4=4.797"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 1,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "name=miles;leg-1=10.321;leg-2=4.194;leg-3=15.447;leg-4=11.636;leg-5=15.435",
+      "expected": "leg-1=10.321; leg-2=4.194; leg-3=15.441; leg-4=11.638; leg-5=15.435"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 2,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "leg-1=4.983;leg-2=22.605;leg-3=2.839;leg-4=21.624;leg-5=22.363",
+      "expected": "leg-1=4.983; leg-2=22.605; leg-3=2.840; leg-4=21.624; leg-5=22.363"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 3,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=13.403; leg-2=17.697; leg-3=3.660"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 4,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=14.049; leg-2=20.605; leg-3=15.882"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 5,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=24.283; leg-2=8.606; leg-3=11.843"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 6,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "leg-1=2.007; leg",
+      "expected": "leg-1=2.007; leg-2=15.671; leg-3=2.535; leg-4=15.304; leg-5=17.349"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 7,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "name=miles;leg-1=11.539;leg-2=5.710;leg-3=13.117;leg-4=14.857;leg-5=9.104",
+      "expected": "leg-1=11.539; leg-2=5.710; leg-3=13.117; leg-4=14.857; leg-5=9.103"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 8,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "leg-1=19.139; leg-2=14.633; leg-3=8.084; leg-4=13.931; leg-5=1.988",
+      "expected": "leg-1=19.138; leg-2=14.633; leg-3=8.084; leg-4=13.931; leg-5=1.988"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "unit-convert",
+      "seed": 9,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=24.084; leg-2=9.227; leg-3=16.112; leg-4=16.280; leg-5=23.121"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 0,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1041;1041;1043",
+      "expected": "1041; 1041; 1043"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 1,
+      "retrieved": "split-remainder",
+      "solved": true,
+      "error": "",
+      "answer": "2680; 2680; 2680",
+      "expected": "2680; 2680; 2680"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 2,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1517;1517;1517;1518",
+      "expected": "1517; 1517; 1517; 1518"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 3,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "653;653;653;653;653;654",
+      "expected": "653; 653; 653; 653; 653; 654"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 4,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1836;1836;1836;1839",
+      "expected": "1836; 1836; 1836; 1839"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 5,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "832; 832; 832; 3",
+      "expected": "832; 832; 832; 835"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 6,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "464;464;464;465",
+      "expected": "464; 464; 464; 465"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 7,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "2100; 2100; 2100; 6",
+      "expected": "2101; 2101; 2101; 2103"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 8,
+      "retrieved": "split-remainder",
+      "solved": true,
+      "error": "",
+      "answer": "2677; 2677; 2677",
+      "expected": "2677; 2677; 2677"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "split-remainder",
+      "seed": 9,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1899;1899;1899;3",
+      "expected": "1899; 1899; 1899; 1902"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 0,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 1,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 2,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 3,
+      "retrieved": "schema-check",
+      "solved": true,
+      "error": "",
+      "answer": "ok",
+      "expected": "ok"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 4,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:1,rule:quantity",
+      "expected": "1:quantity"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 5,
+      "retrieved": "schema-check",
+      "solved": true,
+      "error": "",
+      "answer": "ok",
+      "expected": "ok"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 6,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:3 rule 2",
+      "expected": "3:quantity"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 7,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "1:quantity"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 8,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:7",
+      "expected": "7:quantity"
+    },
+    {
+      "condition": "oracle-skill",
+      "family": "schema-check",
+      "seed": 9,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2 name",
+      "expected": "2:name"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 0,
+      "retrieved": "sum-by-group",
+      "solved": true,
+      "error": "",
+      "answer": "central=1038; north=749; south=538; west=607",
+      "expected": "central=1038; north=749; south=538; west=607"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 1,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "north=12; south=692; central=581; west=580",
+      "expected": "central=581; north=12; south=692; west=580"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 2,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "central=266; north=529; south=1145; west=642",
+      "expected": "central=266; north=529; south=1167; west=642"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 3,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "south=414; central=1075; north=1118; west=60",
+      "expected": "central=1075; north=1118; south=414; west=60"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 4,
+      "retrieved": "sum-by-group",
+      "solved": true,
+      "error": "",
+      "answer": "east=158; north=422; south=763; west=225",
+      "expected": "east=158; north=422; south=763; west=225"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 5,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "south=289; north=406; central=415; east=300",
+      "expected": "central=415; east=300; north=406; south=289"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 6,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "west=529; south=477; central=506; east=417",
+      "expected": "central=506; east=417; south=477; west=529"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 7,
+      "retrieved": "sum-by-group",
+      "solved": true,
+      "error": "",
+      "answer": "east=515; north=957; south=554; west=719",
+      "expected": "east=515; north=957; south=554; west=719"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 8,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "east=965; central=365; north=793; west=213",
+      "expected": "central=365; east=965; north=793; west=213"
+    },
+    {
+      "condition": "keyword",
+      "family": "sum-by-group",
+      "seed": 9,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "east=81; south=509; north=1031; central=445",
+      "expected": "central=445; east=81; north=1031; south=509"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 0,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-129 8; id-107 3; id-119 3; id-106 1; id-121 1; id-124 7; id-120 1",
+      "expected": "id-129 8; id-107 3; id-119 3; id-106 1; id-121 1; id-124 7; id-120 1"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 1,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "",
+      "answer": "id-113 6; id-128 5; id-133 7; id-105 2; id-112 7; id-136 5; id-114 4; id-137 1; id-101 3; id-102 8",
+      "expected": "id-113 6; id-128 5; id-133 7; id-105 2; id-112 6; id-136 5; id-114 4; id-137 5; id-101 3; id-102 8"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 2,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "",
+      "answer": "id-117 6; id-125 7; id-110 6; id-103 7; id-135 1; id-119 1; id-128 4; id-126 2; id-108 6; id-102 6; id-114 6",
+      "expected": "id-117 6; id-125 7; id-110 6; id-103 7; id-135 1; id-119 1; id-128 2; id-126 2; id-108 6; id-102 6; id-114 6"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 3,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-102 8; id-118 2; id-100 6; id-110 4; id-101 7; id-139 8; id-133 7; id-132 3; id-123 8; id-127 4; id-122 7",
+      "expected": "id-102 8; id-118 2; id-100 6; id-110 4; id-101 7; id-139 8; id-133 7; id-132 3; id-123 8; id-127 4; id-122 7"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 4,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-134 1; id-128 4; id-124 1; id-117 2; id-131 8; id-121 6; id-133 4; id-112 7; id-103 4",
+      "expected": "id-134 1; id-128 4; id-124 1; id-117 2; id-131 8; id-121 6; id-133 4; id-112 7; id-103 4"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 5,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "id-123 6; id-112 8; id-111 3; id-133 4; id-108 3; id-104 4; id-135 7; id-132 2"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 6,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-125 8; id-137 6; id-115 3; id-112 2; id-134 3; id-103 3; id-123 3; id-126 5; id-133 1",
+      "expected": "id-125 8; id-137 6; id-115 3; id-112 2; id-134 3; id-103 3; id-123 3; id-126 5; id-133 1"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 7,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-115 6; id-110 4; id-104 4; id-127 2; id-134 5; id-128 6; id-107 8",
+      "expected": "id-115 6; id-110 4; id-104 4; id-127 2; id-134 5; id-128 6; id-107 8"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 8,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-135 6; id-134 6; id-127 2; id-111 1; id-115 5; id-112 5; id-102 3",
+      "expected": "id-135 6; id-134 6; id-127 2; id-111 1; id-115 5; id-112 5; id-102 3"
+    },
+    {
+      "condition": "keyword",
+      "family": "dedupe-keep-last",
+      "seed": 9,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-120 5; id-116 8; id-105 6; id-111 2; id-139 2; id-136 6; id-107 5",
+      "expected": "id-120 5; id-116 8; id-105 6; id-111 2; id-139 2; id-136 6; id-107 5"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 0,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "2021-05-06;2021-06-04;2021-09-22;2022-04-28;2022-05-20;2022-09-24;2024-06-12;2024-07-15;2024-12-06",
+      "expected": "2021-04-06; 2021-05-06; 2021-09-22; 2022-04-28; 2022-05-20; 2022-09-24; 2024-06-12; 2024-07-15; 2024-12-06"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 1,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "2021-12-01;2021-12-26;2022-09-14;2022-10-13;2022-11-10;2023-02-06;2024-01-06;2024-11-19",
+      "expected": "2021-12-01; 2021-12-26; 2022-09-14; 2022-10-13; 2022-11-10; 2023-02-06; 2024-01-06; 2024-11-19"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 2,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-01-13; 2021-01-18; 2021-09-19; 2022-01-06; 2022-03-26; 2023-01-26; 2023-05-17; 2023-12-02; 2024-08-19"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 3,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "2021-06-10;2021-07-02;2023-10-11;2023-12-25;2024-08-08;2024-09-10;2024-11-14",
+      "expected": "2021-02-07; 2021-10-06; 2023-10-11; 2023-12-25; 2024-08-08; 2024-09-10; 2024-11-14"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 4,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-06-04; 2021-08-25; 2022-01-20; 2022-01-24; 2022-11-04; 2023-05-20; 2023-10-28; 2024-06-20; 2024-10-13"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 5,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "2021-09-12;2022-09-24;2022-12-02;2023-05-09;2023-05-20;2023-11-26;2024-06-03;2024-08-03",
+      "expected": "2021-09-12; 2022-09-24; 2022-12-02; 2023-05-09; 2023-05-20; 2023-11-26; 2024-06-03; 2024-08-03"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 6,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "2021-03-24;2021-09-11;2022-02-18;2023-04-18;2023-07-05;2023-07-14;2023-10-11",
+      "expected": "2021-03-24; 2021-11-09; 2022-02-18; 2023-04-18; 2023-07-05; 2023-07-14; 2023-10-11"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 7,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "2021-04-24;2021-10-17;2022-02-21;2022-02-24;2022-06-07;2022-11-18;2023-03-23;2023-09-28;2024-11-12",
+      "expected": "2021-04-24; 2021-10-17; 2022-02-21; 2022-02-24; 2022-06-07; 2022-11-18; 2023-03-23; 2023-09-28; 2024-11-12"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 8,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "2021-03-11;2021-06-22;2022-01-09;2022-02-27;2022-03-20;2022-09-02;2022-10-11;2023-02-11",
+      "expected": "2021-03-11; 2021-06-22; 2022-01-09; 2022-02-27; 2022-03-20; 2022-09-02; 2022-11-10; 2023-11-22; 2024-01-10"
+    },
+    {
+      "condition": "keyword",
+      "family": "normalise-dates",
+      "seed": 9,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "2021-07-06;2021-10-14;2021-10-23;2022-10-15;2023-05-27;2023-06-28;",
+      "expected": "2021-07-06; 2021-10-14; 2021-10-23; 2022-10-15; 2023-05-27; 2023-06-28; 2023-11-06; 2024-04-27; 2024-07-18"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 0,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "449.89"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 1,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "265.53"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 2,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "377.83"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 3,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "403.12"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 4,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "394.46"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 5,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "272.48"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 6,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "177.34"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 7,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "381.51"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 8,
+      "retrieved": "round-currency",
+      "solved": true,
+      "error": "",
+      "answer": "344.35",
+      "expected": "344.35"
+    },
+    {
+      "condition": "keyword",
+      "family": "round-currency",
+      "seed": 9,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "557.20"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 0,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "gus:5; fay:5; eli:5",
+      "expected": "eli:5; fay:5; gus:5"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 1,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "fay:5; ada:5; dee:4",
+      "expected": "ada:5; fay:5; dee:4"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 2,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "fay:5; bo:5; hal:5",
+      "expected": "ada:5; bo:5; fay:5"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 3,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "cy:4; eli:3",
+      "expected": "cy:4; bo:3"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 4,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "bo:5; dee:3; eli:3",
+      "expected": "bo:5; dee:3; eli:3"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 5,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "eli:5; gus:4",
+      "expected": "eli:5; gus:4"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 6,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "ivy:5; lu:4; bo:3",
+      "expected": "ivy:5; lu:4; bo:3"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 7,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "bo:5; dee:5",
+      "expected": "bo:5; dee:5"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 8,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "eli:5; jo:5; hal:4",
+      "expected": "eli:5; jo:5; hal:4"
+    },
+    {
+      "condition": "keyword",
+      "family": "top-k-by",
+      "seed": 9,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "jo:5; fay:4; cy:4",
+      "expected": "jo:5; cy:4; fay:4"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 0,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a-x=0; a-y=1; b-x=1; b-y=1; c-x=0; c-y=4",
+      "expected": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=0; c-y=5"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 1,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a x=2; a y=1; b x=0; b y=0; c x=1; c y=2",
+      "expected": "a-x=2; a-y=1; b-x=0; b-y=0; c-x=2; c-y=2"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 2,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=0; a-y=3; b-x=2; b-y=1; c-x=2; c-y=2",
+      "expected": "a-x=0; a-y=3; b-x=2; b-y=1; c-x=2; c-y=2"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 3,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=1; a-y=2; b-x=3; b-y=2; c-x=0; c-y=0",
+      "expected": "a-x=1; a-y=2; b-x=3; b-y=2; c-x=0; c-y=0"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 4,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=1; a-y=2; b-x=1; b-y=1; c-x=0; c-y=3",
+      "expected": "a-x=1; a-y=2; b-x=1; b-y=1; c-x=0; c-y=3"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 5,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=4; a-y=3; b-x=0; b-y=0; c-x=3; c-y=1",
+      "expected": "a-x=4; a-y=3; b-x=0; b-y=0; c-x=3; c-y=1"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 6,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=2; a-y=1; b-x=2; b-y=0; c-x=3; c-y=1",
+      "expected": "a-x=2; a-y=1; b-x=2; b-y=0; c-x=3; c-y=1"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 7,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=2; a-y=2; b-x=2; b-y=2; c-x=0; c-y=1"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 8,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a-x=0; a-y=1; b-x=1; b-y=1; c-x=1; c-y=3",
+      "expected": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=1; c-y=3"
+    },
+    {
+      "condition": "keyword",
+      "family": "pivot-counts",
+      "seed": 9,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a-x=3; a-y=3; b-x=2; b-y=1; c-x=1; c-y=1",
+      "expected": "a-x=3; a-y=3; b-x=2; b-y=1; c-x=0; c-y=1"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 0,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; -; 74; 74; 67; 67; 67; 10"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 1,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 56; 41; 41; 41; 70; 70; 81; 42; 42"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 2,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 67; 66; 33; 92; 76; 67; 38; 38"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 3,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "54; 54; 54; 83; 17; 17; 59; 44; 21; 11; 11"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 4,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "",
+      "answer": "-;87;85;48;89;89;82;82",
+      "expected": "-; 87; 85; 48; 89; 89; 82; 82"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 5,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 10; 81; 66; 66; 66; 89; 89; 18; 18"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 6,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "65; 94; 50; 50; 37; 94; 94; 63; 41; 40; 40"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 7,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 58; 75; 75; 29; 29; 92; 92"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 8,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "82; 91; 31; 50; 69; 28; 28; 28; 73"
+    },
+    {
+      "condition": "keyword",
+      "family": "fill-forward",
+      "seed": 9,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 18; 18; 18; 18; 46; 46; 19; 19"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 0,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=9.078; leg-2=8.152; leg-3=19.822; leg-4=4.797"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 1,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=10.321; leg-2=4.194; leg-3=15.441; leg-4=11.638; leg-5=15.435"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 2,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "leg-1=4.983;leg-2=22.605;leg-3=2.839;leg-4=21.624;leg-5=22.365",
+      "expected": "leg-1=4.983; leg-2=22.605; leg-3=2.840; leg-4=21.624; leg-5=22.363"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 3,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=13.403; leg-2=17.697; leg-3=3.660"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 4,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=14.049; leg-2=20.605; leg-3=15.882"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 5,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=24.283; leg-2=8.606; leg-3=11.843"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 6,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "name=miles;leg-1=2.007;leg-2=15.671;leg-3=2.535;leg-4=15.303;leg-5=17.346",
+      "expected": "leg-1=2.007; leg-2=15.671; leg-3=2.535; leg-4=15.304; leg-5=17.349"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 7,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "name=miles;leg-1=11.539;leg-2=5.710;leg-3=13.117;leg-4=14.856;leg-5=9.104",
+      "expected": "leg-1=11.539; leg-2=5.710; leg-3=13.117; leg-4=14.857; leg-5=9.103"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 8,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "leg-1=19.139; leg-2=14.633; leg-3=8.084; leg-4=13.931; leg-5=1.988",
+      "expected": "leg-1=19.138; leg-2=14.633; leg-3=8.084; leg-4=13.931; leg-5=1.988"
+    },
+    {
+      "condition": "keyword",
+      "family": "unit-convert",
+      "seed": 9,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=24.084; leg-2=9.227; leg-3=16.112; leg-4=16.280; leg-5=23.121"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 0,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1041;1041;1043",
+      "expected": "1041; 1041; 1043"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 1,
+      "retrieved": "split-remainder",
+      "solved": true,
+      "error": "",
+      "answer": "2680; 2680; 2680",
+      "expected": "2680; 2680; 2680"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 2,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1517;1517;1517;1518",
+      "expected": "1517; 1517; 1517; 1518"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 3,
+      "retrieved": "split-remainder",
+      "solved": true,
+      "error": "",
+      "answer": "653; 653; 653; 653; 653; 654",
+      "expected": "653; 653; 653; 653; 653; 654"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 4,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1836;1836;1836;1839",
+      "expected": "1836; 1836; 1836; 1839"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 5,
+      "retrieved": "split-remainder",
+      "solved": true,
+      "error": "",
+      "answer": "832; 832; 832; 835",
+      "expected": "832; 832; 832; 835"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 6,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "464;464;464;465",
+      "expected": "464; 464; 464; 465"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 7,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "2100; 2100; 2100; 6",
+      "expected": "2101; 2101; 2101; 2103"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 8,
+      "retrieved": "split-remainder",
+      "solved": true,
+      "error": "",
+      "answer": "2677; 2677; 2677",
+      "expected": "2677; 2677; 2677"
+    },
+    {
+      "condition": "keyword",
+      "family": "split-remainder",
+      "seed": 9,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1899;1899;1899;3",
+      "expected": "1899; 1899; 1899; 1902"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 0,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 1,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2,rule:quantity",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 2,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index: rule2",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 3,
+      "retrieved": "schema-check",
+      "solved": true,
+      "error": "",
+      "answer": "ok",
+      "expected": "ok"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 4,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:quantity",
+      "expected": "1:quantity"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 5,
+      "retrieved": "schema-check",
+      "solved": true,
+      "error": "",
+      "answer": "ok",
+      "expected": "ok"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 6,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:quantity",
+      "expected": "3:quantity"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 7,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "1:quantity"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 8,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:7, rule:quantity",
+      "expected": "7:quantity"
+    },
+    {
+      "condition": "keyword",
+      "family": "schema-check",
+      "seed": 9,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "2:name"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 0,
+      "retrieved": "sum-by-group",
+      "solved": true,
+      "error": "",
+      "answer": "central=1038; north=749; south=538; west=607",
+      "expected": "central=1038; north=749; south=538; west=607"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 1,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "north=12; south=692; central=581; west=580",
+      "expected": "central=581; north=12; south=692; west=580"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 2,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "central=266; north=529; south=1145; west=642",
+      "expected": "central=266; north=529; south=1167; west=642"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 3,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "south=414; central=1075; north=1118; west=60",
+      "expected": "central=1075; north=1118; south=414; west=60"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 4,
+      "retrieved": "sum-by-group",
+      "solved": true,
+      "error": "",
+      "answer": "east=158; north=422; south=763; west=225",
+      "expected": "east=158; north=422; south=763; west=225"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 5,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "south=289; north=406; central=415; east=300",
+      "expected": "central=415; east=300; north=406; south=289"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 6,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "west=529; south=477; central=506; east=417",
+      "expected": "central=506; east=417; south=477; west=529"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 7,
+      "retrieved": "sum-by-group",
+      "solved": true,
+      "error": "",
+      "answer": "east=515; north=957; south=554; west=719",
+      "expected": "east=515; north=957; south=554; west=719"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 8,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "east=965; central=365; north=793; west=213",
+      "expected": "central=365; east=965; north=793; west=213"
+    },
+    {
+      "condition": "idf",
+      "family": "sum-by-group",
+      "seed": 9,
+      "retrieved": "sum-by-group",
+      "solved": false,
+      "error": "",
+      "answer": "east=81; south=509; north=1031; central=445",
+      "expected": "central=445; east=81; north=1031; south=509"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 0,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "",
+      "answer": "id-129 8; id-107 3; id-119 6; id-106 1; id-121 1; id-124 7; id-120 1",
+      "expected": "id-129 8; id-107 3; id-119 3; id-106 1; id-121 1; id-124 7; id-120 1"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 1,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "",
+      "answer": "id-113 6; id-128 5; id-133 7; id-105 2; id-112 7; id-136 5; id-114 4; id-137 1; id-101 3; id-102 8",
+      "expected": "id-113 6; id-128 5; id-133 7; id-105 2; id-112 6; id-136 5; id-114 4; id-137 5; id-101 3; id-102 8"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 2,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "",
+      "answer": "id-117 6; id-125 7; id-110 6; id-103 7; id-135 1; id-119 1; id-128 4; id-126 2; id-108 6; id-102 6; id-114 6",
+      "expected": "id-117 6; id-125 7; id-110 6; id-103 7; id-135 1; id-119 1; id-128 2; id-126 2; id-108 6; id-102 6; id-114 6"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 3,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "",
+      "answer": "id-102 8; id-118 2; id-100 5; id-110 4; id-101 7; id-",
+      "expected": "id-102 8; id-118 2; id-100 6; id-110 4; id-101 7; id-139 8; id-133 7; id-132 3; id-123 8; id-127 4; id-122 7"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 4,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-134 1; id-128 4; id-124 1; id-117 2; id-131 8; id-121 6; id-133 4; id-112 7; id-103 4",
+      "expected": "id-134 1; id-128 4; id-124 1; id-117 2; id-131 8; id-121 6; id-133 4; id-112 7; id-103 4"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 5,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-123 6; id-112 8; id-111 3; id-133 4; id-108 3; id-104 4; id-135 7; id-132 2",
+      "expected": "id-123 6; id-112 8; id-111 3; id-133 4; id-108 3; id-104 4; id-135 7; id-132 2"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 6,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-125 8; id-137 6; id-115 3; id-112 2; id-134 3; id-103 3; id-123 3; id-126 5; id-133 1",
+      "expected": "id-125 8; id-137 6; id-115 3; id-112 2; id-134 3; id-103 3; id-123 3; id-126 5; id-133 1"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 7,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-115 6; id-110 4; id-104 4; id-127 2; id-134 5; id-128 6; id-107 8",
+      "expected": "id-115 6; id-110 4; id-104 4; id-127 2; id-134 5; id-128 6; id-107 8"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 8,
+      "retrieved": "dedupe-keep-last",
+      "solved": true,
+      "error": "",
+      "answer": "id-135 6; id-134 6; id-127 2; id-111 1; id-115 5; id-112 5; id-102 3",
+      "expected": "id-135 6; id-134 6; id-127 2; id-111 1; id-115 5; id-112 5; id-102 3"
+    },
+    {
+      "condition": "idf",
+      "family": "dedupe-keep-last",
+      "seed": 9,
+      "retrieved": "dedupe-keep-last",
+      "solved": false,
+      "error": "",
+      "answer": "id-120 5; id-116 8; id-105 5; id-111 2; id-139 2; id-136 6; id-107 5",
+      "expected": "id-120 5; id-116 8; id-105 6; id-111 2; id-139 2; id-136 6; id-107 5"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 0,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-04-06; 2021-05-06; 2021-09-22; 2022-04-28; 2022-05-20; 2022-09-24; 2024-06-12; 2024-07-15; 2024-12-06"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 1,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "",
+      "answer": "2021-12-01;2021-12-26;2022-09-14;2022-10-13;2022-11-10;2023-02-06;2024-01-06;2024-11-19",
+      "expected": "2021-12-01; 2021-12-26; 2022-09-14; 2022-10-13; 2022-11-10; 2023-02-06; 2024-01-06; 2024-11-19"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 2,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-01-13; 2021-01-18; 2021-09-19; 2022-01-06; 2022-03-26; 2023-01-26; 2023-05-17; 2023-12-02; 2024-08-19"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 3,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-02-07; 2021-10-06; 2023-10-11; 2023-12-25; 2024-08-08; 2024-09-10; 2024-11-14"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 4,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-06-04; 2021-08-25; 2022-01-20; 2022-01-24; 2022-11-04; 2023-05-20; 2023-10-28; 2024-06-20; 2024-10-13"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 5,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-09-12; 2022-09-24; 2022-12-02; 2023-05-09; 2023-05-20; 2023-11-26; 2024-06-03; 2024-08-03"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 6,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "",
+      "answer": "2021-03-24;2021-09-11;2022-02-18;2023-04-18;2023-07-05;2023-07-14;2023-10-11",
+      "expected": "2021-03-24; 2021-11-09; 2022-02-18; 2023-04-18; 2023-07-05; 2023-07-14; 2023-10-11"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 7,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "",
+      "answer": "2021-04-24;2021-10-17;2022-02-21;2022-02-24;2022-06-07;2022-11-18;2023-03-23;2023-09-28;2024-11-12",
+      "expected": "2021-04-24; 2021-10-17; 2022-02-21; 2022-02-24; 2022-06-07; 2022-11-18; 2023-03-23; 2023-09-28; 2024-11-12"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 8,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "2021-03-11; 2021-06-22; 2022-01-09; 2022-02-27; 2022-03-20; 2022-09-02; 2022-11-10; 2023-11-22; 2024-01-10"
+    },
+    {
+      "condition": "idf",
+      "family": "normalise-dates",
+      "seed": 9,
+      "retrieved": "normalise-dates",
+      "solved": false,
+      "error": "",
+      "answer": "2021-07-06;2021-10-14;2021-10-23;2022-10-15;2023-05-27;2023-06-28;2023-11-06;2024-04-27;2024-07-18",
+      "expected": "2021-07-06; 2021-10-14; 2021-10-23; 2022-10-15; 2023-05-27; 2023-06-28; 2023-11-06; 2024-04-27; 2024-07-18"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 0,
+      "retrieved": "round-currency",
+      "solved": true,
+      "error": "",
+      "answer": "449.89",
+      "expected": "449.89"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 1,
+      "retrieved": "round-currency",
+      "solved": true,
+      "error": "",
+      "answer": "265.53",
+      "expected": "265.53"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 2,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "377.83"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 3,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "403.12"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 4,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "394.46"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 5,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "272.48"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 6,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "177.34"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 7,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "381.51"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 8,
+      "retrieved": "round-currency",
+      "solved": true,
+      "error": "",
+      "answer": "344.35",
+      "expected": "344.35"
+    },
+    {
+      "condition": "idf",
+      "family": "round-currency",
+      "seed": 9,
+      "retrieved": "round-currency",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "557.20"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 0,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "gus:5; fay:5; eli:5",
+      "expected": "eli:5; fay:5; gus:5"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 1,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "ada:5; fay:5; dee:4",
+      "expected": "ada:5; fay:5; dee:4"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 2,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "fay:5; bo:5; hal:5",
+      "expected": "ada:5; bo:5; fay:5"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 3,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "cy 4; eli 3",
+      "expected": "cy:4; bo:3"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 4,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "bo:5; dee:3; eli:3",
+      "expected": "bo:5; dee:3; eli:3"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 5,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "eli:5; gus:4",
+      "expected": "eli:5; gus:4"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 6,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "ivy:5; lu:4; bo:3",
+      "expected": "ivy:5; lu:4; bo:3"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 7,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "bo:5; dee:5",
+      "expected": "bo:5; dee:5"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 8,
+      "retrieved": "top-k-by",
+      "solved": true,
+      "error": "",
+      "answer": "eli:5; jo:5; hal:4",
+      "expected": "eli:5; jo:5; hal:4"
+    },
+    {
+      "condition": "idf",
+      "family": "top-k-by",
+      "seed": 9,
+      "retrieved": "top-k-by",
+      "solved": false,
+      "error": "",
+      "answer": "jo:5;fay:4;cy:4",
+      "expected": "jo:5; cy:4; fay:4"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 0,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=0; c-y=5",
+      "expected": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=0; c-y=5"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 1,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a x=2; a y=1; b x=0; b y=0; c x=2; c y=2",
+      "expected": "a-x=2; a-y=1; b-x=0; b-y=0; c-x=2; c-y=2"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 2,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=0; a-y=3; b-x=2; b-y=1; c-x=2; c-y=2",
+      "expected": "a-x=0; a-y=3; b-x=2; b-y=1; c-x=2; c-y=2"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 3,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=1; a-y=2; b-x=3; b-y=2; c-x=0; c-y=0"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 4,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=1; a-y=2; b-x=1; b-y=1; c-x=0; c-y=3",
+      "expected": "a-x=1; a-y=2; b-x=1; b-y=1; c-x=0; c-y=3"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 5,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "a-x=4; a-y=3; b-x=0; b-y=0; c-x=3; c-y=1"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 6,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a-x=2; a-y=1; b-x=2; b-y=0; c-x=3; c-y=1;",
+      "expected": "a-x=2; a-y=1; b-x=2; b-y=0; c-x=3; c-y=1"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 7,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a-x=2; a-y=2; b-x=2; b-y=3; c-x=0; c-y=1",
+      "expected": "a-x=2; a-y=2; b-x=2; b-y=2; c-x=0; c-y=1"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 8,
+      "retrieved": "pivot-counts",
+      "solved": true,
+      "error": "",
+      "answer": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=1; c-y=3",
+      "expected": "a-x=0; a-y=1; b-x=2; b-y=1; c-x=1; c-y=3"
+    },
+    {
+      "condition": "idf",
+      "family": "pivot-counts",
+      "seed": 9,
+      "retrieved": "pivot-counts",
+      "solved": false,
+      "error": "",
+      "answer": "a-x=3; a-y=3; b-x=2; b-y=2; c-x=0; c-y=1",
+      "expected": "a-x=3; a-y=3; b-x=2; b-y=1; c-x=0; c-y=1"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 0,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; -; 74; 74; 67; 67; 67; 10"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 1,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 56; 41; 41; 41; 70; 70; 81; 42; 42"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 2,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 67; 66; 33; 92; 76; 67; 38; 38"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 3,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "54; 54; 54; 83; 17; 17; 59; 44; 21; 11; 11"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 4,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 87; 85; 48; 89; 89; 82; 82"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 5,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 10; 81; 66; 66; 66; 89; 89; 18; 18"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 6,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "65; 94; 50; 50; 37; 94; 94; 63; 41; 40; 40"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 7,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 58; 75; 75; 29; 29; 92; 92"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 8,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "82; 91; 31; 50; 69; 28; 28; 28; 73"
+    },
+    {
+      "condition": "idf",
+      "family": "fill-forward",
+      "seed": 9,
+      "retrieved": "fill-forward",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "-; 18; 18; 18; 18; 46; 46; 19; 19"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 0,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "name=miles; leg-1=9.078; leg-2=8.152; leg-3=19.822; leg-4=4.797",
+      "expected": "leg-1=9.078; leg-2=8.152; leg-3=19.822; leg-4=4.797"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 1,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "name=miles;leg-1=10.321;leg-2=4.194;leg-3=15.441;leg-4=11.636;leg-5=15.435",
+      "expected": "leg-1=10.321; leg-2=4.194; leg-3=15.441; leg-4=11.638; leg-5=15.435"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 2,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "name=miles; leg-1=4.983; leg-2=22.605; leg-3=2.839; leg-4=21.624; leg-5=22.365",
+      "expected": "leg-1=4.983; leg-2=22.605; leg-3=2.840; leg-4=21.624; leg-5=22.363"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 3,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=13.403; leg-2=17.697; leg-3=3.660"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 4,
+      "retrieved": "unit-convert",
+      "solved": true,
+      "error": "",
+      "answer": "leg-1=14.049; leg-2=20.605; leg-3=15.882",
+      "expected": "leg-1=14.049; leg-2=20.605; leg-3=15.882"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 5,
+      "retrieved": "unit-convert",
+      "solved": true,
+      "error": "",
+      "answer": "leg-1=24.283; leg-2=8.606; leg-3=11.843",
+      "expected": "leg-1=24.283; leg-2=8.606; leg-3=11.843"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 6,
+      "retrieved": "unit-convert",
+      "solved": true,
+      "error": "",
+      "answer": "leg-1=2.007; leg-2=15.671; leg-3=2.535; leg-4=15.304; leg-5=17.349",
+      "expected": "leg-1=2.007; leg-2=15.671; leg-3=2.535; leg-4=15.304; leg-5=17.349"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 7,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=11.539; leg-2=5.710; leg-3=13.117; leg-4=14.857; leg-5=9.103"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 8,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "",
+      "answer": "leg-1=19.139; leg-2=14.633; leg-3=8.084; leg-4=13.931; leg-5=1.988",
+      "expected": "leg-1=19.138; leg-2=14.633; leg-3=8.084; leg-4=13.931; leg-5=1.988"
+    },
+    {
+      "condition": "idf",
+      "family": "unit-convert",
+      "seed": 9,
+      "retrieved": "unit-convert",
+      "solved": false,
+      "error": "truncated: the reply ended inside its reasoning",
+      "answer": "",
+      "expected": "leg-1=24.084; leg-2=9.227; leg-3=16.112; leg-4=16.280; leg-5=23.121"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 0,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1041;1041;1043",
+      "expected": "1041; 1041; 1043"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 1,
+      "retrieved": "split-remainder",
+      "solved": true,
+      "error": "",
+      "answer": "2680; 2680; 2680",
+      "expected": "2680; 2680; 2680"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 2,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1517;1517;1517;1518",
+      "expected": "1517; 1517; 1517; 1518"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 3,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "653; 653; 653; 653; 653; 1",
+      "expected": "653; 653; 653; 653; 653; 654"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 4,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1836;1836;1836;1839",
+      "expected": "1836; 1836; 1836; 1839"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 5,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "832; 832; 832; 3",
+      "expected": "832; 832; 832; 835"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 6,
+      "retrieved": "split-remainder",
+      "solved": true,
+      "error": "",
+      "answer": "464; 464; 464; 465",
+      "expected": "464; 464; 464; 465"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 7,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "2100; 2100; 2100; 6",
+      "expected": "2101; 2101; 2101; 2103"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 8,
+      "retrieved": "split-remainder",
+      "solved": true,
+      "error": "",
+      "answer": "2677; 2677; 2677",
+      "expected": "2677; 2677; 2677"
+    },
+    {
+      "condition": "idf",
+      "family": "split-remainder",
+      "seed": 9,
+      "retrieved": "split-remainder",
+      "solved": false,
+      "error": "",
+      "answer": "1899;1899;1899;3",
+      "expected": "1899; 1899; 1899; 1902"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 0,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 1,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2,rule:quantity",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 2,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:quantity",
+      "expected": "2:quantity"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 3,
+      "retrieved": "schema-check",
+      "solved": true,
+      "error": "",
+      "answer": "ok",
+      "expected": "ok"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 4,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "1:quantity"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 5,
+      "retrieved": "schema-check",
+      "solved": true,
+      "error": "",
+      "answer": "ok",
+      "expected": "ok"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 6,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:3 rule 2",
+      "expected": "3:quantity"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 7,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "1:quantity"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 8,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:7",
+      "expected": "7:quantity"
+    },
+    {
+      "condition": "idf",
+      "family": "schema-check",
+      "seed": 9,
+      "retrieved": "schema-check",
+      "solved": false,
+      "error": "",
+      "answer": "index:2",
+      "expected": "2:name"
+    }
+  ]
+}

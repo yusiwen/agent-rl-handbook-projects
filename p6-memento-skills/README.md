@@ -74,6 +74,52 @@ The `hybrid` router is the instructive failure: it had the failure symptom avail
 scored 0.400, because a long procedure dilutes a Jaccard score while a short decoy concentrates it.
 Having the right input is not the same as weighting it correctly.
 
+## What is measured so far: outcome, four conditions on the same 100 instances
+
+`env/measure_outcome.py`, `qwen3-1.7b-base`, 10 instances per family, temperature 0, identical
+instances and identical checker in every condition:
+
+| condition | solved | truncated | solved / answered |
+|---|---|---|---|
+| bare | 34/100 | 40 | 34/60 |
+| oracle-skill (the true procedure, no retrieval error) | 25/100 | 33 | 25/67 |
+| keyword retrieval | 27/100 | 28 | 27/72 |
+| idf retrieval | 29/100 | 28 | 29/72 |
+
+**No injection beat the question alone, including the one where retrieval cannot be wrong.** The
+`oracle-skill` row is the ceiling condition - the model was handed the correct procedure for its
+family, with no router in the way - and it scored nine points *below* the floor. At 100 instances
+the Wilson intervals overlap (`bare` 25.5-43.7, `idf` 21.0-38.5), so the honest reading of the total
+is a direction, not an effect; conditioning on the answers that were actually produced widens the
+gap (56.7% versus 40.3%) without settling it.
+
+The per-family table is where the result stops being noise and starts being an explanation:
+
+| family | bare | oracle-skill | keyword | idf |
+|---|---|---|---|---|
+| sum-by-group | 3 | 3 | 3 | 3 |
+| dedupe-keep-last | **10** | 7 | 7 | 5 |
+| normalise-dates | 0 | 0 | 0 | 0 |
+| round-currency | 3 | 2 | 1 | 3 |
+| top-k-by | 5 | 5 | 5 | 6 |
+| pivot-counts | **0** | 4 | 5 | 4 |
+| fill-forward | 0 | 0 | 0 | 0 |
+| unit-convert | 1 | 0 | 0 | 3 |
+| split-remainder | **10** | 2 | 4 | 3 |
+| schema-check | 2 | 2 | 2 | 2 |
+
+* **A skill library is not monotone.** `pivot-counts` went 0 to 4 (the procedure says to emit the
+  empty cells). `split-remainder` and `dedupe-keep-last` went 10 to 3 and 10 to 5: two families the
+  model already solved perfectly were **broken by being told the rule**. Advice can overwrite a
+  working prior, and the aggregate hides both directions at once.
+* **Retrieval was not the bottleneck.** `idf` put the right family on top for 100 of 100 rows, so
+  this run measures injection, not routing - which is exactly why the `oracle-skill` row had to
+  exist before the library could be blamed or credited.
+* **The truncation is part of the result.** A reasoning model with a 2048-token budget ended 40 of
+  100 bare replies inside `<think>`; at 96 tokens (the first attempt) every condition scored 0.
+  Those rows are counted as errors, never as wrong answers, and the answered-only column is
+  reported beside the total rather than instead of it.
+
 ## What is not here yet
 
 - **The outcome half.** A run of `policy(ask, "")` against `policy(ask, skill)` on the same
