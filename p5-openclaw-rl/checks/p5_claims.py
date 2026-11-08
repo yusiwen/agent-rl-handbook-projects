@@ -27,7 +27,7 @@ def rows(path: Path) -> list[dict]:
 
 class SummaryTests(unittest.TestCase):
     def test_every_summary_agrees_with_its_round_log(self):
-        for run in ("sync", "async1w", "async3w"):
+        for run in ("sync", "async1w", "async3w", "process3w"):
             with self.subTest(run=run):
                 summary = json.loads((RUNS / run / "summary.json").read_text(encoding="utf-8"))
                 updates = rows(RUNS / run / "updates.jsonl")
@@ -39,7 +39,7 @@ class SummaryTests(unittest.TestCase):
                 self.assertEqual(recomputed["max_staleness"], summary["max_staleness"])
 
     def test_samples_per_minute_is_a_division(self):
-        for run in ("sync", "async1w", "async3w"):
+        for run in ("sync", "async1w", "async3w", "process3w"):
             with self.subTest(run=run):
                 summary = json.loads((RUNS / run / "summary.json").read_text(encoding="utf-8"))
                 expected = summary["samples"] / (summary["seconds"] / 60)
@@ -47,7 +47,7 @@ class SummaryTests(unittest.TestCase):
                 self.assertAlmostEqual(summary["samples_per_minute"], expected, delta=0.2)
 
     def test_the_sample_log_matches_the_round_log(self):
-        for run in ("sync", "async1w", "async3w"):
+        for run in ("sync", "async1w", "async3w", "process3w"):
             with self.subTest(run=run):
                 summary = json.loads((RUNS / run / "summary.json").read_text(encoding="utf-8"))
                 samples = rows(RUNS / run / "samples.jsonl")
@@ -86,6 +86,18 @@ class FindingTests(unittest.TestCase):
         async_ = json.loads((RUNS / "eval-async3w.json").read_text(encoding="utf-8"))["summary"]
         self.assertEqual({baseline["solved"], sync_["solved"], async_["solved"]}, {7})
         self.assertEqual({baseline["tasks"], sync_["tasks"], async_["tasks"]}, {9})
+
+    def test_a_process_reward_creates_variance_and_the_policy_farms_it(self):
+        """Stage 3's two numbers: more samples carried an advantage, and a worse policy."""
+        outcome = json.loads((RUNS / "async3w" / "summary.json").read_text(encoding="utf-8"))
+        process = json.loads((RUNS / "process3w" / "summary.json").read_text(encoding="utf-8"))
+        self.assertEqual(process["samples"], outcome["samples"])
+        self.assertGreater(process["used"], 5 * outcome["used"])
+        staged = json.loads((RUNS / "eval-process.json").read_text(encoding="utf-8"))["summary"]
+        baseline = json.loads((RUNS / "eval-baseline.json").read_text(encoding="utf-8"))["summary"]
+        self.assertLess(staged["solved"], baseline["solved"])
+        self.assertGreater(staged["tool_errors"], baseline["tool_errors"])
+        self.assertGreater(staged["turn_budget_exhausted"], 0)
 
     def test_throughput_at_one_worker_is_the_same_in_both_modes(self):
         sync_ = json.loads((RUNS / "sync" / "summary.json").read_text(encoding="utf-8"))
