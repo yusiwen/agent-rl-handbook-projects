@@ -9,7 +9,7 @@
 ## the calibration that chose the training set (served base model, 8 samples per prompt)
 # set 1:  369/384 solved - saturated, one item in band
 # set 2:  388/448 solved - 13 items with any variance at all
-# set 3:  407/448 solved - 14 items with variance
+# set 3:  332/448 solved - 14 items with variance
 # training set: the 24 items from sets 2+3 whose measured rate fell strictly inside (0, 1)
 
 ## the training curve

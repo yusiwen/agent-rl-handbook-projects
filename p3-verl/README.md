@@ -151,9 +151,10 @@ that question badly is to train on a task set the model already solves - the P5 
 nine tasks were solved in every sampled attempt and the reward carried no gradient at all.
 
 So the task set was calibrated first. Three generated sets of graded arithmetic were sampled eight
-times each against the served base model: 369/384, then 388/448, then 407/448 solved - saturated at
-every tier, with only 24 prompts across all three sets landing strictly between always-solved and
-never-solved. Those 24 became the training set. A fresh draw of 24 prompts from the same four families
+times each against the served base model: 369/384, then 388/448, then 332/448 solved - the model
+handles two- and three-digit arithmetic far better than expected, so the first set was saturated and
+the later sets only reached 0.74. Of the 112 prompts in the last two sets, **24** landed strictly
+between always-solved and never-solved. Those 24 became the training set. A fresh draw of 24 prompts from the same four families
 became the held-out set, measured with the same protocol before training: **128/192 = 0.667**
 (Wilson 95% [0.597, 0.730]).
 
