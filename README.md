@@ -3,21 +3,29 @@
 Companion code for the handbook *Agent RL Explained: A Beginner's Handbook*
 (<https://yusiwen.cn/agent-rl-handbook/>). Six projects, one shared contract.
 
+**Version:** `v0.1`, the same tag the book released. The book pins this commit, so a number quoted in a
+chapter points at the tree that produced it.
+
 **Progress lives in one place:** [`ROADMAP.md`](https://github.com/yusiwen/agent-rl-handbook/blob/main/ROADMAP.md)
 in the book repository is generated from both repositories - chapters, projects, tests, run records -
 and the book's gate fails when it drifts.
 
-**Status: fields 1 and 2 are built, and P2 has been trained.** The shared layer (`common/`) is
-implemented and tested; P1 (verifier suite) runs end to end on fixtures, offline, and against a
-served model over HTTP, graded by a check script that was negative-tested. P2 (the credit-assignment
-loop) closes its loop offline on a tabular policy, and has now been carried through all four of its
-stages on the reference machine: a supervised fine-tune of a 1.7B policy on 117 oracle
-demonstrations, the same loop driven by the served checkpoint, task calibration read out of the
-recorded rollouts, and a budgeted judge measured against the rule critic and demoted to a diagnostic
-because it disagrees with the rule on three quarters of the turns it scored. The update on top of
-the served policy is not built - that loop runs frozen, and P2's README says so. P3-P6 are
-directories with a README each, written when their chapter is written. Every number in these
-documents comes from a run whose record is named beside it.
+**Status: all six projects are built, and each one carries a measurement.** The shared layer
+(`common/`) is implemented and tested. **P1** (verifier suite) runs end to end on fixtures, offline
+and against a served model over HTTP, graded by a check script that was negative-tested. **P2** (the
+credit-assignment loop) closes its loop offline on a tabular policy and has been carried through all
+four of its stages on the reference machine; the served loop itself still runs frozen, and the update
+that closes it is P3's job. **P3** (the VeRL runtime) runs GRPO on a DGX Spark: two steps to prove
+the gradient path, then an eight-step learning check whose held-out move is Chapter 9's figure - with
+its limits stated, one seed and 24 prompts, ending at the 118 GB memory cap. **P4** (data-analysis
+agent) reproduces its six fixtures through the sandbox and measures a cold start that takes 5 of 6 to
+6 of 6. **P5** (asynchronous loop) measures throughput at one, two and three workers. **P6** (skill
+library) measures retrieval and returns a negative outcome on the outcome metric: at 100 instances
+the arms cannot be separated.
+
+**What is not finished** is written down as issues rather than left implied: #1 a longer,
+multi-seed GRPO run; #2 wider instance sets for the skill arms; #3 a DPO path, which verl 0.9.1 does
+not ship. Every number in these documents comes from a run whose record is named beside it.
 
 ## What runs today
 
@@ -32,20 +40,22 @@ whatever the machine happens to have.
 ```
 == common tests ==                Ran 128 tests ... OK
 == p1 tests ==                    Ran 190 tests ... OK
-== p1 check (fixtures) ==         coverage 21/21 tasks; 42 rollouts; 21/42 passed
-                                  contamination 0/21 tasks vs gsm8k/test (1319 items, sha256:524c11ab4ee19ae2)
+== p1 check (fixtures) ==         coverage 21/21 tasks; 42 rollouts; 21/42 passed; 19/21 groups mixed
+                                  contamination 0/21 tasks vs 1319 evaluation items (sha256:524c11ab4ee19ae2)
 == p2 tests ==                    Ran 87 tests ... OK
-== p2 check (loop) ==             [PASS] every task solvable, the loop closes, no entropy cliff
-== p4 tests ==                    Ran 24 tests ... OK
+== p2 check (loop) ==             [PASS] mask, boundaries, terms, lineage, entropy, budget
+== p4 tests ==                    Ran 36 tests ... OK
 == p4 check (loop) ==             six fixtures reproduced by their oracles, through the sandbox
-== p4 claims (arithmetic) ==      2 claims, arithmetic and records agree
+== p4 claims ==                   12 claims, arithmetic and records agree
+== p5 tests ==                    Ran 17 tests ... OK
+== p6 tests ==                    Ran 14 tests ... OK
+== p3 eval-claims ==              19 claims, arithmetic and records agree
 == datasets tests ==              Ran 39 tests ... OK
-== repository checks (selftest) == [PASS] the checks still reject what they must reject
 == repository checks ==           [PASS] characters  [PASS] payloads  [PASS] secrets  [PASS] imports
 all checks passed
 ```
 
-468 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
+511 tests, no network, no GPU, no weights. The fixture run prints a coverage report and
 writes a run record to `runs/` (gitignored). The gate itself sets `ARL_RUNS_DIR` to a scratch
 directory, so verifying the tree never adds a record to it; set the same variable to send your own
 runs elsewhere. If the gate fails, the problem is in this repository rather
